@@ -7,9 +7,14 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.optim.lr_scheduler import CyclicLR
 
+import os
+import sys
 import numpy as np
 import math
 import random
+import datetime
+import csv
+import time
 
 
 def signed_l3(z):
@@ -217,6 +222,8 @@ def weights_init(m):
 
 
 def train_model(model,
+                outfile_path,
+                fieldnames,
                 train_loader,
                 validation_loader,
                 seed=0,
@@ -248,18 +255,21 @@ def train_model(model,
     epoch = 1
     while epoch <= 10:
 
+        epoch_best_train_loss = -1
+        epoch_best_val_loss = -1
+        epoch_best_acc = 0
+
+        start_time = time.time()
         # ---- Training
         for batch_idx, (x, targetx) in enumerate(train_loader):
             model.train()
-            total_train_loss = 0
-            total_train_batch_size = 0
             if torch.cuda.is_available():
                 x, targetx = x.cuda(), targetx.cuda()
             optimizer.zero_grad()
             out = model(x)
             train_loss = criterion(out, targetx)
-            total_train_loss += train_loss
-            total_train_batch_size += 1
+            if train_loss < epoch_best_train_loss or epoch_best_train_loss == -1:
+                epoch_best_train_loss = train_loss
             train_loss.backward()
             optimizer.step()
             scheduler.step()
@@ -268,38 +278,64 @@ def train_model(model,
             if batch_idx % 100 == 0 or (epoch == 10 and batch_idx == 499):
                 num_correct = 0
                 num_total = 0
-                total_test_loss = 0
-                total_test_batch_size = 0
+                total_val_loss = 0
+                total_val_batch_size = 0
                 model.eval()
                 with torch.no_grad():
                     for batch_idx2, (y, targety) in enumerate(validation_loader):
                         if torch.cuda.is_available():
-                            y, targety = x.cuda(), targety.cuda()
+                            y, targety = y.cuda(), targety.cuda()
                         out = model(y)
-                        test_loss = criterion(out, targety)
-                        total_test_loss += test_loss
-                        total_test_batch_size += 1
+                        val_loss = criterion(out, targety)
+                        if val_loss < epoch_best_val_loss or epoch_best_val_loss == -1:
+                            epoch_best_val_loss = val_loss
+                        total_val_loss += val_loss
+                        total_val_batch_size += 1
                         _, prediction = torch.max(out.data, 1)
                         num_correct += torch.sum(prediction == targety.data)
                         num_total += len(prediction)
                 accuracy = num_correct * 1.0 / num_total
-                avg_train_loss = total_train_loss / total_train_batch_size
-                avg_test_loss = total_test_loss / total_test_batch_size
+                if accuracy > epoch_best_acc:
+                    epoch_best_acc = accuracy
+                avg_val_loss = total_val_loss / total_val_batch_size
 
                 print(
                     "    ({}) Epoch {}, Batch {}  :   train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
-                        .format(model.actfun, epoch, batch_idx, avg_train_loss, avg_test_loss, accuracy)
+                        .format(model.actfun, epoch, batch_idx, train_loss, avg_val_loss, accuracy)
                 )
+        with open(outfile_path, mode='a') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+            writer.writerow({'seed':seed,
+                             'epoch': epoch,
+                             'actfun': model.actfun,
+                             'train_loss': float(epoch_best_train_loss),
+                             'val_loss': float(epoch_best_val_loss),
+                             'top_accuracy': float(epoch_best_acc),
+                             'time': (time.time() - start_time),
+                             'adam_beta_1': adam_beta_1,
+                             'adam_beta_2': adam_beta_2,
+                             'adam_eps': adam_eps,
+                             'adam_wd': adam_wd,
+                             'base_lr': base_lr,
+                             'max_lr': max_lr
+                             })
 
         epoch += 1
 
 
-def run_experiment(iterations):
+def run_experiment(iterations, outfile_path):
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
     mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
     train_set_indices = np.arange(0, 50000)
     validation_set_indices = np.arange(50000, 60000)
+
+    fieldnames = ['seed', 'epoch', 'actfun', 'train_loss', 'val_loss', 'top_accuracy', 'time',
+                  'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr']
+    if not os.path.exists(outfile_path):
+        with open(outfile_path, mode='w') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+            writer.writeheader()
 
     for i in range(iterations):
 
@@ -331,8 +367,8 @@ def run_experiment(iterations):
         adam_beta_2 = 1 - 10**np.random.uniform(-3, -2)
         adam_eps = 10**np.random.uniform(-8, -7)
         adam_wd = 10**np.random.uniform(-6, -3)
-        base_lr = 10**np.random.uniform(-4, 0)
-        max_lr = base_lr + (np.random.uniform(1, 5) * 10**np.random.uniform(-3, 0))
+        base_lr = 10**(-8)
+        max_lr = 10**np.random.uniform(-4, 0)
 
         print("-----> Iteration " + str(i))
         print("seed=" + str(seed))
@@ -349,8 +385,10 @@ def run_experiment(iterations):
             if torch.cuda.is_available():
                 model.cuda()
             train_model(model,
-                        train_loader=train_loader,
-                        validation_loader=validation_loader,
+                        outfile_path,
+                        fieldnames,
+                        train_loader,
+                        validation_loader,
                         seed=seed,
                         adam_beta_1=adam_beta_1,
                         adam_beta_2=adam_beta_2,
@@ -363,5 +401,6 @@ def run_experiment(iterations):
 
 
 if __name__ == '__main__':
-
-    run_experiment(1000)
+    print(sys.argv[1])
+    outfile_path = sys.argv[1] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
+    run_experiment(1000, outfile_path)
