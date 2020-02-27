@@ -11,8 +11,7 @@
 source ~/.bashrc
 source activate ~/venvs/combinact
 
-NUM_ITERATIONS="$1"
-SAVE_PATH="$2"
+SAVE_PATH="$1"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 # Debugging outputs
