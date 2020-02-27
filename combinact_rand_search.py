@@ -401,6 +401,8 @@ def run_experiment(iterations, outfile_path):
 
 
 if __name__ == '__main__':
-    print(sys.argv[1])
-    outfile_path = sys.argv[1] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
+    if len(sys.argv) > 1:
+        outfile_path = sys.argv[1] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
+    else:
+        outfile_path = str(datetime.date.today()) + "combinact_rand_search.csv"
     run_experiment(1000, outfile_path)
