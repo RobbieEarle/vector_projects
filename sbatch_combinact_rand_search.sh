@@ -20,6 +20,16 @@ which conda
 python --version
 pip freeze
 
+echo ""
+
+python -c "import torch; print('torch version = {}'.format(torch.__version__))"
+python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()))"
+​
+echo ""
+
+echo "SAVE_PATH=$SAVE_PATH"
+echo "SEED=$SEED"
+
 python combinact_rand_search.py "relu" "$SEED" "$SAVE_PATH"
 python combinact_rand_search.py "max" "$SEED" "$SAVE_PATH"
 python combinact_rand_search.py "signed_geomean" "$SEED" "$SAVE_PATH"
