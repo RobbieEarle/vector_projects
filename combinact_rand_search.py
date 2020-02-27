@@ -238,7 +238,6 @@ def train_model(model,
     Trains a model for 10 epochs using the given hyperparameters. Uses ADAM optimizer and one-cycle learning rate
     schedule. Logs accuracy 5 times per epoch, outputs results to output CSV at end of each epoch.
 
-
     :param model:
     :param outfile_path:
     :param fieldnames:
@@ -319,13 +318,16 @@ def train_model(model,
                     epoch_best_acc = accuracy
                 avg_val_loss = total_val_loss / total_val_batch_size
 
+                # Logging test results
                 print(
                     "    ({}) Epoch {}, Batch {}  :   train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
                         .format(model.actfun, epoch, batch_idx, train_loss, avg_val_loss, accuracy)
                 )
+
+        # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'seed':seed,
+            writer.writerow({'seed': seed,
                              'epoch': epoch,
                              'actfun': model.actfun,
                              'train_loss': float(epoch_best_train_loss),
