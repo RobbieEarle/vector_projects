@@ -233,7 +233,8 @@ def train_model(model,
                 adam_wd=10 ** (-3),
                 base_lr=0.1,
                 max_lr=1,
-                cycle_size=500):
+                cycle_size=5000,
+                cycle_peak=0.5):
     """
     Trains a model for 10 epochs using the given hyperparameters. Uses ADAM optimizer and one-cycle learning rate
     schedule. Logs accuracy 5 times per epoch, outputs results to output CSV at end of each epoch.
@@ -251,6 +252,7 @@ def train_model(model,
     :param base_lr:
     :param max_lr:
     :param cycle_size:
+    :param cycle_peak:
     :return:
     """
 
@@ -266,7 +268,8 @@ def train_model(model,
     scheduler = CyclicLR(optimizer,
                          base_lr=base_lr,
                          max_lr=max_lr,
-                         step_size_up=int(cycle_size / 2),
+                         step_size_up=int(cycle_peak * cycle_size),
+                         step_size_down=int((1-cycle_peak) * cycle_size),
                          cycle_momentum=False
                          )
 
@@ -294,7 +297,7 @@ def train_model(model,
             scheduler.step()
 
             # ---- Testing
-            if batch_idx % 100 == 0 or (epoch == 10 and batch_idx == 499):
+            if (batch_idx+1) % 100 == 0:
                 num_correct = 0
                 num_total = 0
                 total_val_loss = 0
@@ -320,8 +323,8 @@ def train_model(model,
 
                 # Logging test results
                 print(
-                    "    ({}) Epoch {}, Batch {}  :   train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
-                        .format(model.actfun, epoch, batch_idx, train_loss, avg_val_loss, accuracy)
+                    "    ({}) Epoch {}, Batch {}  :   lr = {:1.6f}  |  train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
+                        .format(model.actfun, epoch, batch_idx, optimizer.param_groups[0]['lr'], train_loss, avg_val_loss, accuracy)
                 )
 
         # Outputting data to CSV at end of epoch
@@ -339,13 +342,14 @@ def train_model(model,
                              'adam_eps': adam_eps,
                              'adam_wd': adam_wd,
                              'base_lr': base_lr,
-                             'max_lr': max_lr
+                             'max_lr': max_lr,
+                             'cycle_peak': cycle_peak
                              })
 
         epoch += 1
 
 
-def run_experiment(iterations, outfile_path):
+def run_experiment(actfun, seed, outfile_path):
     """
     Repeatedly shuffles our parameters randomly for the given number of iterations. Trains models using multiple
     higher dimensional activation functions.
@@ -369,83 +373,79 @@ def run_experiment(iterations, outfile_path):
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True)
 
     fieldnames = ['seed', 'epoch', 'actfun', 'train_loss', 'val_loss', 'top_accuracy', 'time',
-                  'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr']
+                  'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr', 'cycle_peak']
     if not os.path.exists(outfile_path):
         with open(outfile_path, mode='w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writeheader()
 
-    for i in range(iterations):
+    # relu, max, min, signed_geomean, swish2, l2, l3-signed, linf, lse-approx, zclse-approx
+    # nlsen-approx, zcnlsen-approx
+    model = Net(actfun=actfun)
 
-        models = [
-            Net(actfun='relu'),
-            Net(actfun='max'),
-            Net(actfun='min'),
-            Net(actfun='signed_geomean'),
-            Net(actfun='swish2'),
-            Net(actfun='l2'),
-            # Net(actfun='l3-signed')
-            Net(actfun='linf'),
-            Net(actfun='lse-approx'),
-            Net(actfun='zclse-approx'),
-            Net(actfun='nlsen-approx'),
-            Net(actfun='zcnlsen-approx')
-        ]
+    lr = 0.7
+    b1 = 0.9
+    b2 = 0.999
+    eps = 10**-8
+    sf_10 = 10
 
-        seed_all(i)
-        adam_beta_1 = 1 - 10**np.random.uniform(-2, 0)
-        adam_beta_2 = 1 - 10**np.random.uniform(-3, -2)
-        adam_eps = 10**np.random.uniform(-8, -7)
-        adam_wd = 10**np.random.uniform(-6, -3)
-        base_lr = 10**(-8)
-        max_lr = 10**np.random.uniform(-4, 0)
-        seed_all(0)
+    rng = np.random.RandomState(seed)
+    adam_beta_1 = 1 - (1 - b1) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
+    adam_beta_2 = 1 - (1 - b2) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
+    adam_eps = eps * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
+    adam_wd = 10**rng.uniform(-5, -3)
+    base_lr = 10**(-8)
+    max_lr = lr * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
+    cycle_peak = rng.uniform(0.2, 0.5)
 
-        print("-----> Iteration " + str(i))
-        print("seed=" + str(i))
-        print("adam_beta_1=" + str(adam_beta_1))
-        print("adam_beta_2=" + str(adam_beta_2))
-        print("adam_eps=" + str(adam_eps))
-        print("adam_wd=" + str(adam_wd))
-        print("base_lr=" + str(base_lr))
-        print("max_lr=" + str(max_lr))
-        print()
+    print("-----> Iteration " + str(seed))
+    print("seed=" + str(seed))
+    print("adam_beta_1=" + str(adam_beta_1))
+    print("adam_beta_2=" + str(adam_beta_2))
+    print("adam_eps=" + str(adam_eps))
+    print("adam_wd=" + str(adam_wd))
+    print("base_lr=" + str(base_lr))
+    print("max_lr=" + str(max_lr))
+    print("cycle_peak=" + str(cycle_peak))
+    print()
 
-        for model in models:
-            print("  --> Iteration : " + str(i) + ", Activation " + str(model.actfun))
-            if torch.cuda.is_available():
-                model.cuda()
-            train_model(model,
-                        outfile_path,
-                        fieldnames,
-                        train_loader,
-                        validation_loader,
-                        seed=i,
-                        adam_beta_1=adam_beta_1,
-                        adam_beta_2=adam_beta_2,
-                        adam_eps=adam_eps,
-                        adam_wd=adam_wd,
-                        base_lr=base_lr,
-                        max_lr=max_lr,
-                        cycle_size=500)
-            print()
+    print("  --> Iteration : " + str(seed) + ", Activation " + str(model.actfun))
+    if torch.cuda.is_available():
+        model.cuda()
+    train_model(model,
+                outfile_path,
+                fieldnames,
+                train_loader,
+                validation_loader,
+                seed=seed,
+                adam_beta_1=adam_beta_1,
+                adam_beta_2=adam_beta_2,
+                adam_eps=adam_eps,
+                adam_wd=adam_wd,
+                base_lr=base_lr,
+                max_lr=max_lr,
+                cycle_size=5000,
+                cycle_peak=cycle_peak)
+    print()
 
 
 if __name__ == '__main__':
     """
-    Takes in number of iterations and outfile path as command line arguments
+    Takes in activation function, seed, and outfile_path as command line arguments.
     """
 
     if len(sys.argv) == 1:
-        iterations = 1000
-        outfile_path = str(datetime.date.today()) + "combinact_rand_search.csv"
-    elif len(sys.argv) == 2:
-        iterations = int(sys.argv[1])
-        outfile_path = str(datetime.date.today()) + "combinact_rand_search.csv"
-    elif len(sys.argv) >= 3:
-        iterations = int(sys.argv[1])
-        outfile_path = sys.argv[2] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
+        actfun = "relu"
+        seed = 0
+        outfile_path = str(datetime.date.today()) + "-combinact_rand_search-" + str(actfun) + "-" + str(seed) + ".csv"
 
-    print("Iterations: " + str(iterations))
+    else:
+        seed_all(0)
+        actfun = sys.argv[1]
+        seed = int(sys.argv[2])
+        outfile_path = sys.argv[3] + "/" + str(datetime.date.today()) + "-combinact_rand_search-"\
+                       + str(actfun) + "-" + str(seed) + ".csv"
+
+    print("Activation Function: " + str(actfun))
     print("Save Path: " + str(outfile_path))
-    run_experiment(iterations, outfile_path)
+    run_experiment(actfun, seed, outfile_path)
