@@ -234,6 +234,26 @@ def train_model(model,
                 base_lr=0.1,
                 max_lr=1,
                 cycle_size=500):
+    """
+    Trains a model for 10 epochs using the given hyperparameters. Uses ADAM optimizer and one-cycle learning rate
+    schedule. Logs accuracy 5 times per epoch, outputs results to output CSV at end of each epoch.
+
+
+    :param model:
+    :param outfile_path:
+    :param fieldnames:
+    :param train_loader:
+    :param validation_loader:
+    :param seed:
+    :param adam_beta_1:
+    :param adam_beta_2:
+    :param adam_eps:
+    :param adam_wd:
+    :param base_lr:
+    :param max_lr:
+    :param cycle_size:
+    :return:
+    """
 
     # ---- Initialization
     model.apply(weights_init)
@@ -324,11 +344,27 @@ def train_model(model,
 
 
 def run_experiment(iterations, outfile_path):
+    """
+    Repeatedly shuffles our parameters randomly for the given number of iterations. Trains models using multiple
+    higher dimensional activation functions.
+
+    :param iterations:
+    :param outfile_path:
+    :return:
+    """
+
+    seed_all(0)
 
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
     mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
     train_set_indices = np.arange(0, 50000)
     validation_set_indices = np.arange(50000, 60000)
+
+    mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
+    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
+    batch_size = 100
+    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True)
 
     fieldnames = ['seed', 'epoch', 'actfun', 'train_loss', 'val_loss', 'top_accuracy', 'time',
                   'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr']
@@ -338,15 +374,6 @@ def run_experiment(iterations, outfile_path):
             writer.writeheader()
 
     for i in range(iterations):
-
-        seed = i
-        seed_all(seed)
-
-        mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
-        mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
-        batch_size = 100
-        train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
-        validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True)
 
         models = [
             Net(actfun='relu'),
@@ -363,15 +390,17 @@ def run_experiment(iterations, outfile_path):
             Net(actfun='zcnlsen-approx')
         ]
 
+        seed_all(i)
         adam_beta_1 = 1 - 10**np.random.uniform(-2, 0)
         adam_beta_2 = 1 - 10**np.random.uniform(-3, -2)
         adam_eps = 10**np.random.uniform(-8, -7)
         adam_wd = 10**np.random.uniform(-6, -3)
         base_lr = 10**(-8)
         max_lr = 10**np.random.uniform(-4, 0)
+        seed_all(0)
 
         print("-----> Iteration " + str(i))
-        print("seed=" + str(seed))
+        print("seed=" + str(i))
         print("adam_beta_1=" + str(adam_beta_1))
         print("adam_beta_2=" + str(adam_beta_2))
         print("adam_eps=" + str(adam_eps))
@@ -389,7 +418,7 @@ def run_experiment(iterations, outfile_path):
                         fieldnames,
                         train_loader,
                         validation_loader,
-                        seed=seed,
+                        seed=i,
                         adam_beta_1=adam_beta_1,
                         adam_beta_2=adam_beta_2,
                         adam_eps=adam_eps,
@@ -401,8 +430,20 @@ def run_experiment(iterations, outfile_path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        outfile_path = sys.argv[1] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
-    else:
+    """
+    Takes in number of iterations and outfile path as command line arguments
+    """
+
+    if len(sys.argv) == 1:
+        iterations = 1000
         outfile_path = str(datetime.date.today()) + "combinact_rand_search.csv"
-    run_experiment(1000, outfile_path)
+    elif len(sys.argv) == 2:
+        iterations = int(sys.argv[1])
+        outfile_path = str(datetime.date.today()) + "combinact_rand_search.csv"
+    elif len(sys.argv) >= 3:
+        iterations = int(sys.argv[1])
+        outfile_path = sys.argv[2] + "/" + str(datetime.date.today()) + "combinact_rand_search.csv"
+
+    print("Iterations: " + str(iterations))
+    print("Save Path: " + str(outfile_path))
+    run_experiment(iterations, outfile_path)
