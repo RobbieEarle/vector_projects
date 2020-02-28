@@ -407,7 +407,7 @@ def run_experiment(actfun, seed, outfile_path):
 
     print("  --> Iteration : " + str(seed) + ", Activation " + str(model.actfun))
     if torch.cuda.is_available():
-        model.cuda(non_blocking=True)
+        model = model.cuda()
     train_model(model,
                 outfile_path,
                 fieldnames,
