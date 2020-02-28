@@ -30,6 +30,8 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
+~/utilities/log_gpu_cpu_stats -l 0.5 -n 600 "logs/combinact/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.csv"
+
 python combinact_rand_search.py "relu" "$SEED" "$SAVE_PATH"
 python combinact_rand_search.py "max" "$SEED" "$SAVE_PATH"
 python combinact_rand_search.py "signed_geomean" "$SEED" "$SAVE_PATH"

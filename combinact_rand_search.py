@@ -41,17 +41,13 @@ _ACTFUNS2D = {
     'linf':
         lambda z: torch.max(z[:, :, 0].abs(), z[:, :, 1].abs()),
     'lse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0.).cuda(), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()) if torch.cuda.is_available()
-        else torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0.), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'zclse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2).cuda(), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()) if torch.cuda.is_available()
-        else torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'nlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0.).cuda(), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()) if torch.cuda.is_available()
-        else -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0.), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'zcnlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2).cuda(), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()) if torch.cuda.is_available()
-        else -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_())
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_())
 }
 
 
@@ -286,7 +282,7 @@ def train_model(model,
         for batch_idx, (x, targetx) in enumerate(train_loader):
             model.train()
             if torch.cuda.is_available():
-                x, targetx = x.cuda(), targetx.cuda()
+                x, targetx = x.cuda(non_blocking=True), targetx.cuda(non_blocking=True)
             optimizer.zero_grad()
             out = model(x)
             train_loss = criterion(out, targetx)
@@ -306,7 +302,7 @@ def train_model(model,
                 with torch.no_grad():
                     for batch_idx2, (y, targety) in enumerate(validation_loader):
                         if torch.cuda.is_available():
-                            y, targety = y.cuda(), targety.cuda()
+                            y, targety = y.cuda(non_blocking=True), targety.cuda(non_blocking=True)
                         out = model(y)
                         val_loss = criterion(out, targety)
                         if val_loss < epoch_best_val_loss or epoch_best_val_loss == -1:
@@ -369,8 +365,8 @@ def run_experiment(actfun, seed, outfile_path):
     mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
     mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
     batch_size = 100
-    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
-    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
+    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
 
     fieldnames = ['seed', 'epoch', 'actfun', 'train_loss', 'val_loss', 'top_accuracy', 'time',
                   'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr', 'cycle_peak']
@@ -411,7 +407,7 @@ def run_experiment(actfun, seed, outfile_path):
 
     print("  --> Iteration : " + str(seed) + ", Activation " + str(model.actfun))
     if torch.cuda.is_available():
-        model.cuda()
+        model.cuda(non_blocking=True)
     train_model(model,
                 outfile_path,
                 fieldnames,
