@@ -370,10 +370,9 @@ def run_experiment(actfun, seed, outfile_path):
 
     fieldnames = ['seed', 'epoch', 'actfun', 'train_loss', 'val_loss', 'top_accuracy', 'time',
                   'adam_beta_1', 'adam_beta_2', 'adam_eps', 'adam_wd', 'base_lr', 'max_lr', 'cycle_peak']
-    if not os.path.exists(outfile_path):
-        with open(outfile_path, mode='w') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writeheader()
+    with open(outfile_path, mode='w') as out_file:
+        writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+        writer.writeheader()
 
     # relu, max, min, signed_geomean, swish2, l2, l3-signed, linf, lse-approx, zclse-approx
     # nlsen-approx, zcnlsen-approx
