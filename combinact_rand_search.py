@@ -320,7 +320,7 @@ def train_model(model,
                 # Logging test results
                 print(
                     "    ({}) Epoch {}, Batch {}  :   lr = {:1.6f}  |  train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
-                        .format(model.actfun, epoch, batch_idx, optimizer.param_groups[0]['lr'], train_loss, avg_val_loss, accuracy)
+                        .format(model.actfun, epoch, batch_idx, optimizer.param_groups[0]['lr'], train_loss, avg_val_loss, accuracy), flush=True
                 )
 
         # Outputting data to CSV at end of epoch
@@ -402,7 +402,7 @@ def run_experiment(actfun, seed, outfile_path):
     print("base_lr=" + str(base_lr))
     print("max_lr=" + str(max_lr))
     print("cycle_peak=" + str(cycle_peak))
-    print()
+    print(flush=True)
 
     print("  --> Iteration : " + str(seed) + ", Activation " + str(model.actfun))
     if torch.cuda.is_available():
