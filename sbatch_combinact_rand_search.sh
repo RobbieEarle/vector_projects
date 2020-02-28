@@ -33,12 +33,12 @@ echo "SEED=$SEED"
 ~/utilities/log_gpu_cpu_stats -l 0.5 -n 500 -t "logs/combinact/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.log"&
 export LOGGER_PID="$!"
 
-python combinact_rand_search.py "relu" "$SEED" "$SAVE_PATH"
-python combinact_rand_search.py "max" "$SEED" "$SAVE_PATH"
-python combinact_rand_search.py "signed_geomean" "$SEED" "$SAVE_PATH"
-python combinact_rand_search.py "swish2" "$SEED" "$SAVE_PATH"
-python combinact_rand_search.py "l2" "$SEED" "$SAVE_PATH"
-python combinact_rand_search.py "linf" "$SEED" "$SAVE_PATH"
+python combinact_rand_search.py "relu" "$SEED" "$SAVE_PATH" &
+python combinact_rand_search.py "max" "$SEED" "$SAVE_PATH" &
+python combinact_rand_search.py "signed_geomean" "$SEED" "$SAVE_PATH" &
+python combinact_rand_search.py "swish2" "$SEED" "$SAVE_PATH" &
+python combinact_rand_search.py "l2" "$SEED" "$SAVE_PATH" &
+python combinact_rand_search.py "linf" "$SEED" "$SAVE_PATH" &
 python combinact_rand_search.py "zclse-approx" "$SEED" "$SAVE_PATH"
 
 kill "$LOGGER_PID"
