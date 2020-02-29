@@ -273,10 +273,7 @@ def train_model(model,
     epoch = 1
     while epoch <= 10:
 
-        epoch_best_train_loss = -1
-        epoch_best_val_loss = -1
-        epoch_best_acc = 0
-
+        final_train_loss = 0
         start_time = time.time()
         # ---- Training
         for batch_idx, (x, targetx) in enumerate(train_loader):
@@ -286,42 +283,33 @@ def train_model(model,
             optimizer.zero_grad()
             out = model(x)
             train_loss = criterion(out, targetx)
-            if train_loss < epoch_best_train_loss or epoch_best_train_loss == -1:
-                epoch_best_train_loss = train_loss
             train_loss.backward()
             optimizer.step()
             scheduler.step()
+            final_train_loss = train_loss
 
-            # ---- Testing
-            if (batch_idx+1) % 100 == 0:
-                num_correct = 0
-                num_total = 0
-                total_val_loss = 0
-                total_val_batch_size = 0
-                model.eval()
-                with torch.no_grad():
-                    for batch_idx2, (y, targety) in enumerate(validation_loader):
-                        if torch.cuda.is_available():
-                            y, targety = y.cuda(non_blocking=True), targety.cuda(non_blocking=True)
-                        out = model(y)
-                        val_loss = criterion(out, targety)
-                        if val_loss < epoch_best_val_loss or epoch_best_val_loss == -1:
-                            epoch_best_val_loss = val_loss
-                        total_val_loss += val_loss
-                        total_val_batch_size += 1
-                        _, prediction = torch.max(out.data, 1)
-                        num_correct += torch.sum(prediction == targety.data)
-                        num_total += len(prediction)
-                accuracy = num_correct * 1.0 / num_total
-                if accuracy > epoch_best_acc:
-                    epoch_best_acc = accuracy
-                avg_val_loss = total_val_loss / total_val_batch_size
+        # ---- Testing
+        num_correct = 0
+        num_total = 0
+        final_val_loss = 0
+        model.eval()
+        with torch.no_grad():
+            for batch_idx2, (y, targety) in enumerate(validation_loader):
+                if torch.cuda.is_available():
+                    y, targety = y.cuda(non_blocking=True), targety.cuda(non_blocking=True)
+                out = model(y)
+                val_loss = criterion(out, targety)
+                final_val_loss = val_loss
+                _, prediction = torch.max(out.data, 1)
+                num_correct += torch.sum(prediction == targety.data)
+                num_total += len(prediction)
+        accuracy = num_correct * 1.0 / num_total
 
-                # Logging test results
-                print(
-                    "    ({}) Epoch {}, Batch {}  :   lr = {:1.6f}  |  train_loss = {:1.6f}  |  test_loss = {:1.6f}  |  accuracy = {:1.6f}"
-                        .format(model.actfun, epoch, batch_idx, optimizer.param_groups[0]['lr'], train_loss, avg_val_loss, accuracy), flush=True
-                )
+        # Logging test results
+        print(
+            "    ({}) Epoch {}: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}"
+                .format(model.actfun, epoch, final_train_loss, final_val_loss, accuracy), flush=True
+        )
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
@@ -329,9 +317,9 @@ def train_model(model,
             writer.writerow({'seed': seed,
                              'epoch': epoch,
                              'actfun': model.actfun,
-                             'train_loss': float(epoch_best_train_loss),
-                             'val_loss': float(epoch_best_val_loss),
-                             'top_accuracy': float(epoch_best_acc),
+                             'train_loss': float(final_train_loss),
+                             'val_loss': float(final_val_loss),
+                             'top_accuracy': float(accuracy),
                              'time': (time.time() - start_time),
                              'adam_beta_1': adam_beta_1,
                              'adam_beta_2': adam_beta_2,
@@ -378,9 +366,9 @@ def run_experiment(actfun, seed, outfile_path):
     # nlsen-approx, zcnlsen-approx
     model = Net(actfun=actfun)
 
-    lr = 0.7
+    lr = 0.07
     b1 = 0.9
-    b2 = 0.999
+    b2 = 0.9999
     eps = 10**-8
     sf_10 = 10
 
@@ -388,7 +376,7 @@ def run_experiment(actfun, seed, outfile_path):
     adam_beta_1 = 1 - (1 - b1) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
     adam_beta_2 = 1 - (1 - b2) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
     adam_eps = eps * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
-    adam_wd = 10**rng.uniform(-5, -3)
+    adam_wd = 10**rng.uniform(-6, -4)
     base_lr = 10**(-8)
     max_lr = lr * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
     cycle_peak = rng.uniform(0.2, 0.5)
