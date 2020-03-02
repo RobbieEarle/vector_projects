@@ -366,20 +366,64 @@ def run_experiment(actfun, seed, outfile_path):
     # nlsen-approx, zcnlsen-approx
     model = Net(actfun=actfun)
 
-    lr = 0.07
-    b1 = 0.9
-    b2 = 0.9999
-    eps = 10**-8
-    sf_10 = 10
-
     rng = np.random.RandomState(seed)
-    adam_beta_1 = 1 - (1 - b1) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
-    adam_beta_2 = 1 - (1 - b2) * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
-    adam_eps = eps * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
-    adam_wd = 10**rng.uniform(-6, -4)
-    base_lr = 10**(-8)
-    max_lr = lr * np.exp(rng.uniform(np.log(1 / sf_10), np.log(sf_10)))
-    cycle_peak = rng.uniform(0.2, 0.5)
+    if actfun == 'l2':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-3.3885, -0.527))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-11.1695, -7.3835))
+        adam_eps = np.exp(-21.2019, -16.0049)
+        adam_wd = np.exp(-13.421, -9.628)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-5.0193, -3.1874)
+        cycle_peak = rng.uniform(0.2091, 0.4424)
+    elif actfun == 'linf':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-3.4605, 0.232))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-10.6429, -7.1978))
+        adam_eps = np.exp(-19.9802, -16.6967)
+        adam_wd = np.exp(-12.4787, -9.3966)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-5.0503, -3.5588)
+        cycle_peak = rng.uniform(0.2566, 0.4754)
+    elif actfun == 'max':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-3.8996, -0.2972))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-10.9224, -7.4551))
+        adam_eps = np.exp(-21.302, -16.3239)
+        adam_wd = np.exp(-13.4115, -9.8473)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-5.114, -3.511)
+        cycle_peak = rng.uniform(0.2263, 0.4821)
+    elif actfun == 'relu':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-3.7017, -0.162))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-11.1529, -6.7116))
+        adam_eps = np.exp(-20.4337, -16.4012)
+        adam_wd = np.exp(-14.4059, -9.8197)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-4.9212, -3.1667)
+        cycle_peak = rng.uniform(0.21, 0.4564)
+    elif actfun == 'signed_geomean':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-3.4433, -0.603))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-11.4703, -7.3001))
+        adam_eps = np.exp(-20.5796, -15.787)
+        adam_wd = np.exp(-12.8655, -9.466)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-5.1372, -4.0357)
+        cycle_peak = rng.uniform(0.2081, 0.4264)
+    elif actfun == 'swish2':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-4.839, -0.9906))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-10.4542, -7.679))
+        adam_eps = np.exp(-20.6917, -16.7904)
+        adam_wd = np.exp(-13.8422, -11.6871)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-4.872, -3.2421)
+        cycle_peak = rng.uniform(0.216, 0.4721)
+    elif actfun == 'zclse-approx':
+        adam_beta_1 = 1 - np.exp(rng.uniform(-2.8972, 0.0188))
+        adam_beta_2 = 1 - np.exp(rng.uniform(-10.9635, -7.4221))
+        adam_eps = np.exp(-20.4646, -16.4248)
+        adam_wd = np.exp(-13.5709, -10.5091)
+        base_lr = 10 ** (-8)
+        max_lr = np.exp(-3.8973, -2.4824)
+        cycle_peak = rng.uniform(0.1987, 0.4722)
+
 
     print("-----> Iteration " + str(seed))
     print("seed=" + str(seed))
