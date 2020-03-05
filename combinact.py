@@ -51,163 +51,128 @@ _ACTFUNS2D = {
 }
 
 
-def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
-    r"""
-    Initialises the random number generators for random, numpy, and both CPU and GPU(s)
-    for torch.
-    Arguments:
-        seed (int, optional): seed value to use for the random number generators.
-            If :attr:`seed` is ``None`` (default), seeds are picked at random using
-            the methods built in to each RNG.
-        only_current_gpu (bool, optional): indicates whether to only re-seed the current
-            cuda device, or to seed all of them. Default is ``False``.
-        mirror_gpus (bool, optional): indicates whether all cuda devices should receive
-            the same seed, or different seeds. If :attr:`mirror_gpus` is ``False`` and
-            :attr:`seed` is not ``None``, each device receives a different but
-            deterministically determined seed. Default is ``False``.
-    Note that we override the settings for the cudnn backend whenever this function is
-    called. If :attr:`seed` is not ``None``, we set::
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-    in order to ensure experimental results behave deterministically and are repeatible.
-    However, enabling deterministic mode may result in an impact on performance. See
-    `link`_ for more details. If :attr:`seed` is ``None``, we return the cudnn backend
-    to its performance-optimised default settings of::
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-    .. _link:
-        https://pytorch.org/docs/stable/notes/randomness.html
-    """
-    # Note that random, np.random and torch's RNG all have different
-    # implementations so they will produce different numbers even with
-    # when they are seeded the same.
-
-    # Seed Python's built-in random number generator
-    random.seed(seed)
-    # Seed numpy's random number generator
-    np.random.seed(seed)
-
-    def get_seed():
-        '''
-        On Python 3.2 and above, and when system sources of randomness are
-        available, use `os.urandom` to make a new seed. Otherwise, use the
-        current time.
-        '''
-        try:
-            import os
-            # Use system's source of entropy (on Linux, syscall `getrandom()`)
-            s = int.from_bytes(os.urandom(4), byteorder="little")
-        except AttributeError:
-            from datetime import datetime
-            # Get the current time in mircoseconds, and map to an integer
-            # in the range [0, 2**32)
-            s = int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
-                    * 1000000) % 4294967296
-        return s
-
-    # Seed pytorch's random number generator on the CPU
-    # torch doesn't support a None argument, so we have to source our own seed
-    # with high entropy if none is given.
-    s = seed if seed is not None else get_seed()
-    torch.manual_seed(s)
-
-    if seed is None:
-        # Since seeds are random, we don't care about determinism and
-        # will set the backend up for optimal performance
-        torch.backends.cudnn.deterministic = False
-        torch.backends.cudnn.benchmark = True
-    else:
-        # Ensure cudNN is deterministic, so the results are consistent
-        # for this seed
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-    # Seed pytorch's random number generator on the GPU(s)
-    if only_current_gpu:
-        # Only re-seed the current GPU
-        if mirror_gpus:
-            # ... re-seed with the same as the CPU seed
-            torch.cuda.manual_seed(s)
-        elif seed is None:
-            # ... re-seed at random, however pytorch deems fit
-            torch.cuda.seed()
-        else:
-            # ... re-seed with a deterministic seed based on, but
-            # not equal to, the CPU seed
-            torch.cuda.manual_seed((seed + 1) % 4294967296)
-    elif mirror_gpus:
-        # Seed multiple GPUs, each with the same seed
-        torch.cuda.manual_seed_all(s)
-    elif seed is None:
-        # Seed multiple GPUs, all with unique seeds
-        # ... a random seed for each GPU, however pytorch deems fit
-        torch.cuda.seed_all()
-    else:
-        # Seed multiple GPUs, all with unique seeds
-        # ... different deterministic seeds for each GPU
-        # We assign the seeds in ascending order, and can't exceed the
-        # random state's maximum value of 2**32 == 4294967296
-        for device in range(torch.cuda.device_count()):
-            with torch.cuda.device(device):
-                torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
+def test_net_inputs(actfun, in_size, M1, M2, out_size, k1, k2, p1, p2, g2, g_out):
+    if M1 * p1 % k1 != 0:
+        return 'k1 must divide M1*p1.  k1 = {}, M1*p1 = {}'.format(k1, M1 * p1)
+    if M2 % g2 != 0:
+        return 'g2 must divide M2.  M2 = {}, g2 = {}'.format(M2, g2)
+    if (M1 * p1 / k1) % g2 != 0:
+        return 'g2 must divide M1*p1/k1.  M1*p1/k1 = {}, g2 = {}'.format(M1 * p1 / k1, g2)
+    return None
 
 
 class Net(nn.Module):
 
     def __init__(self,
-                 hidden_u1=240,
-                 hidden_u2=240,
-                 k=2,
-                 actfun='max'
+                 actfun='max',
+                 batch_size=100,
+                 in_size=784,
+                 M1=240,
+                 M2=240,
+                 out_size=10,
+                 k1=2,
+                 k2=2,
+                 p1=2,
+                 p2=2,
+                 g2=1,
+                 g_out=1
                  ):
         super(Net, self).__init__()
 
-        self.k = k
-        self.actfun = actfun
-        postact_hidden_u1 = hidden_u1
-        postact_hidden_u2 = hidden_u2
-        if self.actfun != 'relu':
-            postact_hidden_u1 = int(math.ceil(hidden_u1 / k))
-            postact_hidden_u2 = int(math.ceil(hidden_u2 / k))
+        error = test_net_inputs(actfun, in_size, M1, M2, out_size, k1, k2, p1, p2, g2, g_out)
+        if error is not None:
+            raise ValueError(error)
 
-        self.fc1 = nn.Linear(784, hidden_u1)
-        self.fc2 = nn.Linear(postact_hidden_u1, hidden_u2)
-        self.fc3 = nn.Linear(postact_hidden_u2, 10)
-        self.bn1 = nn.BatchNorm1d(hidden_u1)
-        self.bn2 = nn.BatchNorm1d(hidden_u2)
+        if actfun == 'relu':
+            k1 = 1
+            k2 = 1
+            p1 = 1
+            p2 = 1
+            g2 = 1
+            g_out = 1
+
+        self.actfun = actfun
+        self.batch_size = batch_size
+        self.k1 = k1
+        self.k2 = k2
+        self.p1 = p1
+        self.p2 = p2
+
+        # Round 1 Params
+        self.fc1 = nn.Linear(in_size, M1)
+
+        # Round 2 Params
+        self.r2_fc_groups = []
+        for i in range(g2):
+            self.r2_fc_groups.append(nn.Linear(int((M1*p1/k1)/g2), int(M2/g2)))
+
+        # Round 3 Params
+        self.r3_fc_groups = []
+        for i in range(g_out):
+            self.r3_fc_groups.append(nn.Linear(int((M2*p2/k2)/g_out), int(out_size/g_out)))
+
+        # Batchnorm for the pre-activations of the two hidden layers
+        self.bn1 = nn.BatchNorm1d(M1)
+        self.bn2 = nn.BatchNorm1d(M2)
+
+        # self.k = k1
+        # self.actfun = actfun
+        # postact_hidden_u1 = M1
+        # postact_hidden_u2 = M2
+        # if self.actfun != 'relu':
+        #     postact_hidden_u1 = int(math.ceil(M1 / k1))
+        #     postact_hidden_u2 = int(math.ceil(M2 / k1))
+        #
+        # self.fc1 = nn.Linear(784, M1)
+        # self.fc2 = nn.Linear(postact_hidden_u1, M2)
+        # self.fc3 = nn.Linear(postact_hidden_u2, 10)
+        # self.bn1 = nn.BatchNorm1d(M1)
+        # self.bn2 = nn.BatchNorm1d(M2)
 
     def forward(self, x):
-        x = x.view(-1, 28 * 28)
+        # x is initially torch.Size([100, 1, 28, 28]), this step converts to torch.Size([100, 784])
+        x = x.view(self.batch_size, -1)
+
+        # Handles relu activation functions (used as control in experiment)
         if self.actfun == 'relu':
             x = F.relu(self.bn1(self.fc1(x)))
-            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn2(self.r2_fc_groups[0](x)))
+            x = self.r3_fc_groups[0](x)
+
+        # Handling all other activation functions
         else:
-            x = self.activate(self.bn1(self.fc1(x)))
-            x = self.activate(self.bn2(self.fc2(x)))
-        x = self.fc3(x)
+            x = self.activate(self.bn1(self.fc1(x)), self.k1, self.p1)
+            x = self.activate(self.bn2(self.fc2(x)), self.k2, self.p2)
+            x = self.r3_params[0](x)
 
         return x
 
-    def activate(self, x):
+    def activate(self, x, k, p):
         batch_size = x.shape[0]
-        num_hidden_nodes = x.shape[1]
-        num_groups = math.floor(num_hidden_nodes / self.k)
-        remainder = num_hidden_nodes % self.k
+        M = x.shape[1]
+        clusters = math.floor(M / k)
+        remainder = M % k
+
+        x = x.view(batch_size, M, 1)
+
+        for i in range(1, p):
+            x = torch.cat((x[:,:,:i], torch.cat((x[:, i:, 0], x[:, :i, 0]), dim=1).view(batch_size, M, 1)), dim=2)
+            x = x.view(batch_size, M, -1)
 
         if remainder != 0:
-            y = x[:, num_hidden_nodes - remainder:]
-            x = x[:, :num_hidden_nodes - remainder]
-            y = y.view(batch_size, 1, remainder)
+            y = x[:, M - remainder:, :]
+            x = x[:, :M - remainder, :]
+            y = y.view(batch_size, 1, remainder, p)
             y = _ACTFUNS2D[self.actfun](y)
-            y = y.view(y.shape[0], 1)
+            y = y.view(y.shape[0], 1, p)
 
-        x = x.view(batch_size, num_groups, self.k)
+        x = x.view(batch_size, clusters, k, p)
         x = _ACTFUNS2D[self.actfun](x)
 
         if remainder != 0:
             x = torch.cat((x, y), dim=1)
 
-        return x
+        return x.view(batch_size, int(M*p/k))
 
 
 def weights_init(m):
@@ -241,7 +206,6 @@ def train_model(model, train_loader, validation_loader, hyper_params):
     while epoch <= 10:
 
         final_train_loss = 0
-        start_time = time.time()
         # ---- Training
         for batch_idx, (x, targetx) in enumerate(train_loader):
             model.train()
@@ -283,8 +247,6 @@ def train_model(model, train_loader, validation_loader, hyper_params):
 
 def run_experiment():
 
-    seed_all(0)
-
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
     mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
     train_set_indices = np.arange(0, 50000)
@@ -296,7 +258,7 @@ def run_experiment():
     train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
 
-    model = Net()
+    model = Net(batch_size=batch_size)
 
     hyper_params = {"l2": {"adam_beta_1": 0.760516,
                            "adam_beta_2": 0.999983,
