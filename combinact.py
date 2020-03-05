@@ -74,7 +74,7 @@ class Net(nn.Module):
                  k2=2,
                  p1=2,
                  p2=2,
-                 g2=1,
+                 g2=2,
                  g_out=1
                  ):
         super(Net, self).__init__()
@@ -93,10 +93,14 @@ class Net(nn.Module):
 
         self.actfun = actfun
         self.batch_size = batch_size
+        self.M1 = M1
+        self.M2 = M2
         self.k1 = k1
         self.k2 = k2
         self.p1 = p1
         self.p2 = p2
+        self.g2 = g2
+        self.g_out = g_out
 
         # Round 1 Params
         self.fc1 = nn.Linear(in_size, M1)
@@ -113,23 +117,10 @@ class Net(nn.Module):
 
         # Batchnorm for the pre-activations of the two hidden layers
         self.bn1 = nn.BatchNorm1d(M1)
-        self.bn2 = nn.BatchNorm1d(M2)
-
-        # self.k = k1
-        # self.actfun = actfun
-        # postact_hidden_u1 = M1
-        # postact_hidden_u2 = M2
-        # if self.actfun != 'relu':
-        #     postact_hidden_u1 = int(math.ceil(M1 / k1))
-        #     postact_hidden_u2 = int(math.ceil(M2 / k1))
-        #
-        # self.fc1 = nn.Linear(784, M1)
-        # self.fc2 = nn.Linear(postact_hidden_u1, M2)
-        # self.fc3 = nn.Linear(postact_hidden_u2, 10)
-        # self.bn1 = nn.BatchNorm1d(M1)
-        # self.bn2 = nn.BatchNorm1d(M2)
+        self.bn2 = nn.BatchNorm1d(int(M2 / g2))
 
     def forward(self, x):
+
         # x is initially torch.Size([100, 1, 28, 28]), this step converts to torch.Size([100, 784])
         x = x.view(self.batch_size, -1)
 
@@ -141,38 +132,56 @@ class Net(nn.Module):
 
         # Handling all other activation functions
         else:
-            x = self.activate(self.bn1(self.fc1(x)), self.k1, self.p1)
-            x = self.activate(self.bn2(self.fc2(x)), self.k2, self.p2)
+            print(x.shape)
+            x = self.activate(self.bn1(self.fc1(x)), self.M1, self.k1, self.p1)
+            print(x.shape)
+
+            x = x.view((self.batch_size, int((self.M1*self.p1/self.k1)/self.g2), self.g2))
+            print(x.shape)
+            print(x[0, :10, :])
+
+            for i, fc2 in enumerate(self.r2_fc_groups):
+                print()
+                print(x[:, :, i].shape)
+                print(x[0, :10, i])
+                x_i = self.activate(self.bn2(fc2(x[:, :, i])), int(self.M2 / self.g2), self.k2, self.p2)
+                print(x_i.shape)
+
+            print()
+            print("sdfds" + 234)
+
+            x = self.activate(self.bn2(self.fc2(x)), self.M2, self.k2, self.p2)
             x = self.r3_params[0](x)
 
         return x
 
-    def activate(self, x, k, p):
-        batch_size = x.shape[0]
-        M = x.shape[1]
+    def activate(self, x, M, k, p):
         clusters = math.floor(M / k)
         remainder = M % k
 
-        x = x.view(batch_size, M, 1)
+        x = x.view(self.batch_size, M, 1)
 
         for i in range(1, p):
-            x = torch.cat((x[:,:,:i], torch.cat((x[:, i:, 0], x[:, :i, 0]), dim=1).view(batch_size, M, 1)), dim=2)
-            x = x.view(batch_size, M, -1)
+            x = torch.cat((x[:,:,:i], torch.cat((x[:, i:, 0], x[:, :i, 0]), dim=1).view(self.batch_size, M, 1)), dim=2)
+            x = x.view(self.batch_size, M, -1)
 
         if remainder != 0:
             y = x[:, M - remainder:, :]
             x = x[:, :M - remainder, :]
-            y = y.view(batch_size, 1, remainder, p)
+            y = y.view(self.batch_size, 1, remainder, p)
             y = _ACTFUNS2D[self.actfun](y)
             y = y.view(y.shape[0], 1, p)
 
-        x = x.view(batch_size, clusters, k, p)
+        x = x.view(self.batch_size, clusters, k, p)
         x = _ACTFUNS2D[self.actfun](x)
 
         if remainder != 0:
             x = torch.cat((x, y), dim=1)
 
-        return x.view(batch_size, int(M*p/k))
+        # Note that at the moment if we flatten x the outputs from the permutations will be interleaved. ie. if p = 4
+        # the first 4 flattened elements will be the first element from each of the 4 permutations, NOT the first 4
+        # elements from the first permutation. Might need to fix later (not permutation invariant?)
+        return x
 
 
 def weights_init(m):
