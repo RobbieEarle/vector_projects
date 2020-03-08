@@ -61,7 +61,7 @@ def test_net_inputs(actfun, in_size, M1, M2, out_size, k1, k2, p1, p2, g2, g_out
     return None
 
 
-class Net(nn.Module):
+class ScottNet(nn.Module):
 
     def __init__(self,
                  actfun='max',
@@ -75,9 +75,9 @@ class Net(nn.Module):
                  p1=2,
                  p2=2,
                  g2=2,
-                 g_out=1
+                 g_out=2
                  ):
-        super(Net, self).__init__()
+        super(ScottNet, self).__init__()
 
         error = test_net_inputs(actfun, in_size, M1, M2, out_size, k1, k2, p1, p2, g2, g_out)
         if error is not None:
@@ -95,6 +95,7 @@ class Net(nn.Module):
         self.batch_size = batch_size
         self.M1 = M1
         self.M2 = M2
+        self.out_size = out_size
         self.k1 = k1
         self.k2 = k2
         self.p1 = p1
@@ -106,18 +107,18 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(in_size, M1)
 
         # Round 2 Params
-        self.r2_fc_groups = []
-        for i in range(g2):
-            self.r2_fc_groups.append(nn.Linear(int((M1*p1/k1)/g2), int(M2/g2)))
+        self.r2_fc_groups = nn.ModuleList([nn.Linear(int((M1*p1/k1)/g2), int(M2/g2)) for i in range(g2)])
 
         # Round 3 Params
-        self.r3_fc_groups = []
-        for i in range(g_out):
-            self.r3_fc_groups.append(nn.Linear(int((M2*p2/k2)/g_out), int(out_size/g_out)))
+        self.r3_fc_groups = nn.ModuleList([nn.Linear(int((M2*p2/k2)/g_out), int(out_size/g_out)) for i in range(g_out)])
 
         # Batchnorm for the pre-activations of the two hidden layers
         self.bn1 = nn.BatchNorm1d(M1)
         self.bn2 = nn.BatchNorm1d(int(M2 / g2))
+
+    def permute(self, x, method, seed):
+        if method == "roll":
+            return torch.cat((x[:, seed:, 0], x[:, :seed, 0]), dim=1)
 
     def forward(self, x):
 
@@ -132,55 +133,70 @@ class Net(nn.Module):
 
         # Handling all other activation functions
         else:
-            print(x.shape)
+
+            # ------- First Round
+            #   In: [batch_size, in_size]
+            #   Out: [batch_size, M1 / k1, p1]
             x = self.activate(self.bn1(self.fc1(x)), self.M1, self.k1, self.p1)
-            print(x.shape)
 
-            x = x.view((self.batch_size, int((self.M1*self.p1/self.k1)/self.g2), self.g2))
-            print(x.shape)
-            print(x[0, :10, :])
+            # Grouping: [batch_size, M1 / k1, p1] -> [batch_size, (M1 * p1 / k1) / g2, g2]
+            x = torch.transpose(x, dim0=1, dim1=2).reshape(
+                (self.batch_size, int((self.M1*self.p1/self.k1) / self.g2), self.g2))
 
+            # ------- Second Round
+            #   In: [batch_size, (M1 * p1 / k1) / g2, g2]
+            #   Out: [batch_size, (M2 / g2) / k2, p2 * g2]
+            outputs = torch.zeros((self.batch_size, int((self.M2 / self.g2) / self.k2), self.p2 * self.g2),
+                                  device=x.device)
             for i, fc2 in enumerate(self.r2_fc_groups):
-                print()
-                print(x[:, :, i].shape)
-                print(x[0, :10, i])
-                x_i = self.activate(self.bn2(fc2(x[:, :, i])), int(self.M2 / self.g2), self.k2, self.p2)
-                print(x_i.shape)
+                outputs[:, :, i*self.p2:(i+1)*self.p2] = self.activate(
+                    self.bn2(fc2(x[:, :, i])), int(self.M2 / self.g2), self.k2, self.p2)
+            x = outputs
 
-            print()
-            print("sdfds" + 234)
+            # Grouping: [batch_size, (M2 / g2) / k2, p2 * g2] -> [batch_size, (M2 * p2 / k2) / g_out, g_out]
+            x = torch.transpose(x, dim0=1, dim1=2).reshape(
+                (self.batch_size, int((self.M2 * self.p2 / self.k2) / self.g_out), self.g_out))
 
-            x = self.activate(self.bn2(self.fc2(x)), self.M2, self.k2, self.p2)
-            x = self.r3_params[0](x)
+            # ------- Third Round
+            #   In: [batch_size, (M2 * p2 / k2) / g_out, g_out]
+            #   Out: [batch_size, out_size / g_out, g_out]
+            outputs = torch.zeros((self.batch_size, int(self.out_size / self.g_out), self.g_out),
+                                  device=x.device)
+            for i, fc3 in enumerate(self.r3_fc_groups):
+                outputs[:, :, i] = fc3(x[:, :, i])
+
+            # Grouping: [batch_size, out_size / g_out, g_out] -> [batch_size, out_size]
+            x = torch.transpose(outputs, dim0=1, dim1=2).reshape((self.batch_size, self.out_size))
 
         return x
 
     def activate(self, x, M, k, p):
         clusters = math.floor(M / k)
         remainder = M % k
-
         x = x.view(self.batch_size, M, 1)
 
+        # Duplicate and permute x
         for i in range(1, p):
-            x = torch.cat((x[:,:,:i], torch.cat((x[:, i:, 0], x[:, :i, 0]), dim=1).view(self.batch_size, M, 1)), dim=2)
-            x = x.view(self.batch_size, M, -1)
+            x = torch.cat((x[:,:,:i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
 
+        # Handle if k doesn't divide M evenly
         if remainder != 0:
+            # Separate reminder elements from complete clusters
             y = x[:, M - remainder:, :]
             x = x[:, :M - remainder, :]
+            # Apply activation function to remainder elements
             y = y.view(self.batch_size, 1, remainder, p)
             y = _ACTFUNS2D[self.actfun](y)
             y = y.view(y.shape[0], 1, p)
 
+        # Apply activation function to complete clusters
         x = x.view(self.batch_size, clusters, k, p)
         x = _ACTFUNS2D[self.actfun](x)
 
+        # Combine results from complete clusters with result from remainder elements if necessary
         if remainder != 0:
             x = torch.cat((x, y), dim=1)
 
-        # Note that at the moment if we flatten x the outputs from the permutations will be interleaved. ie. if p = 4
-        # the first 4 flattened elements will be the first element from each of the 4 permutations, NOT the first 4
-        # elements from the first permutation. Might need to fix later (not permutation invariant?)
         return x
 
 
@@ -267,7 +283,7 @@ def run_experiment():
     train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
 
-    model = Net(batch_size=batch_size)
+    model = ScottNet(batch_size=batch_size)
 
     hyper_params = {"l2": {"adam_beta_1": 0.760516,
                            "adam_beta_2": 0.999983,
