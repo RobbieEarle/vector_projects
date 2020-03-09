@@ -163,6 +163,10 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 
 def test_net_inputs(actfun, in_size, M1, M2, out_size, k1, k2, p1, p2, g2, g_out):
+    if M1 % k1 != 0:
+        return 'k1 must divide M1.  M1 = {}, k1 = {}'.format(M1, k1)
+    if M2 % k2 != 0:
+        return 'k2 must divide M2.  M2 = {}, k2 = {}'.format(M2, k2)
     if M2 % g2 != 0:
         return 'g2 must divide M2.  M2 = {}, g2 = {}'.format(M2, g2)
     if out_size % g_out != 0:
@@ -347,7 +351,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
 
     # ---- Start Training
     epoch = 1
-    while epoch <= 2:
+    while epoch <= 10:
 
         start_time = time.time()
         final_train_loss = 0
@@ -443,7 +447,7 @@ def run_experiment(actfun, seed, outfile_path):
         model = model.cuda()
 
     print(
-        "Model Params: M1 = {] | M2 = {} | k1 = {} | k2 = {} | p1 = {} | p2 = {} | g2 = {} | g_out = {} | params = {}"
+        "Model Params: M1 = {} | M2 = {} | k1 = {} | k2 = {} | p1 = {} | p2 = {} | g2 = {} | g_out = {} | params = {}"
             .format(M1, M2, k1, k2, p1, p2, g2, g_out, get_n_params(model)), flush=True
     )
 
