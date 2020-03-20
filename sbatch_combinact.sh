@@ -4,7 +4,7 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=500-800%10       # array value
+#SBATCH --array=800-1100%10       # array value
 #SBATCH --output=logs/combinact2/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=combinact2
 
@@ -28,7 +28,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-~/utilities/log_gpu_cpu_stats -l 0.5 -n 500 -t "logs/combinact/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.log"&
+# ~/utilities/log_gpu_cpu_stats -l 0.5 -n 500 -t "logs/combinact/${SLURM_ARRAY_TASK_ID}_${SLURM_NODEID}_${SLURM_ARRAY_JOB_ID}_compute_usage.log"&
 export LOGGER_PID="$!"
 
 python combinact.py "relu" "$SEED" "$SAVE_PATH" &
