@@ -430,14 +430,14 @@ def run_experiment(actfun, seed, outfile_path):
 
     rng = np.random.RandomState(seed)
     while True:
-        M1 = rng.randint(60, 120) * 2
-        M2 = rng.randint(60, 120) * 2
-        k1 = rng.randint(2, 11)
-        k2 = rng.randint(2, 11)
-        p1 = rng.randint(1, 11)
+        M1 = rng.randint(100, 120) * 2
+        p1 = rng.randint(1, 16)
+        k1 = rng.randint(2, 9)
+        g2 = 1
+        M2 = rng.randint(60, 100) * 2
         p2 = rng.randint(1, 11)
-        g2 = rng.randint(1, 5)
-        g_out = rng.randint(1, 5)
+        k2 = rng.randint(2, 11)
+        g_out = 1
         if test_net_inputs(actfun, 784, M1, M2, 10, k1, k2, p1, p2, g2, g_out) is None:
             break
     model = ScottNet(batch_size=100, actfun=actfun, in_size=784, out_size=10,
