@@ -34,9 +34,10 @@ export LOGGER_PID="$!"
 python combinact.py "relu" "$SEED" "$SAVE_PATH" &
 python combinact.py "max" "$SEED" "$SAVE_PATH" &
 python combinact.py "signed_geomean" "$SEED" "$SAVE_PATH" &
-python combinact.py "swish2" "$SEED" "$SAVE_PATH" &
+python combinact.py "swishk" "$SEED" "$SAVE_PATH" &
 python combinact.py "l2" "$SEED" "$SAVE_PATH" &
 python combinact.py "linf" "$SEED" "$SAVE_PATH" &
-python combinact.py "zclse-approx" "$SEED" "$SAVE_PATH"
+python combinact.py "lse" "$SEED" "$SAVE_PATH"
+python combinact.py "lae" "$SEED" "$SAVE_PATH"
 
 kill "$LOGGER_PID"

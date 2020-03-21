@@ -6,15 +6,22 @@ import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.optim.lr_scheduler import CyclicLR
+from torch import logsumexp
 
-import os
 import sys
 import numpy as np
 import math
+import numbers
 import random
 import datetime
 import csv
 import time
+
+
+def signed_geomean(z):
+    prod = torch.prod(z, dim=2)
+    signs = prod.sign()
+    return signs * prod.abs().sqrt()
 
 
 def signed_l3(z):
@@ -24,6 +31,26 @@ def signed_l3(z):
     return out_val
 
 
+def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
+    if isinstance(temperature, numbers.Number) and temperature == 1:
+        temperature = None
+    input_dtype = input.dtype
+    if dtype is not None:
+        input = input.to(dtype)
+    if isinstance(temperature, torch.Tensor):
+        temperature = temperature.to(input.dtype)
+    if temperature is not None:
+        input = input.div(temperature)
+    log_n = math.log(input.shape[dim])
+    lae = logsumexp(input, dim=dim, keepdim=True).sub(log_n)
+    if temperature is not None:
+        lae = lae.mul(temperature)
+    if not keepdim:
+        lae = lae.squeeze(dim)
+    return lae.to(input_dtype)
+
+
+
 _ln2 = 0.6931471805599453
 _ACTFUNS2D = {
     'max':
@@ -31,15 +58,19 @@ _ACTFUNS2D = {
     'min':
         lambda z: torch.min(z, dim=2).values,
     'signed_geomean':
-        lambda z: z[:, :, 0].sign() * z[:, :, 1].sign() * (z[:, :, 0] * z[:, :, 1]).abs_().sqrt_(),
-    'swish2':
-        lambda z: z[:, :, 0] * torch.sigmoid(z[:, :, 1]),
+        lambda z: signed_geomean(z),
+    'swishk':
+        lambda z: z[:, :, 0] * torch.prod((torch.sigmoid(z)), dim=2),
     'l2':
-        lambda z: (z[:, :, 0].pow(2) + z[:, :, 1].pow(2)).sqrt_(),
+        lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
     'l3-signed':
         lambda z: signed_l3(z),
     'linf':
-        lambda z: torch.max(z[:, :, 0].abs(), z[:, :, 1].abs()),
+        lambda z: torch.max(z.abs(), dim=2).values,
+    'lse':
+        lambda z: torch.logsumexp(z, dim=2),
+    'lae':
+        lambda z: logavgexp(z, dim=2),
     'lse-approx':
         lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'zclse-approx':
@@ -341,6 +372,8 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                            weight_decay=hyper_params['adam_wd']
                            )
     criterion = nn.CrossEntropyLoss()
+
+    # 5000 = total number of batches: 500 * 10
     scheduler = CyclicLR(optimizer,
                          base_lr=10**-8,
                          max_lr=hyper_params['max_lr'],
@@ -366,6 +399,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
+            # print(batch_idx, train_loss)
             final_train_loss = train_loss
 
         # ---- Testing
@@ -387,8 +421,8 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
 
         # Logging test results
         print(
-            "    ({}) Epoch {}: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}"
-                .format(model.actfun, epoch, final_train_loss, final_val_loss, accuracy), flush=True
+            "    ({}) Epoch {}: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
+                .format(model.actfun, epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
 
         # Outputting data to CSV at end of epoch
@@ -438,6 +472,14 @@ def run_experiment(actfun, seed, outfile_path):
         p2 = rng.randint(1, 11)
         k2 = rng.randint(2, 11)
         g_out = 1
+        # M1 = 100
+        # p1 = 2
+        # k1 = 2
+        # g2 = 1
+        # M2 = 100
+        # p2 = 1
+        # k2 = 2
+        # g_out = 1
         if test_net_inputs(actfun, 784, M1, M2, 10, k1, k2, p1, p2, g2, g_out) is None:
             break
     model = ScottNet(batch_size=100, actfun=actfun, in_size=784, out_size=10,
@@ -492,20 +534,27 @@ def run_experiment(actfun, seed, outfile_path):
                                        "max_lr": 0.0077076,
                                        "cycle_peak": 0.36065
                                        },
-                    "swish2": {"adam_beta_1": 0.766942,
+                    "swishk": {"adam_beta_1": 0.766942,
                                "adam_beta_2": 0.999799,
                                "adam_eps": 3.43514 * 10 ** -9,
                                "adam_wd": 2.46361 * 10 ** -6,
                                "max_lr": 0.0155614,
                                "cycle_peak": 0.417112
                                },
-                    "zclse-approx": {"adam_beta_1": 0.929379,
-                                     "adam_beta_2": 0.999822,
-                                     "adam_eps": 6.87644 * 10 ** -9,
-                                     "adam_wd": 1.11525 * 10 ** -5,
-                                     "max_lr": 0.0209105,
-                                     "cycle_peak": 0.425568
-                                     },
+                    "lse": {"adam_beta_1": 0.929379,
+                            "adam_beta_2": 0.999822,
+                            "adam_eps": 6.87644 * 10 ** -9,
+                            "adam_wd": 1.11525 * 10 ** -5,
+                            "max_lr": 0.0209105,
+                            "cycle_peak": 0.425568
+                            },
+                    "lae": {"adam_beta_1": 0.929379,
+                            "adam_beta_2": 0.999822,
+                            "adam_eps": 6.87644 * 10 ** -9,
+                            "adam_wd": 1.11525 * 10 ** -5,
+                            "max_lr": 0.0209105,
+                            "cycle_peak": 0.425568
+                            },
                     }
 
     print("Running...")
@@ -516,7 +565,7 @@ def run_experiment(actfun, seed, outfile_path):
 if __name__ == '__main__':
 
     if len(sys.argv) == 1:
-        actfun = "max"
+        actfun = "signed_geomean"
         seed = 0
         outfile_path = str(datetime.date.today()) + "-combinact-" + str(actfun) + "-" + str(seed) + ".csv"
 
