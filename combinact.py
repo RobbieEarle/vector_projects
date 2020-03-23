@@ -525,68 +525,18 @@ def run_experiment(seed, outfile_path):
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
 
-    # ---- Use optimized hyperparams from previous random search
-    hyper_params = {"l2": {"adam_beta_1": 0.760516,
-                           "adam_beta_2": 0.999983,
-                           "adam_eps": 1.7936 * 10 ** -8,
-                           "adam_wd": 1.33755 * 10 ** -5,
-                           "max_lr": 0.0122491,
-                           "cycle_peak": 0.234177
-                           },
-                    "linf": {"adam_beta_1": 0.193453,
-                             "adam_beta_2": 0.999734,
-                             "adam_eps": 5.78422 * 10 ** -9,
-                             "adam_wd": 1.43599 * 10 ** -5,
-                             "max_lr": 0.0122594,
-                             "cycle_peak": 0.428421
-                             },
-                    "max": {"adam_beta_1": 0.942421,
-                            "adam_beta_2": 0.999505,
-                            "adam_eps": 2.81391 * 10 ** -9,
-                            "adam_wd": 8.57978 * 10 ** -6,
-                            "max_lr": 0.0245333,
-                            "cycle_peak": 0.431589
-                            },
-                    "relu": {"adam_beta_1": 0.892104,
-                             "adam_beta_2": 0.999429,
-                             "adam_eps": 5.89807 * 10 ** -8,
-                             "adam_wd": 3.62133 * 10 ** -6,
-                             "max_lr": 0.0134033,
-                             "cycle_peak": 0.310841
-                             },
-                    "signed_geomean": {"adam_beta_1": 0.965103,
-                                       "adam_beta_2": 0.99997,
-                                       "adam_eps": 9.15089 * 10 ** -8,
-                                       "adam_wd": 6.99736 * 10 ** -5,
-                                       "max_lr": 0.0077076,
-                                       "cycle_peak": 0.36065
-                                       },
-                    "swishk": {"adam_beta_1": 0.766942,
-                               "adam_beta_2": 0.999799,
-                               "adam_eps": 3.43514 * 10 ** -9,
-                               "adam_wd": 2.46361 * 10 ** -6,
-                               "max_lr": 0.0155614,
-                               "cycle_peak": 0.417112
-                               },
-                    "lse": {"adam_beta_1": 0.929379,
-                            "adam_beta_2": 0.999822,
-                            "adam_eps": 6.87644 * 10 ** -9,
-                            "adam_wd": 1.11525 * 10 ** -5,
-                            "max_lr": 0.0209105,
-                            "cycle_peak": 0.425568
-                            },
-                    "lae": {"adam_beta_1": 0.929379,
-                            "adam_beta_2": 0.999822,
-                            "adam_eps": 6.87644 * 10 ** -9,
-                            "adam_wd": 1.11525 * 10 ** -5,
-                            "max_lr": 0.0209105,
-                            "cycle_peak": 0.425568
-                            },
+    # ---- Use optimized hyperparams for l2 from previous random search
+    hyper_params = {"adam_beta_1": 0.760516,
+                    "adam_beta_2": 0.999983,
+                    "adam_eps": 1.7936 * 10 ** -8,
+                    "adam_wd": 1.33755 * 10 ** -5,
+                    "max_lr": 0.0122491,
+                    "cycle_peak": 0.234177
                     }
 
     # ---- Begin training model
     print("Running...")
-    train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, net_struct.tolist(), actfuns, hyper_params[actfun])
+    train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, net_struct.tolist(), actfuns, hyper_params)
     print()
 
 
@@ -596,7 +546,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         seed_all(0)
         seed = 3
-        outfile_path = str(datetime.date.today()) + "-combinact-" + str(actfun) + "-" + str(seed) + ".csv"
+        outfile_path = str(datetime.date.today()) + "-combinact-" + str(seed) + ".csv"
 
     # ---- Handle running on Vector
     else:
