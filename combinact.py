@@ -18,20 +18,20 @@ import csv
 import time
 
 
-def signed_geomean(z):
+def actfun_signed_geomean(z):
     prod = torch.prod(z, dim=2)
     signs = prod.sign()
     return signs * prod.abs().sqrt()
 
 
-def signed_l3(z):
+def actfun_signed_l3(z):
     x3 = z[:, :, 0].pow(3)
     y3 = z[:, :, 1].pow(3)
     out_val = (x3 + y3).tanh() * (x3 + y3).abs().pow(1 / 3)
     return out_val
 
 
-def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
+def actfun_logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
     if isinstance(temperature, numbers.Number) and temperature == 1:
         temperature = None
     input_dtype = input.dtype
@@ -50,7 +50,6 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
     return lae.to(input_dtype)
 
 
-
 _ln2 = 0.6931471805599453
 _ACTFUNS2D = {
     'max':
@@ -58,19 +57,19 @@ _ACTFUNS2D = {
     'min':
         lambda z: torch.min(z, dim=2).values,
     'signed_geomean':
-        lambda z: signed_geomean(z),
+        lambda z: actfun_signed_geomean(z),
     'swishk':
         lambda z: z[:, :, 0] * torch.prod((torch.sigmoid(z)), dim=2),
     'l2':
         lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
     'l3-signed':
-        lambda z: signed_l3(z),
+        lambda z: actfun_signed_l3(z),
     'linf':
         lambda z: torch.max(z.abs(), dim=2).values,
     'lse':
         lambda z: torch.logsumexp(z, dim=2),
     'lae':
-        lambda z: logavgexp(z, dim=2),
+        lambda z: actfun_logavgexp(z, dim=2),
     'lse-approx':
         lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'zclse-approx':
@@ -83,6 +82,10 @@ _ACTFUNS2D = {
 
 
 def get_n_params(model):
+    """
+    :param model: Pytorch network model
+    :return: Number of parameters in the model
+    """
     pp=0
     for p in list(model.parameters()):
         nn=1
@@ -194,6 +197,14 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 
 def test_net_inputs(net_struct, actfuns, in_size, out_size):
+    """
+    Tests network structure and activation hyperparameters to make sure they are valid
+    :param net_struct: given network structure
+    :param actfuns: given activation functions
+    :param in_size: number of inputs
+    :param out_size: number of outputs
+    :return:
+    """
 
     if len(actfuns) != net_struct.size()[0]:
         return 'actfuns must have one set of entries for each layer. Layers: {}, Sets: {}'.format(net_struct.size()[0], len(actfuns))
@@ -243,6 +254,7 @@ class CombinactNet(nn.Module):
         :param out_size: Number of outputs nodes
         :param batch_size: Batchsize for minibatch optimization
         """
+
         super(CombinactNet, self).__init__()
 
         # ---- Error checking given network structure and activation functions
@@ -355,7 +367,7 @@ class CombinactNet(nn.Module):
 
         # Duplicate and permute x
         for i in range(1, p):
-            x = torch.cat((x[:,:,:i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
+            x = torch.cat((x[:, :, :i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
 
         x = x.view(self.batch_size, clusters, k, p)
 
@@ -369,13 +381,29 @@ class CombinactNet(nn.Module):
 
 
 def weights_init(m):
+    """
+    Randomly initialize weights for model. Always uses seed 0 so weights initialize to same value across experiments
+    :param m: model
+    :return:
+    """
     irange = 0.005
     if type(m) == nn.Linear:
         m.weight.data.uniform_(-1 * irange, irange)
         m.bias.data.fill_(0)
 
 
-def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, net_struct_list, actfuns, hyper_params):
+def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params):
+    """
+    Runs training session for a given randomized model
+    :param model: model to train
+    :param outfile_path: path to save outputs from training session
+    :param fieldnames: column names for output file
+    :param seed: seed for randomization
+    :param train_loader: training data loader
+    :param validation_loader: validation data loader
+    :param hyper_params: optimizer and scheduler hyperparameters
+    :return:
+    """
 
     # ---- Initialization
     model.apply(weights_init)
@@ -447,15 +475,22 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                              'val_loss': float(final_val_loss),
                              'acc': float(accuracy),
                              'time': (time.time() - start_time),
-                             'net_struct': net_struct_list,
-                             'actfuns': actfuns,
+                             'net_struct': model.net_struct.tolist(),
+                             'actfuns': model.actfuns,
                              'n_params': get_n_params(model)
                              })
 
         epoch += 1
 
 
-def run_experiment(seed, outfile_path):
+def setup_experiment(seed, outfile_path):
+    """
+    Retrieves training / validation data, randomizes network structure and activation functions, creates model,
+    creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
+    :param seed: seed for parameter randomization
+    :param outfile_path: path to save outputs from experiment
+    :return:
+    """
 
     # ---- Loading MNIST
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
@@ -469,7 +504,7 @@ def run_experiment(seed, outfile_path):
     train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
 
-    # ---- Randomizing network structure
+    # ---- Randomizing network structure & activation functions
     rng = np.random.RandomState(seed)
     num_hidden_layers = rng.randint(1, 4)
     net_struct = torch.zeros(num_hidden_layers, 4)
@@ -537,7 +572,7 @@ def run_experiment(seed, outfile_path):
 
     # ---- Begin training model
     print("Running...")
-    train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, net_struct.tolist(), actfuns, hyper_params)
+    train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params)
     print()
 
 
@@ -546,14 +581,14 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        seed = 3
-        outfile_path = str(datetime.date.today()) + "-combinact-" + str(seed) + ".csv"
+        argv_seed = 3
+        argv_outfile_path = str(datetime.date.today()) + "-combinact-" + str(argv_seed) + ".csv"
 
     # ---- Handle running on Vector
     else:
         seed_all(0)
-        index = int(sys.argv[1])
-        seed = int(sys.argv[2]) + (500 * index)
-        outfile_path = sys.argv[3] + "/" + str(datetime.date.today()) + "-combinact-" + str(seed) + ".csv"
+        argv_index = int(sys.argv[1])
+        argv_seed = int(sys.argv[2]) + (500 * argv_index)
+        argv_outfile_path = sys.argv[3] + "/" + str(datetime.date.today()) + "-combinact-" + str(argv_seed) + ".csv"
 
-    run_experiment(seed, outfile_path)
+    setup_experiment(argv_seed, argv_outfile_path)
