@@ -198,27 +198,27 @@ def test_net_inputs(net_struct, actfuns, in_size, out_size):
     if len(actfuns) != net_struct.size()[0]:
         return 'actfuns must have one set of entries for each layer. Layers: {}, Sets: {}'.format(net_struct.size()[0], len(actfuns))
 
-    num_inputs = in_size
+    layer_inputs = in_size
     for layer in range(net_struct.size()[0]):
         M = int(net_struct[layer, 0])
         k = int(net_struct[layer, 1])
         p = int(net_struct[layer, 2])
         g = int(net_struct[layer, 3])
 
-        if num_inputs % g != 0:
+        if layer_inputs % g != 0:
             return 'g must divide the number of output (post activation) nodes from the previous layer.  ' \
-                   'Previous layer outputs = {}, g = {}'.format(num_inputs, g)
+                   'Layer = {}, Previous layer outputs = {}, g = {}'.format(layer, layer_inputs, g)
         if M % g != 0:
             return 'g must divide the number of pre-activation nodes in this layer.  ' \
-                   'M = {}, g = {}'.format(M, g)
+                   'Layer = {}, M = {}, g = {}'.format(layer, M, g)
         if (M / g) % k != 0:
             return 'k must divide the number of nodes M divided by the number of groups in this layer. ' \
-                   'M / g_prev = {}, k = {}'.format(M / g, k)
+                   'Layer = {}, M / g_prev = {}, k = {}'.format(layer, M / g, k)
         if len(actfuns[layer]) != p:
             return 'Each layer\'s set of actfun entries must equal that layer\'s p value. ' \
                    'Layer: {}, num entries: {}, p: {}'.format(layer, len(actfuns[layer]), p)
 
-        num_inputs = M * p / k
+        layer_inputs = M * p / k
 
     return None
 
@@ -245,11 +245,12 @@ class CombinactNet(nn.Module):
         """
         super(CombinactNet, self).__init__()
 
+        # ---- Error checking given network structure and activation functions
         error = test_net_inputs(net_struct, actfuns, in_size, out_size)
         if error is not None:
             raise ValueError(error)
 
-        self.actfun = 'signed_geomean'
+        # self.actfun = 'lae'
 
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
@@ -257,13 +258,14 @@ class CombinactNet(nn.Module):
         self.in_size = in_size
         self.out_size = out_size
         self.batch_size = batch_size
-
         self.all_weights = nn.ModuleList()
         self.all_batch_norms = nn.ModuleList()
         self.hyper_params = {'M': [], 'k': [], 'p': [], 'g': []}
 
-        num_inputs = int(in_size)
+        # Creating nn.Linear transformations for each layer. Also stores hyperparams in easier to reference dict
+        layer_inputs = int(in_size)
         for layer in range(self.num_hidden_layers + 1):
+            # Last layer is output layer
             if layer == self.num_hidden_layers:
                 M = int(out_size)
                 k = 1
@@ -281,9 +283,9 @@ class CombinactNet(nn.Module):
                 self.all_batch_norms.append(nn.ModuleList([nn.BatchNorm1d(int(M / g)) for i in range(g)]))
 
             num_pre_act_nodes = M
-            self.all_weights.append(nn.ModuleList([nn.Linear(int(num_inputs / g), int(num_pre_act_nodes / g)) for i in range(g)]))
+            self.all_weights.append(nn.ModuleList([nn.Linear(int(layer_inputs / g), int(num_pre_act_nodes / g)) for i in range(g)]))
 
-            num_inputs = M * p / k
+            layer_inputs = M * p / k
 
     def permute(self, x, method, seed):
         if method == "roll":
@@ -301,64 +303,67 @@ class CombinactNet(nn.Module):
         #     x = F.relu(self.bn2(self.r2_fc_groups[0](x)))
         #     x = self.r3_fc_groups[0](x)
 
-        num_inputs = self.in_size
+        layer_inputs = self.in_size
         for layer in range(self.num_hidden_layers + 1):
-            # Last layer is output layer
+
+            # Last layer is output layer, so hyperparameters are all 1
             if layer == self.num_hidden_layers:
                 M = self.out_size
                 k = 1
                 p = 1
                 g = 1
+            # Otherwise retrieves hyperparameters for this layer
             else:
                 M = self.hyper_params['M'][layer]
                 k = self.hyper_params['k'][layer]
                 p = self.hyper_params['p'][layer]
                 g = self.hyper_params['g'][layer]
+                layer_actfuns = self.actfuns[layer]
 
             # Group inputs
-            x = x.reshape(self.batch_size, int(num_inputs / g), g)
+            x = x.reshape(self.batch_size, int(layer_inputs / g), g)
 
+            # Creates placeholder for outputs (ie. post activation nodes)
             outputs = torch.zeros((self.batch_size, int((M / k) / g), p * g), device=x.device)
+
+            # For each group in this layer
             for i, fc in enumerate(self.all_weights[layer]):
+
+                # If this layer is the last layer, we simply output the pre-activation nodes in this layer
                 if layer == self.num_hidden_layers:
                     post_act_nodes = fc(x[:, :, i]).unsqueeze(dim=2)
+
+                # Otherwise we apply batchnorm to pre-activation nodes, and then apply our activation functions
                 else:
                     pre_act_nodes = self.all_batch_norms[layer][i](fc(x[:, :, i]))
-                    post_act_nodes = self.activate(pre_act_nodes, int(M / g), k, p)
+                    post_act_nodes = self.activate(pre_act_nodes, layer_actfuns, int(M / g), k, p)
                 outputs[:, :, i * p:(i + 1) * p] = post_act_nodes
+
+            # We transpose so that when we reshape our outputs, the results from the permutations merge correctly
             x = torch.transpose(outputs, dim0=1, dim1=2)
-            num_inputs = M * p / k
+
+            # Records the number of outputs from this layer as the number of inputs for the next layer
+            layer_inputs = M * p / k
 
         x = x.reshape((self.batch_size, self.out_size))
 
         return x
 
-    def activate(self, x, M, k, p):
+    def activate(self, x, actfuns, M, k, p):
         clusters = math.floor(M / k)
-        remainder = M % k
         x = x.view(self.batch_size, M, 1)
 
         # Duplicate and permute x
         for i in range(1, p):
             x = torch.cat((x[:,:,:i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
 
-        # Handle if k doesn't divide M evenly
-        if remainder != 0:
-            # Separate reminder elements from complete clusters
-            y = x[:, M - remainder:, :]
-            x = x[:, :M - remainder, :]
-            # Apply activation function to remainder elements
-            y = y.view(self.batch_size, 1, remainder, p)
-            y = _ACTFUNS2D[self.actfun](y)
-            y = y.view(y.shape[0], 1, p)
-
-        # Apply activation function to complete clusters
         x = x.view(self.batch_size, clusters, k, p)
-        x = _ACTFUNS2D[self.actfun](x)
 
-        # Combine results from complete clusters with result from remainder elements if necessary
-        if remainder != 0:
-            x = torch.cat((x, y), dim=1)
+        # Apply activations functions to each permutation
+        outputs = torch.zeros((self.batch_size, clusters, p), device=x.device)
+        for perm in range(p):
+            outputs[:, :, perm] = _ACTFUNS2D[actfuns[perm]](x[:, :, :, perm])
+        x = outputs
 
         return x
 
@@ -382,11 +387,10 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                            )
     criterion = nn.CrossEntropyLoss()
 
-    # 5000 = total number of batches: 500 * 10
     scheduler = CyclicLR(optimizer,
                          base_lr=10**-8,
                          max_lr=hyper_params['max_lr'],
-                         step_size_up=int(hyper_params['cycle_peak'] * 5000),
+                         step_size_up=int(hyper_params['cycle_peak'] * 5000),  # 5000 = tot number of batches: 500 * 10
                          step_size_down=int((1-hyper_params['cycle_peak']) * 5000),
                          cycle_momentum=False
                          )
@@ -408,7 +412,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
-            print(batch_idx, train_loss)
+            # print(batch_idx, train_loss)
             final_train_loss = train_loss
 
         # ---- Testing
@@ -451,8 +455,9 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         epoch += 1
 
 
-def run_experiment(actfun, seed, outfile_path):
+def run_experiment(seed, outfile_path):
 
+    # ---- Loading MNIST
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
     mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
     train_set_indices = np.arange(0, 50000)
@@ -464,11 +469,16 @@ def run_experiment(actfun, seed, outfile_path):
     train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
 
+    # ---- Randomizing network structure
     rng = np.random.RandomState(seed)
+    num_hidden_layers = rng.randint(1, 4)
+    net_struct = torch.zeros(num_hidden_layers, 4)
+    all_actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae']
+    actfuns = []
     while True:
-        L = rng.randint(1, 4)
-        net_struct = torch.zeros(L, 4)
-        for layer in range(L):
+
+        # For each layer, randomizes M, k, p, and g within given ranges
+        for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(75, 120) * 2  # M
             net_struct[layer, 1] = rng.randint(2, 11)  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
@@ -481,32 +491,41 @@ def run_experiment(actfun, seed, outfile_path):
             net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
 
-        all_actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'relu', 'linf', 'lse', 'lae']
-        actfuns = []
-        for layer in range(L):
+        # For each layer, designate one activation function for each of its p permutations
+        for layer in range(num_hidden_layers):
             layer_actfuns = []
             for perm in range(int(net_struct[layer, 2])):
                 layer_actfuns.append(all_actfuns[rng.randint(0, len(all_actfuns))])
             actfuns.append(layer_actfuns)
+
+        # Test to ensure the network structure is valid
         test = test_net_inputs(net_struct, actfuns, in_size=784, out_size=10)
         if test is None:
             break
-        print(test)
+        print(
+            "\nInvalid network structure: \n{}\nError: {}\nTrying again..."
+                .format(net_struct, test), flush=True
+        )
+        actfuns = []
+        net_struct = torch.zeros(num_hidden_layers, 4)
 
+    # ---- Create new model using randomized structure
     model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size)
     if torch.cuda.is_available():
         model = model.cuda()
 
     print(
-        "Outfile Path: {} \nNetwork Structure: \n{} \nActivation Functions: \n{} \nNumber of Parameters: {}\n\n"
+        "\nOutfile Path: {} \nNetwork Structure: \n{} \nActivation Functions: \n{} \nNumber of Parameters: {}\n\n"
             .format(outfile_path, net_struct, actfuns, get_n_params(model)), flush=True
     )
 
+    # ---- Create new output file
     fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'actfuns', 'n_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
 
+    # ---- Use optimized hyperparams from previous random search
     hyper_params = {"l2": {"adam_beta_1": 0.760516,
                            "adam_beta_2": 0.999983,
                            "adam_eps": 1.7936 * 10 ** -8,
@@ -565,6 +584,7 @@ def run_experiment(actfun, seed, outfile_path):
                             },
                     }
 
+    # ---- Begin training model
     print("Running...")
     train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, net_struct.tolist(), actfuns, hyper_params[actfun])
     print()
@@ -572,19 +592,16 @@ def run_experiment(actfun, seed, outfile_path):
 
 if __name__ == '__main__':
 
+    # ---- Handle running locally
     if len(sys.argv) == 1:
-        actfun = "signed_geomean"
+        seed_all(0)
         seed = 3
         outfile_path = str(datetime.date.today()) + "-combinact-" + str(actfun) + "-" + str(seed) + ".csv"
 
+    # ---- Handle running on Vector
     else:
         seed_all(0)
-        actfun = sys.argv[1]
-        seed = int(sys.argv[2])
-        outfile_path = sys.argv[3] + "/" + str(datetime.date.today()) + "-combinact-"\
-                       + str(actfun) + "-" + str(seed) + ".csv"
+        seed = int(sys.argv[1])
+        outfile_path = sys.argv[2] + "/" + str(datetime.date.today()) + "-combinact-" + str(seed) + ".csv"
 
-    print("Activation Function: " + str(actfun))
-    print("Save Path: " + str(outfile_path))
-
-    run_experiment(actfun, seed, outfile_path)
+    run_experiment(seed, outfile_path)
