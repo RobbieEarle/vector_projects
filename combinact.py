@@ -553,7 +553,7 @@ if __name__ == '__main__':
     else:
         seed_all(0)
         index = int(sys.argv[1])
-        seed = int(sys.argv[2] + (500 * index))
+        seed = int(sys.argv[2]) + (500 * index)
         outfile_path = sys.argv[3] + "/" + str(datetime.date.today()) + "-combinact-" + str(seed) + ".csv"
 
     run_experiment(seed, outfile_path)
