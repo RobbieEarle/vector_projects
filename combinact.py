@@ -526,6 +526,7 @@ def run_experiment(seed, outfile_path):
         writer.writeheader()
 
     # ---- Use optimized hyperparams for l2 from previous random search
+    # TODO: Optimize these parameters using another random search. Right now params are optimal for only l2
     hyper_params = {"adam_beta_1": 0.760516,
                     "adam_beta_2": 0.999983,
                     "adam_eps": 1.7936 * 10 ** -8,
