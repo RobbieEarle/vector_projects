@@ -5,8 +5,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-499%10       # array value
-#SBATCH --output=logs/combinact4/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=combinact4
+#SBATCH --output=logs/combinact5/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=combinact5
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -36,5 +36,6 @@ python combinact.py "1" "$SEED" "$SAVE_PATH"
 python combinact.py "2" "$SEED" "$SAVE_PATH"
 python combinact.py "3" "$SEED" "$SAVE_PATH"
 python combinact.py "4" "$SEED" "$SAVE_PATH"
+python combinact.py "5" "$SEED" "$SAVE_PATH"
 
 kill "$LOGGER_PID"
