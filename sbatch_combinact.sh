@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p p100,max12hours     # partition - should be gpu on MaRS (q), and either p100 or t4 on Vaughan (vremote1)
+#SBATCH -p p100                # partition - should be gpu on MaRS (q), and either p100 or t4 on Vaughan (vremote1)
 #SBATCH --gres=gpu:1           # request GPU(s)
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
