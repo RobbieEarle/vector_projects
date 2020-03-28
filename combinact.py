@@ -260,7 +260,8 @@ class CombinactNet(nn.Module):
                  in_size,
                  out_size,
                  batch_size=100,
-                 relu=False
+                 relu=False,
+                 l2=False
                  ):
         """
         :param net_struct: Structure of network. L x 4 array, L = number of hidden layers
@@ -283,6 +284,7 @@ class CombinactNet(nn.Module):
             raise ValueError(error)
 
         self.relu = relu
+        self.l2 = l2
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
         self.actfuns = actfuns
@@ -350,8 +352,6 @@ class CombinactNet(nn.Module):
                 g = self.hyper_params['g'][layer]
                 layer_alpha_primes = self.all_alpha_primes[layer]
 
-
-
             # Group inputs
             x = x.reshape(self.batch_size, int(layer_inputs / g), g)
 
@@ -397,9 +397,12 @@ class CombinactNet(nn.Module):
         # Apply activations functions to each permutation
         outputs = torch.zeros((self.batch_size, clusters, p), device=x.device)
         for perm in range(p):
-            perm_alphas = F.softmax(layer_alpha_primes[perm], dim=0)
-            for i, actfun in enumerate(self.actfuns):
-                outputs[:, :, perm] += perm_alphas[i] * _ACTFUNS2D[actfun](x[:, :, :, perm])
+            if self.l2:
+                outputs[:, :, perm] = _ACTFUNS2D['l2'](x[:, :, :, perm])
+            else:
+                perm_alphas = F.softmax(layer_alpha_primes[perm], dim=0)
+                for i, actfun in enumerate(self.actfuns):
+                    outputs[:, :, perm] += perm_alphas[i] * _ACTFUNS2D[actfun](x[:, :, :, perm])
         x = outputs
 
         return x
@@ -426,9 +429,11 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
 
     model_params = [
         {'params': model.all_weights.parameters()},
-        {'params': model.all_batch_norms.parameters(), 'weight_decay': 0},
-        {'params': model.all_alpha_primes.parameters(), 'weight_decay': 0}
+        {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
     ]
+    if not model.l2 and not model.relu:
+        model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+
     optimizer = optim.Adam(model_params,
                            lr=10**-8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
@@ -462,7 +467,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
-            # print(batch_idx, train_loss)
+            print(batch_idx, train_loss)
             final_train_loss = train_loss
 
         # ---- Testing
@@ -550,8 +555,8 @@ def setup_experiment(seed, outfile_path):
         # For each layer, randomizes M, k, p, and g within given ranges
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
-            # net_struct[layer, 1] = rng.randint(2, 11)  # k
-            net_struct[layer, 1] = 1  # k
+            net_struct[layer, 1] = rng.randint(2, 11)  # k
+            # net_struct[layer, 1] = 1  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
             # First layer doesn't get grouped
             if layer == 0:
@@ -564,13 +569,13 @@ def setup_experiment(seed, outfile_path):
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
 
         # Test to ensure the network structure is valid
-        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=True)
+        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=False)
         if test is None:
             break
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size, relu=True)
+    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size, relu=False, l2=True)
     if torch.cuda.is_available():
         model = model.cuda()
 

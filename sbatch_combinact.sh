@@ -5,8 +5,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-499%10       # array value
-#SBATCH --output=logs/relu1/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=relu1
+#SBATCH --output=logs/l2_only1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=l2_only1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -30,4 +30,3 @@ echo "SEED=$SEED"
 
 python combinact.py "0" "$SEED" "$SAVE_PATH"
 python combinact.py "1" "$SEED" "$SAVE_PATH"
-python combinact.py "2" "$SEED" "$SAVE_PATH"
