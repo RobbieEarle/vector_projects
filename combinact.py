@@ -467,7 +467,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
-            print(batch_idx, train_loss)
+            # print(batch_idx, train_loss)
             final_train_loss = train_loss
 
         # ---- Testing
