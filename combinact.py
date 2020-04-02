@@ -74,6 +74,10 @@ _ACTFUNS2D = {
         lambda z: torch.logsumexp(z, dim=2),
     'lae':
         lambda z: actfun_logavgexp(z, dim=2),
+    'nlsen':
+        lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
+    'nlaen':
+        lambda z: -1 * actfun_logavgexp(-1 * z, dim=2),
     'lse-approx':
         lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'zclse-approx':
@@ -260,6 +264,7 @@ class CombinactNet(nn.Module):
                  in_size,
                  out_size,
                  batch_size=100,
+                 per_perm=False,
                  relu=False,
                  l2=False
                  ):
@@ -283,6 +288,7 @@ class CombinactNet(nn.Module):
         if error is not None:
             raise ValueError(error)
 
+        self.per_perm = per_perm
         self.relu = relu
         self.l2 = l2
         self.num_hidden_layers = net_struct.size()[0]
@@ -318,7 +324,11 @@ class CombinactNet(nn.Module):
 
                 curr_alpha_primes = nn.ParameterList()
                 for perm in range(p):
-                    curr_alpha_primes.append(nn.Parameter(torch.zeros(len(actfuns)), requires_grad=True))
+                    if per_perm:
+                        curr_alpha_primes.append(nn.Parameter(torch.zeros(len(actfuns)), requires_grad=True))
+                    else:
+                        for cluster in range(int(M/k)):
+                            curr_alpha_primes.append(nn.Parameter(torch.zeros(len(actfuns)), requires_grad=True))
                 self.all_alpha_primes.append(curr_alpha_primes)
 
             num_pre_act_nodes = M
@@ -388,6 +398,9 @@ class CombinactNet(nn.Module):
         clusters = math.floor(M / k)
         x = x.view(self.batch_size, M, 1)
 
+        # print(k, p, len(layer_alpha_primes))
+        # print("asdfs" + 234)
+
         # Duplicate and permute x
         for i in range(1, p):
             x = torch.cat((x[:, :, :i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
@@ -397,12 +410,42 @@ class CombinactNet(nn.Module):
         # Apply activations functions to each permutation
         outputs = torch.zeros((self.batch_size, clusters, p), device=x.device)
         for perm in range(p):
-            if self.l2:
-                outputs[:, :, perm] = _ACTFUNS2D['l2'](x[:, :, :, perm])
+            if self.per_perm:
+                if self.l2:
+                    outputs[:, :, perm] = _ACTFUNS2D['l2'](x[:, :, :, perm])
+                else:
+                    perm_alphas = F.softmax(layer_alpha_primes[perm], dim=0)
+                    for i, actfun in enumerate(self.actfuns):
+                        outputs[:, :, perm] += perm_alphas[i] * _ACTFUNS2D[actfun](x[:, :, :, perm])
             else:
-                perm_alphas = F.softmax(layer_alpha_primes[perm], dim=0)
-                for i, actfun in enumerate(self.actfuns):
-                    outputs[:, :, perm] += perm_alphas[i] * _ACTFUNS2D[actfun](x[:, :, :, perm])
+                for cluster in range(int(M/k)):
+                    # print(M, k, str(M/k))
+                    # print(x[:, :, :, perm].size())
+                    # print(_ACTFUNS2D['l2'](x[:, :, :, perm]).size())
+                    # print(x[:, cluster, :, perm].unsqueeze(dim=1).size())
+                    # print(_ACTFUNS2D['l2'](x[:, cluster, :, perm].unsqueeze(dim=1)).size())
+                    # cluster_alphas = F.softmax(layer_alpha_primes[(perm*k)+cluster], dim=0)
+                    # print(len(cluster_alphas))
+                    # print("asdf" + 32)
+                    if self.l2:
+                        outputs[:, cluster, perm] = _ACTFUNS2D['l2'](x[:, cluster, :, perm]).unsqueeze(dim=1)
+                    else:
+                        # perm_alphas = F.softmax(layer_alpha_primes[perm], dim=0)
+                        cluster_alphas = F.softmax(layer_alpha_primes[int(perm * M/k) + cluster], dim=0)
+                        # print(perm, cluster, int(perm * M/k) + cluster)
+                        for i, actfun in enumerate(self.actfuns):
+                            # print(_ACTFUNS2D[actfun](x[:, :, :, perm]).size())
+                            # print(_ACTFUNS2D[actfun](x[:, cluster, :, perm].unsqueeze(dim=1)).size())
+                            # print((cluster_alphas[i] * _ACTFUNS2D[actfun](x[:, :, :, perm])).size())
+                            # print((cluster_alphas[i] * _ACTFUNS2D[actfun](x[:, cluster, :, perm].unsqueeze(dim=1))).squeeze(dim=1).size())
+                            # print(outputs[:, cluster, perm].size())
+                            # print("sdf"+79)
+                            outputs[:, cluster, perm] += (cluster_alphas[i] * _ACTFUNS2D[actfun](x[:, cluster, :, perm].unsqueeze(dim=1))).squeeze(dim=1)
+        # print(outputs.size())
+        # print(outputs[0])
+        # print()
+        # print()
+        # print("asdf" + 32)
         x = outputs
 
         return x
@@ -467,6 +510,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
+            # TODO: Comment out
             # print(batch_idx, train_loss)
             final_train_loss = train_loss
 
@@ -549,21 +593,24 @@ def setup_experiment(seed, outfile_path):
     rng = np.random.RandomState(seed)
     num_hidden_layers = rng.randint(1, 4)
     net_struct = torch.zeros(num_hidden_layers, 4)
-    actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae']
+    actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
     while True:
 
         # For each layer, randomizes M, k, p, and g within given ranges
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
+            # net_struct[layer, 0] = 40
             net_struct[layer, 1] = rng.randint(2, 11)  # k
             # net_struct[layer, 1] = 1  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
+
             # First layer doesn't get grouped
             if layer == 0:
                 net_struct[layer, 3] = 1  # g
             else:
                 net_struct[layer, 3] = rng.randint(1, 6)  # g
                 # net_struct[layer, 3] = 1  # g
+
             # Adjust M so that it is divisible by g and k
             net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
@@ -575,7 +622,7 @@ def setup_experiment(seed, outfile_path):
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size, relu=False, l2=True)
+    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size)
     if torch.cuda.is_available():
         model = model.cuda()
 
