@@ -470,7 +470,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
             train_loss.backward()
             optimizer.step()
             scheduler.step()
-            # TODO: Comment out
+            # TODO: Make sure below line is commented out before committing
             # print(batch_idx, train_loss)
             final_train_loss = train_loss
 
@@ -556,13 +556,13 @@ def setup_experiment(seed, outfile_path):
     actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
     while True:
 
-        # TODO: Make sure these are randomized
+        # TODO: Make sure these are randomized before committing
         # For each layer, randomizes M, k, p, and g within given ranges
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
             # net_struct[layer, 0] = 20
-            net_struct[layer, 1] = rng.randint(2, 11)  # k
-            # net_struct[layer, 1] = 2  # k
+            # net_struct[layer, 1] = rng.randint(2, 11)  # k
+            net_struct[layer, 1] = 1  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
             # net_struct[layer, 2] = 3  # p
 
@@ -570,21 +570,21 @@ def setup_experiment(seed, outfile_path):
             if layer == 0:
                 net_struct[layer, 3] = 1  # g
             else:
-                net_struct[layer, 3] = rng.randint(1, 6)  # g
-                # net_struct[layer, 3] = 1  # g
+                # net_struct[layer, 3] = rng.randint(1, 6)  # g
+                net_struct[layer, 3] = 1  # g
 
             # Adjust M so that it is divisible by g and k
             net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
 
         # Test to ensure the network structure is valid
-        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=False)
+        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=True)
         if test is None:
             break
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size)
+    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size, relu=True)
     if torch.cuda.is_available():
         model = model.cuda()
 
