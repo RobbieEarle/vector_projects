@@ -264,7 +264,6 @@ class CombinactNet(nn.Module):
                  in_size,
                  out_size,
                  batch_size=100,
-                 per_perm=False,
                  relu=False,
                  l2=False
                  ):
@@ -288,7 +287,6 @@ class CombinactNet(nn.Module):
         if error is not None:
             raise ValueError(error)
 
-        self.per_perm = per_perm
         self.relu = relu
         self.l2 = l2
         self.num_hidden_layers = net_struct.size()[0]
@@ -501,11 +499,9 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         alpha_primes = []
         alphas = []
         for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            curr_alpha_primes = []
-            curr_alphas = []
-            for j, perm_alpha_prime in enumerate(layer_alpha_primes):
-                curr_alpha_primes.append(perm_alpha_prime.data.tolist())
-                curr_alphas.append(F.softmax(perm_alpha_prime, dim=0).data.tolist())
+            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+            curr_alpha_primes = curr_alpha_primes.tolist()
             alpha_primes.append(curr_alpha_primes)
             alphas.append(curr_alphas)
 
@@ -561,8 +557,8 @@ def setup_experiment(seed, outfile_path):
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
             # net_struct[layer, 0] = 20
-            # net_struct[layer, 1] = rng.randint(2, 11)  # k
-            net_struct[layer, 1] = 1  # k
+            net_struct[layer, 1] = rng.randint(2, 11)  # k
+            # net_struct[layer, 1] = 1  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
             # net_struct[layer, 2] = 3  # p
 
@@ -570,21 +566,21 @@ def setup_experiment(seed, outfile_path):
             if layer == 0:
                 net_struct[layer, 3] = 1  # g
             else:
-                # net_struct[layer, 3] = rng.randint(1, 6)  # g
-                net_struct[layer, 3] = 1  # g
+                net_struct[layer, 3] = rng.randint(1, 6)  # g
+                # net_struct[layer, 3] = 1  # g
 
             # Adjust M so that it is divisible by g and k
             net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
 
         # Test to ensure the network structure is valid
-        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=True)
+        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=False)
         if test is None:
             break
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size, relu=True)
+    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size)
     if torch.cuda.is_available():
         model = model.cuda()
 
@@ -624,7 +620,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 3
+        argv_seed = 1
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
