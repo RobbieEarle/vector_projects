@@ -263,6 +263,7 @@ class CombinactNet(nn.Module):
                  actfuns,
                  in_size,
                  out_size,
+                 alpha_dist="per_cluster",
                  batch_size=100,
                  relu=False,
                  l2=False
@@ -276,8 +277,11 @@ class CombinactNet(nn.Module):
         :param actfuns: L x p array of activation functions to be applied in each permutation of each layer
         :param in_size: Number of input nodes
         :param out_size: Number of outputs nodes
+        :param alpha_dist: per_cluster = unique alpha vector for each cluster of size k
+                           per_perm    = unique alpha vector for each permutation
         :param batch_size: Batchsize for minibatch optimization
         :param relu: True when we just want the model to run relu activation
+        :param l2: True when we just want the model to run l2 activation
         """
 
         super(CombinactNet, self).__init__()
@@ -292,6 +296,7 @@ class CombinactNet(nn.Module):
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
         self.actfuns = actfuns
+        self.alpha_dist = alpha_dist
         self.in_size = in_size
         self.out_size = out_size
         self.batch_size = batch_size
@@ -319,8 +324,10 @@ class CombinactNet(nn.Module):
                 self.hyper_params['p'].append(p)
                 self.hyper_params['g'].append(g)
                 self.all_batch_norms.append(nn.ModuleList([nn.BatchNorm1d(int(M / g)) for i in range(g)]))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(M*p/k), len(actfuns))))
-
+                if alpha_dist == "per_cluster":
+                    self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(M*p/k), len(actfuns))))
+                if alpha_dist == "per_perm":
+                    self.all_alpha_primes.append(nn.Parameter(torch.zeros(p, len(actfuns))))
             num_pre_act_nodes = M
             self.all_weights.append(nn.ModuleList([nn.Linear(int(layer_inputs / g), int(num_pre_act_nodes / g)) for i in range(g)]))
 
@@ -368,11 +375,16 @@ class CombinactNet(nn.Module):
                 # Otherwise we apply batchnorm to pre-activation nodes, and then apply our activation functions
                 else:
                     pre_act_nodes = self.all_batch_norms[layer][i](fc(x[:, :, i]))
+
                     if self.relu:
                         post_act_nodes = F.relu(pre_act_nodes).unsqueeze(dim=2)
-                    else:
+                    elif self.alpha_dist == "per_cluster":
                         post_act_nodes = self.activate(pre_act_nodes,
                                                        layer_alpha_primes[i * int((M/g)*p/k): (i+1) * int((M/g)*p/k)],
+                                                       int(M / g), k, p)
+                    elif self.alpha_dist == "per_perm":
+                        post_act_nodes = self.activate(pre_act_nodes,
+                                                       layer_alpha_primes,
                                                        int(M / g), k, p)
                 outputs[:, :, i * p:(i + 1) * p] = post_act_nodes
 
@@ -387,6 +399,7 @@ class CombinactNet(nn.Module):
         return x
 
     def activate(self, x, layer_alpha_primes, M, k, p):
+
         clusters = math.floor(M / k)
         x = x.view(self.batch_size, M, 1)
 
@@ -394,15 +407,36 @@ class CombinactNet(nn.Module):
         for i in range(1, p):
             x = torch.cat((x[:, :, :i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
 
+        # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
 
+        # Convert our alpha primes to alphas (softmax)
         layer_alphas = F.softmax(layer_alpha_primes, dim=1)
+
+        # Outputs collapse our k dimension, and initially have an extra dimension to hold the result from each actfun
         outputs = torch.zeros((self.batch_size, clusters, p, len(self.actfuns)), device=x.device)
+
+        # Populates extra dimension with results from applying all activation functions to each node
         for i, actfun in enumerate(self.actfuns):
             outputs[:, :, :, i] = _ACTFUNS2D[actfun](x)
-        outputs = outputs.reshape([self.batch_size, int(M*p/k), len(self.actfuns)])
-        outputs = outputs * layer_alphas
-        outputs = torch.sum(outputs, dim=2)
+
+        if self.alpha_dist == "per_cluster":
+            # Reshape to [batch size x (#clusters * #permutations) x #actfuns]
+            outputs = outputs.reshape([self.batch_size, int(M*p/k), len(self.actfuns)])
+            # Our alpha vector has dimensions [(#clusters * #permutations) x #actfuns]; applies elementwise
+            # multiplication to last 2 layers
+            outputs = outputs * layer_alphas
+            # Sums up our weighted activation functions
+            outputs = torch.sum(outputs, dim=2)
+
+        # Note in this case we let the dimensions remain [batch size x #clusters x #permutations x #actfuns]
+        if self.alpha_dist == "per_perm":
+            # Our alpha vector has dimensions [#permutations x #actfuns]; applies elementwise
+            # multiplication to last 2 layers
+            outputs = outputs * layer_alphas
+            # Sums up our weighted activation functions
+            outputs = torch.sum(outputs, dim=3)
+
         outputs = outputs.reshape([self.batch_size, clusters, p])
         x = outputs
 
@@ -565,6 +599,7 @@ def setup_experiment(seed, outfile_path):
             # First layer doesn't get grouped
             if layer == 0:
                 net_struct[layer, 3] = 1  # g
+                # net_struct[layer, 3] = 2  # g
             else:
                 net_struct[layer, 3] = rng.randint(1, 6)  # g
                 # net_struct[layer, 3] = 1  # g
@@ -580,7 +615,8 @@ def setup_experiment(seed, outfile_path):
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size)
+    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
+                         alpha_dist="per_perm")
     if torch.cuda.is_available():
         model = model.cuda()
 
@@ -620,7 +656,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 1
+        argv_seed = 3
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
