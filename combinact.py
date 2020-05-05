@@ -78,14 +78,14 @@ _ACTFUNS2D = {
         lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
     'nlaen':
         lambda z: -1 * actfun_logavgexp(-1 * z, dim=2),
-    'lse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'zclse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'nlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'zcnlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_())
+    # 'lse-approx':
+    #     lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    # 'lae-approx':
+    #     lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    # 'nlsen-approx':
+    #     lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    # 'nlaen-approx':
+    #     lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_())
 }
 
 
@@ -266,7 +266,8 @@ class CombinactNet(nn.Module):
                  alpha_dist="per_cluster",
                  batch_size=100,
                  relu=False,
-                 l2=False
+                 l2=False,
+                 l2_lae=False
                  ):
         """
         :param net_struct: Structure of network. L x 4 array, L = number of hidden layers
@@ -282,6 +283,8 @@ class CombinactNet(nn.Module):
         :param batch_size: Batchsize for minibatch optimization
         :param relu: True when we just want the model to run relu activation
         :param l2: True when we just want the model to run l2 activation
+        :param l2_lae: True when we just want the model to run l2 activation for the first
+                        two layers, lae for the last
         """
 
         super(CombinactNet, self).__init__()
@@ -293,6 +296,7 @@ class CombinactNet(nn.Module):
 
         self.relu = relu
         self.l2 = l2
+        self.l2_lae = l2_lae
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
         self.actfuns = actfuns
@@ -381,10 +385,12 @@ class CombinactNet(nn.Module):
                     elif self.alpha_dist == "per_cluster":
                         post_act_nodes = self.activate(pre_act_nodes,
                                                        layer_alpha_primes[i * int((M/g)*p/k): (i+1) * int((M/g)*p/k)],
+                                                       layer,
                                                        int(M / g), k, p)
                     elif self.alpha_dist == "per_perm":
                         post_act_nodes = self.activate(pre_act_nodes,
                                                        layer_alpha_primes,
+                                                       layer,
                                                        int(M / g), k, p)
                 outputs[:, :, i * p:(i + 1) * p] = post_act_nodes
 
@@ -398,7 +404,7 @@ class CombinactNet(nn.Module):
 
         return x
 
-    def activate(self, x, layer_alpha_primes, M, k, p):
+    def activate(self, x, layer_alpha_primes, layer, M, k, p):
 
         clusters = math.floor(M / k)
         x = x.view(self.batch_size, M, 1)
@@ -410,35 +416,47 @@ class CombinactNet(nn.Module):
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
 
-        # Convert our alpha primes to alphas (softmax)
-        layer_alphas = F.softmax(layer_alpha_primes, dim=1)
+        # ----------------- L2 only
+        if self.l2:
+            x = _ACTFUNS2D['l2'](x)
 
-        # Outputs collapse our k dimension, and initially have an extra dimension to hold the result from each actfun
-        outputs = torch.zeros((self.batch_size, clusters, p, len(self.actfuns)), device=x.device)
+        elif self.l2_lae:
+            if layer == 0 or layer == 1:
+                x = _ACTFUNS2D['l2'](x)
+            else:
+                x = _ACTFUNS2D['lae'](x)
 
-        # Populates extra dimension with results from applying all activation functions to each node
-        for i, actfun in enumerate(self.actfuns):
-            outputs[:, :, :, i] = _ACTFUNS2D[actfun](x)
+        # ----------------- Combinact
+        else:
+            # Convert our alpha primes to alphas (softmax)
+            layer_alphas = F.softmax(layer_alpha_primes, dim=1)
 
-        if self.alpha_dist == "per_cluster":
-            # Reshape to [batch size x (#clusters * #permutations) x #actfuns]
-            outputs = outputs.reshape([self.batch_size, int(M*p/k), len(self.actfuns)])
-            # Our alpha vector has dimensions [(#clusters * #permutations) x #actfuns]; applies elementwise
-            # multiplication to last 2 layers
-            outputs = outputs * layer_alphas
-            # Sums up our weighted activation functions
-            outputs = torch.sum(outputs, dim=2)
+            # Outputs collapse our k dimension, and initially have extra dimension to hold the result from each actfun
+            outputs = torch.zeros((self.batch_size, clusters, p, len(self.actfuns)), device=x.device)
 
-        # Note in this case we let the dimensions remain [batch size x #clusters x #permutations x #actfuns]
-        if self.alpha_dist == "per_perm":
-            # Our alpha vector has dimensions [#permutations x #actfuns]; applies elementwise
-            # multiplication to last 2 layers
-            outputs = outputs * layer_alphas
-            # Sums up our weighted activation functions
-            outputs = torch.sum(outputs, dim=3)
+            # Populates extra dimension with results from applying all activation functions to each node
+            for i, actfun in enumerate(self.actfuns):
+                outputs[:, :, :, i] = _ACTFUNS2D[actfun](x)
 
-        outputs = outputs.reshape([self.batch_size, clusters, p])
-        x = outputs
+            if self.alpha_dist == "per_cluster":
+                # Reshape to [batch size x (#clusters * #permutations) x #actfuns]
+                outputs = outputs.reshape([self.batch_size, int(M*p/k), len(self.actfuns)])
+                # Our alpha vector has dimensions [(#clusters * #permutations) x #actfuns]; applies elementwise
+                # multiplication to last 2 layers
+                outputs = outputs * layer_alphas
+                # Sums up our weighted activation functions
+                outputs = torch.sum(outputs, dim=2)
+
+            # Note in this case we let the dimensions remain [batch size x #clusters x #permutations x #actfuns]
+            if self.alpha_dist == "per_perm":
+                # Our alpha vector has dimensions [#permutations x #actfuns]; applies elementwise
+                # multiplication to last 2 layers
+                outputs = outputs * layer_alphas
+                # Sums up our weighted activation functions
+                outputs = torch.sum(outputs, dim=3)
+
+            outputs = outputs.reshape([self.batch_size, clusters, p])
+            x = outputs
 
         return x
 
@@ -466,7 +484,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         {'params': model.all_weights.parameters()},
         {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
     ]
-    if not model.l2 and not model.relu:
+    if not model.l2 and not model.relu and not model.l2_lae:
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     optimizer = optim.Adam(model_params,
@@ -582,6 +600,7 @@ def setup_experiment(seed, outfile_path):
     # ---- Randomizing network structure & activation functions
     rng = np.random.RandomState(seed)
     num_hidden_layers = rng.randint(1, 4)
+    num_hidden_layers = 3
     net_struct = torch.zeros(num_hidden_layers, 4)
     actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
     while True:
@@ -616,7 +635,7 @@ def setup_experiment(seed, outfile_path):
 
     # ---- Create new model using randomized structure
     model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
-                         alpha_dist="per_perm")
+                         alpha_dist="per_cluster", l2_lae=True)
     if torch.cuda.is_available():
         model = model.cuda()
 
@@ -656,7 +675,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 3
+        argv_seed = 0
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
