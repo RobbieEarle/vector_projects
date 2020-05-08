@@ -64,6 +64,8 @@ _ACTFUNS2D = {
         lambda z: actfun_signed_geomean(z, dim=2),
     'swishk':
         lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
+    'l1':
+        lambda z: (torch.sum(z.abs(), dim=2)),
     'l2':
         lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
     'l3-signed':
@@ -418,6 +420,10 @@ class CombinactNet(nn.Module):
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
 
+        # ----------------- L1 only
+        if self.curr_model == "l1":
+            x = _ACTFUNS2D['l1'](x)
+
         # ----------------- L2 only
         if self.curr_model == "l2" or self.curr_model == "l2_1d":
             x = _ACTFUNS2D['l2'](x)
@@ -590,7 +596,7 @@ def setup_experiment(seed, outfile_path):
     :return:
     """
 
-    curr_model = "l2_1d"  # relu, combinact, l2, l2_lae
+    curr_model = "l1"  # relu, combinact, l2, l2_lae
 
     if curr_model == "combinact":
         curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
@@ -645,7 +651,9 @@ def setup_experiment(seed, outfile_path):
     if curr_model == "relu":
         actfuns = ["relu"]
     if curr_model == "combinact":
-        actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
+        actfuns = ['max', 'signed_geomean', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
+    if curr_model == "l1":
+        actfuns = ["l1"]
     if curr_model == "l2" or curr_model == "l2_1d":
         actfuns = ["l2"]
     if curr_model == "l2_lae":
@@ -700,7 +708,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 5
+        argv_seed = 0
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
