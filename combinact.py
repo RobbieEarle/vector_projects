@@ -590,7 +590,7 @@ def setup_experiment(seed, outfile_path):
     :return:
     """
 
-    curr_model = "l2"  # relu, combinact, l2, l2_lae
+    curr_model = "relu"  # relu, combinact, l2, l2_lae
 
     if curr_model == "combinact":
         curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
@@ -700,7 +700,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 5
+        argv_seed = 0
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
