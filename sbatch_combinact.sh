@@ -4,7 +4,7 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-499%10       # array value
+#SBATCH --array=340-499%10       # array value
 #SBATCH --output=logs/l2_lae/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=l2_lae
 

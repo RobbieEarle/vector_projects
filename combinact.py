@@ -487,6 +487,12 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
     if not model.l2 and not model.relu and not model.l2_lae:
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
+    # for name, param in model.named_parameters():
+    #     if param.requires_grad:
+    #         print(name, param.data)
+    #
+    # print("asdfa" + 23)
+
     optimizer = optim.Adam(model_params,
                            lr=10**-8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
