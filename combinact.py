@@ -218,13 +218,12 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def test_net_inputs(net_struct, in_size, out_size, relu):
+def test_net_inputs(net_struct, in_size):
     """
     Tests network structure and activation hyperparameters to make sure they are valid
     :param net_struct: given network structure
     :param in_size: number of inputs
     :param out_size: number of outputs
-    :param out_size: whether the model is intended to simply use relu
     :return:
     """
 
@@ -245,10 +244,6 @@ def test_net_inputs(net_struct, in_size, out_size, relu):
             return 'k must divide the number of nodes M divided by the number of groups in this layer. ' \
                    'Layer = {}, M / g_prev = {}, k = {}'.format(layer, M / g, k)
 
-        if relu and (k != 1 or g != 1):
-            return 'rel was set to True, so k and g must = 1. ' \
-                   'Layer = {}, k = {}, g = {}'.format(layer, k, g)
-
         layer_inputs = M * p / k
 
     return None
@@ -265,9 +260,7 @@ class CombinactNet(nn.Module):
                  out_size,
                  alpha_dist="per_cluster",
                  batch_size=100,
-                 relu=False,
-                 l2=False,
-                 l2_lae=False
+                 curr_model="combinact"
                  ):
         """
         :param net_struct: Structure of network. L x 4 array, L = number of hidden layers
@@ -281,22 +274,17 @@ class CombinactNet(nn.Module):
         :param alpha_dist: per_cluster = unique alpha vector for each cluster of size k
                            per_perm    = unique alpha vector for each permutation
         :param batch_size: Batchsize for minibatch optimization
-        :param relu: True when we just want the model to run relu activation
-        :param l2: True when we just want the model to run l2 activation
-        :param l2_lae: True when we just want the model to run l2 activation for the first
-                        two layers, lae for the last
+        :param curr_model: what model do we want to use? combinact, relu, l2, l2_lae
         """
 
         super(CombinactNet, self).__init__()
 
         # ---- Error checking given network structure and activation functions
-        error = test_net_inputs(net_struct, in_size, out_size, relu)
+        error = test_net_inputs(net_struct, in_size)
         if error is not None:
             raise ValueError(error)
 
-        self.relu = relu
-        self.l2 = l2
-        self.l2_lae = l2_lae
+        self.curr_model = curr_model
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
         self.actfuns = actfuns
@@ -319,6 +307,8 @@ class CombinactNet(nn.Module):
                 p = 1
                 g = 1
             else:
+                if self.curr_model == "relu":
+                    net_struct[layer, 1] = 1
                 M = int(net_struct[layer, 0])
                 k = int(net_struct[layer, 1])
                 p = int(net_struct[layer, 2])
@@ -328,10 +318,11 @@ class CombinactNet(nn.Module):
                 self.hyper_params['p'].append(p)
                 self.hyper_params['g'].append(g)
                 self.all_batch_norms.append(nn.ModuleList([nn.BatchNorm1d(int(M / g)) for i in range(g)]))
-                if alpha_dist == "per_cluster":
-                    self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(M*p/k), len(actfuns))))
-                if alpha_dist == "per_perm":
-                    self.all_alpha_primes.append(nn.Parameter(torch.zeros(p, len(actfuns))))
+                if self.curr_model == "combinact":
+                    if alpha_dist == "per_cluster":
+                        self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(M*p/k), len(actfuns))))
+                    if alpha_dist == "per_perm":
+                        self.all_alpha_primes.append(nn.Parameter(torch.zeros(p, len(actfuns))))
             num_pre_act_nodes = M
             self.all_weights.append(nn.ModuleList([nn.Linear(int(layer_inputs / g), int(num_pre_act_nodes / g)) for i in range(g)]))
 
@@ -361,7 +352,6 @@ class CombinactNet(nn.Module):
                 k = self.hyper_params['k'][layer]
                 p = self.hyper_params['p'][layer]
                 g = self.hyper_params['g'][layer]
-                layer_alpha_primes = self.all_alpha_primes[layer]
 
             # Group inputs
             x = x.reshape(self.batch_size, int(layer_inputs / g), g)
@@ -380,16 +370,28 @@ class CombinactNet(nn.Module):
                 else:
                     pre_act_nodes = self.all_batch_norms[layer][i](fc(x[:, :, i]))
 
-                    if self.relu:
+                    # ----------------- ReLU
+                    if self.curr_model == "relu":
                         post_act_nodes = F.relu(pre_act_nodes).unsqueeze(dim=2)
-                    elif self.alpha_dist == "per_cluster":
+
+                    # ----------------- Combinact
+                    elif self.curr_model == "combinact":
+                        layer_alpha_primes = self.all_alpha_primes[layer]
+                        if self.alpha_dist == "per_cluster":
+                            post_act_nodes = self.activate(pre_act_nodes,
+                                                           layer_alpha_primes[i * int((M/g)*p/k): (i+1) * int((M/g)*p/k)],
+                                                           layer,
+                                                           int(M / g), k, p)
+                        elif self.alpha_dist == "per_perm":
+                            post_act_nodes = self.activate(pre_act_nodes,
+                                                           layer_alpha_primes,
+                                                           layer,
+                                                           int(M / g), k, p)
+
+                    # ----------------- Any other specific activations
+                    else:
                         post_act_nodes = self.activate(pre_act_nodes,
-                                                       layer_alpha_primes[i * int((M/g)*p/k): (i+1) * int((M/g)*p/k)],
-                                                       layer,
-                                                       int(M / g), k, p)
-                    elif self.alpha_dist == "per_perm":
-                        post_act_nodes = self.activate(pre_act_nodes,
-                                                       layer_alpha_primes,
+                                                       None,
                                                        layer,
                                                        int(M / g), k, p)
                 outputs[:, :, i * p:(i + 1) * p] = post_act_nodes
@@ -417,17 +419,18 @@ class CombinactNet(nn.Module):
         x = x.view(self.batch_size, clusters, k, p)
 
         # ----------------- L2 only
-        if self.l2:
+        if self.curr_model == "l2":
             x = _ACTFUNS2D['l2'](x)
 
-        elif self.l2_lae:
+        # ----------------- L2 and LAE
+        elif self.curr_model == "l2_lae":
             if layer == 0 or layer == 1:
                 x = _ACTFUNS2D['l2'](x)
             else:
                 x = _ACTFUNS2D['lae'](x)
 
         # ----------------- Combinact
-        else:
+        elif self.curr_model == "combinact":
             # Convert our alpha primes to alphas (softmax)
             layer_alphas = F.softmax(layer_alpha_primes, dim=1)
 
@@ -484,14 +487,8 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         {'params': model.all_weights.parameters()},
         {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
     ]
-    if not model.l2 and not model.relu and not model.l2_lae:
+    if model.curr_model == "combinact":
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
-
-    # for name, param in model.named_parameters():
-    #     if param.requires_grad:
-    #         print(name, param.data)
-    #
-    # print("asdfa" + 23)
 
     optimizer = optim.Adam(model_params,
                            lr=10**-8,
@@ -573,9 +570,11 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                              'acc': float(accuracy),
                              'time': (time.time() - start_time),
                              'net_struct': model.net_struct.tolist(),
+                             'model_type': model.curr_model,
                              'actfuns': model.actfuns,
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
+                             'alpha_dist': model.alpha_dist,
                              'n_params': get_n_params(model)
                              })
 
@@ -590,6 +589,13 @@ def setup_experiment(seed, outfile_path):
     :param outfile_path: path to save outputs from experiment
     :return:
     """
+
+    curr_model = "l2"  # relu, combinact, l2, l2_lae
+
+    if curr_model == "combinact":
+        curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
+    else:
+        curr_alpha_dist = None
 
     # ---- Loading MNIST
     trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
@@ -606,53 +612,66 @@ def setup_experiment(seed, outfile_path):
     # ---- Randomizing network structure & activation functions
     rng = np.random.RandomState(seed)
     num_hidden_layers = rng.randint(1, 4)
-    num_hidden_layers = 3
+    if curr_model == "l2_lae":
+        num_hidden_layers = 3
     net_struct = torch.zeros(num_hidden_layers, 4)
-    actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
     while True:
 
         # TODO: Make sure these are randomized before committing
         # For each layer, randomizes M, k, p, and g within given ranges
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
-            # net_struct[layer, 0] = 20
             net_struct[layer, 1] = rng.randint(2, 11)  # k
-            # net_struct[layer, 1] = 1  # k
             net_struct[layer, 2] = rng.randint(1, 11)  # p
-            # net_struct[layer, 2] = 3  # p
 
             # First layer doesn't get grouped
             if layer == 0:
                 net_struct[layer, 3] = 1  # g
-                # net_struct[layer, 3] = 2  # g
             else:
                 net_struct[layer, 3] = rng.randint(1, 6)  # g
-                # net_struct[layer, 3] = 1  # g
 
             # Adjust M so that it is divisible by g and k
             net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
                                        ) * net_struct[layer, 1] * net_struct[layer, 3]
 
         # Test to ensure the network structure is valid
-        test = test_net_inputs(net_struct, in_size=784, out_size=10, relu=False)
+        test = test_net_inputs(net_struct, in_size=784)
         if test is None:
             break
         print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
 
     # ---- Create new model using randomized structure
+
+    if curr_model == "relu":
+        actfuns = ["relu"]
+    if curr_model == "combinact":
+        actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
+    if curr_model == "l2":
+        actfuns = ["l2"]
+    if curr_model == "l2_lae":
+        actfuns = ["l2", "lae"]
+
     model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
-                         alpha_dist="per_cluster", l2_lae=True)
+                         alpha_dist=curr_alpha_dist, curr_model=curr_model)
+
     if torch.cuda.is_available():
         model = model.cuda()
 
     print(
-        "\nOutfile Path: {} \nNetwork Structure: \n{} \nActivation Functions: \n{} \nNumber of Parameters: {}\n\n"
-            .format(outfile_path, net_struct, actfuns, get_n_params(model)), flush=True
+        "\nOutfile Path: {} \n"
+        "Network Structure: \n"
+        "{} \n"
+        "Model Type: {} \n"
+        "Alpha Distribution: {} \n"
+        "Activation Functions: \n"
+        "{} \n"
+        "Number of Parameters: {}\n\n"
+            .format(outfile_path, net_struct, curr_model, curr_alpha_dist, actfuns, get_n_params(model)), flush=True
     )
 
     # ---- Create new output file
-    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'actfuns',
-                  'alpha_primes', 'alphas', 'n_params']
+    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type', 'actfuns',
+                  'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -681,7 +700,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 0
+        argv_seed = 5
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
