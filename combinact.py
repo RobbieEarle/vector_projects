@@ -307,7 +307,7 @@ class CombinactNet(nn.Module):
                 p = 1
                 g = 1
             else:
-                if self.curr_model == "relu":
+                if self.curr_model == "relu" or self.curr_model == "l2_1d":
                     net_struct[layer, 1] = 1
                 M = int(net_struct[layer, 0])
                 k = int(net_struct[layer, 1])
@@ -419,7 +419,7 @@ class CombinactNet(nn.Module):
         x = x.view(self.batch_size, clusters, k, p)
 
         # ----------------- L2 only
-        if self.curr_model == "l2":
+        if self.curr_model == "l2" or self.curr_model == "l2_1d":
             x = _ACTFUNS2D['l2'](x)
 
         # ----------------- L2 and LAE
@@ -590,7 +590,7 @@ def setup_experiment(seed, outfile_path):
     :return:
     """
 
-    curr_model = "relu"  # relu, combinact, l2, l2_lae
+    curr_model = "l2_1d"  # relu, combinact, l2, l2_lae
 
     if curr_model == "combinact":
         curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
@@ -646,7 +646,7 @@ def setup_experiment(seed, outfile_path):
         actfuns = ["relu"]
     if curr_model == "combinact":
         actfuns = ['max', 'signed_geomean', 'swishk', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
-    if curr_model == "l2":
+    if curr_model == "l2" or curr_model == "l2_1d":
         actfuns = ["l2"]
     if curr_model == "l2_lae":
         actfuns = ["l2", "lae"]
@@ -700,7 +700,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 0
+        argv_seed = 5
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
