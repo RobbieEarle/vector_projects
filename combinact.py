@@ -301,6 +301,7 @@ class CombinactNet(nn.Module):
         self.all_alpha_primes = nn.ParameterList()
         self.all_batch_norms = nn.ModuleList()
         self.hyper_params = {'M': [], 'k': [], 'p': [], 'g': []}
+        self.shuffle_maps = []
 
         # Creating nn.Linear transformations for each layer. Also stores hyperparams in easier to reference dict
         layer_inputs = int(in_size)
@@ -322,6 +323,13 @@ class CombinactNet(nn.Module):
                 self.hyper_params['k'].append(k)
                 self.hyper_params['p'].append(p)
                 self.hyper_params['g'].append(g)
+
+                if self.permute_type == "shuffle":
+                    self.shuffle_maps.append([])
+                    for perm in range(p):
+                        for group in range(g):
+                            self.shuffle_maps[layer].append(torch.randperm(int(M/g)))
+
                 self.all_batch_norms.append(nn.ModuleList([nn.BatchNorm1d(int(M / g)) for i in range(g)]))
                 if self.curr_model == "combinact":
                     if alpha_dist == "per_cluster":
@@ -333,7 +341,7 @@ class CombinactNet(nn.Module):
 
             layer_inputs = M * p / k
 
-    def permute(self, x, method, offset, num_groups=1):
+    def permute(self, x, method, offset, num_groups=1, layer=None):
         if method == "roll":
             return torch.cat((x[:, offset:, 0], x[:, :offset, 0]), dim=1)
         elif method == "roll_grouped":
@@ -347,8 +355,9 @@ class CombinactNet(nn.Module):
                     output = curr_roll
                 else:
                     output = torch.cat((output, curr_roll), dim=1)
-
             return output
+        elif method == "shuffle":
+            return x[:, self.shuffle_maps[layer][offset], [0]]
 
     def forward(self, x):
 
@@ -431,7 +440,12 @@ class CombinactNet(nn.Module):
 
         # Duplicate and permute x
         for i in range(1, p):
-            x = torch.cat((x[:, :, :i], self.permute(x, self.permute_type, i, num_groups=2).view(self.batch_size, M, 1)), dim=2)
+            x = torch.cat((
+                x[:, :, :i],
+                self.permute(
+                    x, self.permute_type, offset=i, num_groups=2, layer=layer
+                ).view(self.batch_size, M, 1)
+            ), dim=2)
 
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
@@ -614,7 +628,7 @@ def setup_experiment(seed, outfile_path):
     """
 
     curr_model = "combinact"  # relu, combinact, l2, l2_lae
-    permute_type = "roll_grouped"  # roll, roll_grouped, randomize
+    permute_type = "shuffle"  # roll, roll_grouped, shuffle
 
     if curr_model == "combinact":
         curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
