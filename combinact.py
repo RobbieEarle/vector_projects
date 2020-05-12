@@ -262,7 +262,8 @@ class CombinactNet(nn.Module):
                  out_size,
                  alpha_dist="per_cluster",
                  batch_size=100,
-                 curr_model="combinact"
+                 curr_model="combinact",
+                 permute_type="roll"
                  ):
         """
         :param net_struct: Structure of network. L x 4 array, L = number of hidden layers
@@ -277,6 +278,7 @@ class CombinactNet(nn.Module):
                            per_perm    = unique alpha vector for each permutation
         :param batch_size: Batchsize for minibatch optimization
         :param curr_model: what model do we want to use? combinact, relu, l2, l2_lae
+        :param permute_type: how do we want to execute our permutations?
         """
 
         super(CombinactNet, self).__init__()
@@ -286,6 +288,7 @@ class CombinactNet(nn.Module):
         if error is not None:
             raise ValueError(error)
 
+        self.permute_type = permute_type
         self.curr_model = curr_model
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
@@ -330,9 +333,22 @@ class CombinactNet(nn.Module):
 
             layer_inputs = M * p / k
 
-    def permute(self, x, method, seed):
+    def permute(self, x, method, offset, num_groups=1):
         if method == "roll":
-            return torch.cat((x[:, seed:, 0], x[:, :seed, 0]), dim=1)
+            return torch.cat((x[:, offset:, 0], x[:, :offset, 0]), dim=1)
+        elif method == "roll_grouped":
+            group_size = int(x.shape[1] / num_groups)
+            output = None
+            for group in range(num_groups):
+                start = offset + group_size * group
+                curr_roll = torch.cat((x[:, start:(group + 1) * group_size, 0], x[:, group * group_size:start, 0]),
+                                      dim=1)
+                if group == 0:
+                    output = curr_roll
+                else:
+                    output = torch.cat((output, curr_roll), dim=1)
+
+            return output
 
     def forward(self, x):
 
@@ -415,7 +431,7 @@ class CombinactNet(nn.Module):
 
         # Duplicate and permute x
         for i in range(1, p):
-            x = torch.cat((x[:, :, :i], self.permute(x, "roll", i).view(self.batch_size, M, 1)), dim=2)
+            x = torch.cat((x[:, :, :i], self.permute(x, self.permute_type, i, num_groups=2).view(self.batch_size, M, 1)), dim=2)
 
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
@@ -577,6 +593,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                              'time': (time.time() - start_time),
                              'net_struct': model.net_struct.tolist(),
                              'model_type': model.curr_model,
+                             'permute_type': model.permute_type,
                              'actfuns': model.actfuns,
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
@@ -596,7 +613,8 @@ def setup_experiment(seed, outfile_path):
     :return:
     """
 
-    curr_model = "l1"  # relu, combinact, l2, l2_lae
+    curr_model = "combinact"  # relu, combinact, l2, l2_lae
+    permute_type = "roll_grouped"  # roll, roll_grouped, randomize
 
     if curr_model == "combinact":
         curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
@@ -623,7 +641,6 @@ def setup_experiment(seed, outfile_path):
     net_struct = torch.zeros(num_hidden_layers, 4)
     while True:
 
-        # TODO: Make sure these are randomized before committing
         # For each layer, randomizes M, k, p, and g within given ranges
         for layer in range(num_hidden_layers):
             net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
@@ -660,7 +677,7 @@ def setup_experiment(seed, outfile_path):
         actfuns = ["l2", "lae"]
 
     model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
-                         alpha_dist=curr_alpha_dist, curr_model=curr_model)
+                         alpha_dist=curr_alpha_dist, curr_model=curr_model, permute_type=permute_type)
 
     if torch.cuda.is_available():
         model = model.cuda()
@@ -671,15 +688,16 @@ def setup_experiment(seed, outfile_path):
         "{} \n"
         "Model Type: {} \n"
         "Alpha Distribution: {} \n"
+        "Permute Type: {} \n"
         "Activation Functions: \n"
         "{} \n"
         "Number of Parameters: {}\n\n"
-            .format(outfile_path, net_struct, curr_model, curr_alpha_dist, actfuns, get_n_params(model)), flush=True
+            .format(outfile_path, net_struct, curr_model, curr_alpha_dist, permute_type, actfuns, get_n_params(model)), flush=True
     )
 
     # ---- Create new output file
-    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type', 'actfuns',
-                  'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
+    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type', 'permute_type',
+                  'actfuns', 'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -708,7 +726,7 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 0
+        argv_seed = 5
         argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
 
     # ---- Handle running on Vector
