@@ -347,9 +347,12 @@ class CombinactNet(nn.Module):
         elif method == "roll_grouped":
             group_size = int(x.shape[1] / num_groups)
             output = None
-            for group in range(num_groups):
+            for i, group in enumerate(range(num_groups)):
                 start = offset + group_size * group
-                curr_roll = torch.cat((x[:, start:(group + 1) * group_size, 0], x[:, group * group_size:start, 0]),
+                if i == num_groups - 1:
+                    group_size += x.shape[1] % num_groups
+                end = start + group_size - offset
+                curr_roll = torch.cat((x[:, start:end, 0], x[:, start-offset:start, 0]),
                                       dim=1)
                 if group == 0:
                     output = curr_roll
@@ -437,7 +440,6 @@ class CombinactNet(nn.Module):
 
         clusters = math.floor(M / k)
         x = x.view(self.batch_size, M, 1)
-
         # Duplicate and permute x
         for i in range(1, p):
             x = torch.cat((
@@ -742,7 +744,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         seed_all(0)
         argv_seed = 0
-        argv_curr_model = "combinact"  # relu, combinact, l2, l2_lae
+        argv_curr_model = "combinact"  # relu, combinact, l1, l2, l2_lae, abs
         argv_permute_type = "roll_grouped"  # roll, roll_grouped, shuffle
         argv_alpha_dist = "per_cluster"  # per_cluster, per_perm
         argv_outfile_path = '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
