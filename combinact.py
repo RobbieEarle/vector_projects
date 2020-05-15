@@ -618,20 +618,20 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         epoch += 1
 
 
-def setup_experiment(seed, outfile_path):
+def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
     :param seed: seed for parameter randomization
     :param outfile_path: path to save outputs from experiment
+    :param curr_model: model architecture
+    :param permute_type: permutation strategy used by model
+    :param alpha_dist: how to distribute alpha vectors in our model
     :return:
     """
 
-    curr_model = "combinact"  # relu, combinact, l2, l2_lae
-    permute_type = "shuffle"  # roll, roll_grouped, shuffle
-
     if curr_model == "combinact":
-        curr_alpha_dist = "per_cluster"  # per_cluster, per_perm
+        curr_alpha_dist = alpha_dist
     else:
         curr_alpha_dist = None
 
@@ -697,7 +697,8 @@ def setup_experiment(seed, outfile_path):
         model = model.cuda()
 
     print(
-        "\nOutfile Path: {} \n"
+        "\n===================================================================\n\n"
+        "Outfile Path: {} \n"
         "Network Structure: \n"
         "{} \n"
         "Model Type: {} \n"
@@ -740,14 +741,35 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 5
-        argv_outfile_path = '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed)
+        argv_seed = 20
+        argv_curr_model = "relu"  # relu, combinact, l2, l2_lae
+        argv_permute_type = "shuffle"  # roll, roll_grouped, shuffle
+        argv_alpha_dist = "per_cluster"  # per_cluster, per_perm
+        argv_outfile_path = '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
+                                                        argv_curr_model,
+                                                        argv_permute_type,
+                                                        argv_alpha_dist,
+                                                        argv_seed)
 
     # ---- Handle running on Vector
     else:
         seed_all(0)
         argv_index = int(sys.argv[1])
         argv_seed = int(sys.argv[2]) + (500 * argv_index)
-        argv_outfile_path = os.path.join(sys.argv[3], '{}-combinact-{}.csv'.format(datetime.date.today(), argv_seed))
+        argv_curr_model = sys.argv[4]
+        argv_permute_type = sys.argv[5]
+        argv_alpha_dist = sys.argv[6]
 
-    setup_experiment(argv_seed, argv_outfile_path)
+        argv_outfile_path = os.path.join(
+            sys.argv[3],
+            '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
+                                        argv_curr_model,
+                                        argv_permute_type,
+                                        argv_alpha_dist,
+                                        argv_seed))
+
+    setup_experiment(argv_seed,
+                     argv_outfile_path,
+                     argv_curr_model,
+                     argv_permute_type,
+                     argv_alpha_dist)

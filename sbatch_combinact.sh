@@ -12,6 +12,9 @@ source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
+MODEL_TYPE="$2"
+PERMUTE_TYPE="$3"
+ALPHA_DIST="$4"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 # Debugging outputs
@@ -26,11 +29,14 @@ python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()
 echo ""
 
 echo "SAVE_PATH=$SAVE_PATH"
+echo "MODEL_TYPE=$MODEL_TYPE"
+echo "PERMUTE_TYPE=$PERMUTE_TYPE"
+echo "ALPHA_DIST=$ALPHA_DIST"
 echo "SEED=$SEED"
 
-python combinact.py "0" "$SEED" "$SAVE_PATH"
-python combinact.py "1" "$SEED" "$SAVE_PATH"
-python combinact.py "2" "$SEED" "$SAVE_PATH"
-python combinact.py "3" "$SEED" "$SAVE_PATH"
-python combinact.py "4" "$SEED" "$SAVE_PATH"
-python combinact.py "5" "$SEED" "$SAVE_PATH"
+python combinact.py "0" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
+python combinact.py "1" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
+python combinact.py "2" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
+python combinact.py "3" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
+python combinact.py "4" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
+python combinact.py "5" "$SEED" "$SAVE_PATH" "$MODEL_TYPE$" "$PERMUTE_TYPE$" "$ALPHA_DIST$"
