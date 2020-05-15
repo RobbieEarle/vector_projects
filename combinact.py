@@ -741,9 +741,9 @@ if __name__ == '__main__':
     # ---- Handle running locally
     if len(sys.argv) == 1:
         seed_all(0)
-        argv_seed = 20
-        argv_curr_model = "relu"  # relu, combinact, l2, l2_lae
-        argv_permute_type = "shuffle"  # roll, roll_grouped, shuffle
+        argv_seed = 0
+        argv_curr_model = "combinact"  # relu, combinact, l2, l2_lae
+        argv_permute_type = "roll_grouped"  # roll, roll_grouped, shuffle
         argv_alpha_dist = "per_cluster"  # per_cluster, per_perm
         argv_outfile_path = '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
                                                         argv_curr_model,
