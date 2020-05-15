@@ -313,7 +313,7 @@ class CombinactNet(nn.Module):
                 p = 1
                 g = 1
             else:
-                if self.curr_model == "relu" or self.curr_model == "l2_1d":
+                if self.curr_model == "relu" or self.curr_model == "abs":
                     net_struct[layer, 1] = 1
                 M = int(net_struct[layer, 0])
                 k = int(net_struct[layer, 1])
@@ -455,7 +455,7 @@ class CombinactNet(nn.Module):
             x = _ACTFUNS2D['l1'](x)
 
         # ----------------- L2 only
-        if self.curr_model == "l2" or self.curr_model == "l2_1d":
+        if self.curr_model == "l2" or self.curr_model == "abs":
             x = _ACTFUNS2D['l2'](x)
 
         # ----------------- L2 and LAE
@@ -685,7 +685,7 @@ def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
         actfuns = ['max', 'signed_geomean', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
     if curr_model == "l1":
         actfuns = ["l1"]
-    if curr_model == "l2" or curr_model == "l2_1d":
+    if curr_model == "l2" or curr_model == "abs":
         actfuns = ["l2"]
     if curr_model == "l2_lae":
         actfuns = ["l2", "lae"]
