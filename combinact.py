@@ -452,6 +452,10 @@ class CombinactNet(nn.Module):
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
 
+        # ----------------- max only
+        if self.curr_model == "max":
+            x = _ACTFUNS2D['max'](x)
+
         # ----------------- L1 only
         if self.curr_model == "l1":
             x = _ACTFUNS2D['l1'](x)
@@ -505,7 +509,7 @@ class CombinactNet(nn.Module):
 # -------------------- Setting Up & Running Training Function
 
 
-def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params):
+def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, validation_loader, hyper_params):
     """
     Runs training session for a given randomized model
     :param model: model to train
@@ -519,14 +523,14 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
     """
 
     # ---- Initialization
-    model.apply(weights_init)
-
     model_params = [
         {'params': model.all_weights.parameters()},
         {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
     ]
     if model.curr_model == "combinact":
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+
+    model.apply(weights_init)
 
     optimizer = optim.Adam(model_params,
                            lr=10**-8,
@@ -602,6 +606,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writerow({'seed': seed,
+                             'iteration': iteration,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -620,7 +625,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         epoch += 1
 
 
-def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
+def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist, num_layers):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
@@ -632,54 +637,29 @@ def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
     :return:
     """
 
-    if curr_model == "combinact":
-        curr_alpha_dist = alpha_dist
-    else:
-        curr_alpha_dist = None
-
-    # ---- Loading MNIST
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
-    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
-    train_set_indices = np.arange(0, 50000)
+    # ---- Randomizing indices for training sets
+    rng = np.random.RandomState(seed)
+    num_train_samples = (seed + 1) * 500
+    indices = np.arange(0, 50000)
+    train_set_indices = []
+    for i in range(10):
+        np.random.shuffle(indices)
+        train_set_indices.append(np.copy(indices[:num_train_samples]))
     validation_set_indices = np.arange(50000, 60000)
 
-    mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
-    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
-    batch_size = 100
-    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True, pin_memory=True)
-    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True, pin_memory=True)
-
     # ---- Randomizing network structure & activation functions
-    rng = np.random.RandomState(seed)
-    num_hidden_layers = rng.randint(1, 4)
-    if curr_model == "l2_lae":
-        num_hidden_layers = 3
-    net_struct = torch.zeros(num_hidden_layers, 4)
-    while True:
-
-        # For each layer, randomizes M, k, p, and g within given ranges
-        for layer in range(num_hidden_layers):
-            net_struct[layer, 0] = rng.randint(10, 120) * 2  # M
-            net_struct[layer, 1] = rng.randint(2, 11)  # k
-            net_struct[layer, 2] = rng.randint(1, 11)  # p
-
-            # First layer doesn't get grouped
-            if layer == 0:
-                net_struct[layer, 3] = 1  # g
-            else:
-                net_struct[layer, 3] = rng.randint(1, 6)  # g
-
-            # Adjust M so that it is divisible by g and k
-            net_struct[layer, 0] = int(net_struct[layer, 0] / (net_struct[layer, 1] * net_struct[layer, 3])
-                                       ) * net_struct[layer, 1] * net_struct[layer, 3]
-
-        # Test to ensure the network structure is valid
-        test = test_net_inputs(net_struct, in_size=784)
-        if test is None:
-            break
-        print("\nInvalid network structure: \n{}\nError: {}\nTrying again...".format(net_struct, test), flush=True)
-
-    # ---- Create new model using randomized structure
+    batch_size = 100
+    if num_layers == 2:
+        net_struct = torch.tensor([
+            [250, 2, 8, 1],
+            [200, 2, 4, 1]
+        ])
+    elif num_layers == 3:
+        net_struct = torch.tensor([
+            [250, 2, 8, 1],
+            [200, 2, 4, 1],
+            [100, 2, 2, 1]
+        ])
 
     if curr_model == "relu":
         actfuns = ["relu"]
@@ -691,6 +671,13 @@ def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
         actfuns = ["l2"]
     if curr_model == "l2_lae":
         actfuns = ["l2", "lae"]
+    if curr_model == "max":
+        actfuns = ["max"]
+
+    if curr_model == "combinact":
+        curr_alpha_dist = alpha_dist
+    else:
+        curr_alpha_dist = None
 
     model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
                          alpha_dist=curr_alpha_dist, curr_model=curr_model, permute_type=permute_type)
@@ -713,8 +700,8 @@ def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
     )
 
     # ---- Create new output file
-    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type', 'permute_type',
-                  'actfuns', 'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
+    fieldnames = ['seed', 'iteration', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct',
+                  'model_type', 'permute_type', 'actfuns', 'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -729,10 +716,21 @@ def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist):
                     "cycle_peak": 0.234177
                     }
 
-    # ---- Begin training model
-    print("Running...")
-    train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params)
-    print()
+    # ---- Loading datasets and starting experiment
+    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
+    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
+    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
+    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
+                                                    pin_memory=True)
+
+    for iteration in range(10):
+        curr_train_set_indices = train_set_indices[iteration]
+        mnist_train = torch.utils.data.Subset(mnist_train_full, curr_train_set_indices)
+        train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True,
+                                                   pin_memory=True)
+        print("Running Iteration " + str(iteration) + "...")
+        train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, validation_loader, hyper_params)
+        print()
 
 
 # --------------------  Entry Point
@@ -744,9 +742,11 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         seed_all(0)
         argv_seed = 0
-        argv_curr_model = "combinact"  # relu, combinact, l1, l2, l2_lae, abs
-        argv_permute_type = "roll_grouped"  # roll, roll_grouped, shuffle
+        argv_curr_model = "relu"  # relu, combinact, l1, l2, l2_lae, abs
+        argv_permute_type = "shuffle"  # roll, roll_grouped, shuffle
         argv_alpha_dist = "per_cluster"  # per_cluster, per_perm
+        argv_num_layers = 2
+
         argv_outfile_path = '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
                                                         argv_curr_model,
                                                         argv_permute_type,
@@ -755,23 +755,25 @@ if __name__ == '__main__':
 
     # ---- Handle running on Vector
     else:
-        seed_all(0)
-        argv_index = int(sys.argv[1])
-        argv_seed = int(sys.argv[2]) + (500 * argv_index)
-        argv_curr_model = sys.argv[4]
-        argv_permute_type = sys.argv[5]
-        argv_alpha_dist = sys.argv[6]
+        argv_seed = int(sys.argv[1])
+        argv_curr_model = sys.argv[3]
+        argv_permute_type = sys.argv[4]
+        argv_alpha_dist = sys.argv[5]
+        argv_num_layers = int(sys.argv[6])
+        seed_all(argv_seed)
 
         argv_outfile_path = os.path.join(
             sys.argv[3],
-            '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
-                                        argv_curr_model,
-                                        argv_permute_type,
-                                        argv_alpha_dist,
-                                        argv_seed))
+            '{}-{}_{}-{}-{}-{}.csv'.format(datetime.date.today(),
+                                          argv_curr_model,
+                                          argv_num_layers,
+                                          argv_permute_type,
+                                          argv_alpha_dist,
+                                          argv_seed))
 
     setup_experiment(argv_seed,
                      argv_outfile_path,
                      argv_curr_model,
                      argv_permute_type,
-                     argv_alpha_dist)
+                     argv_alpha_dist,
+                     argv_num_layers)
