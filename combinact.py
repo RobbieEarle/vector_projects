@@ -523,6 +523,8 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
     """
 
     # ---- Initialization
+    model.apply(weights_init)
+
     model_params = [
         {'params': model.all_weights.parameters()},
         {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
@@ -530,10 +532,8 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
     if model.curr_model == "combinact":
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
-    model.apply(weights_init)
-
     optimizer = optim.Adam(model_params,
-                           lr=10**-8,
+                           lr=10 ** -8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
                            eps=hyper_params['adam_eps'],
                            weight_decay=hyper_params['adam_wd']
@@ -541,10 +541,10 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
     criterion = nn.CrossEntropyLoss()
 
     scheduler = CyclicLR(optimizer,
-                         base_lr=10**-8,
+                         base_lr=10 ** -8,
                          max_lr=hyper_params['max_lr'],
                          step_size_up=int(hyper_params['cycle_peak'] * 5000),  # 5000 = tot number of batches: 500 * 10
-                         step_size_down=int((1-hyper_params['cycle_peak']) * 5000),
+                         step_size_down=int((1 - hyper_params['cycle_peak']) * 5000),
                          cycle_momentum=False
                          )
 
@@ -605,8 +605,7 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'seed': seed,
-                             'iteration': iteration,
+            writer.writerow({'iteration': iteration,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -619,161 +618,190 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
                              'alpha_dist': model.alpha_dist,
-                             'n_params': get_n_params(model)
+                             'n_params': get_n_params(model),
+                             'num_training_samples': seed
                              })
 
         epoch += 1
 
 
-def setup_experiment(seed, outfile_path, curr_model, permute_type, alpha_dist, num_layers):
+def setup_experiment(seed, outfile_path, curr_model):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
     :param seed: seed for parameter randomization
     :param outfile_path: path to save outputs from experiment
     :param curr_model: model architecture
-    :param permute_type: permutation strategy used by model
-    :param alpha_dist: how to distribute alpha vectors in our model
     :return:
     """
 
-    # ---- Randomizing indices for training sets
-    rng = np.random.RandomState(seed)
-    num_train_samples = (seed + 1) * 500
-    indices = np.arange(0, 50000)
-    train_set_indices = []
-    for i in range(10):
-        np.random.shuffle(indices)
-        train_set_indices.append(np.copy(indices[:num_train_samples]))
+    # ---- Loading MNIST
+    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
+    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
+    train_set_indices = np.arange(0, seed)
     validation_set_indices = np.arange(50000, 60000)
 
-    # ---- Randomizing network structure & activation functions
+    mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
+    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
     batch_size = 100
-    if num_layers == 2:
-        net_struct = torch.tensor([
-            [250, 2, 8, 1],
-            [200, 2, 4, 1]
-        ])
-    elif num_layers == 3:
-        net_struct = torch.tensor([
-            [250, 2, 8, 1],
-            [200, 2, 4, 1],
-            [100, 2, 2, 1]
-        ])
+    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True,
+                                               pin_memory=True)
+    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
+                                                    pin_memory=True)
 
+    rng = np.random.RandomState(seed)
     if curr_model == "relu":
         actfuns = ["relu"]
-    if curr_model == "combinact":
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.65, -2.3)),
+                        "adam_beta_2": np.exp(rng.uniform(-7.2, -6.5)),
+                        "adam_eps": np.exp(rng.uniform(-20, -19.5)),
+                        "adam_wd": np.exp(rng.uniform(-12.2, -11.8)),
+                        "max_lr": np.exp(rng.uniform(-5.85, -5.5)),
+                        "cycle_peak": rng.uniform(0.275, 0.33)
+                        }
+    elif curr_model == "cf_relu":
+        actfuns = ["relu"]
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-4.5, -4.25)),
+                        "adam_beta_2": np.exp(rng.uniform(-5.4, -4)),
+                        "adam_eps": np.exp(rng.uniform(-17.8, -17.4)),
+                        "adam_wd": np.exp(rng.uniform(-12.8, -12.2)),
+                        "max_lr": np.exp(rng.uniform(-8.9, -8.5)),
+                        "cycle_peak": rng.uniform(0.1, 0.14)
+                        }
+    elif curr_model == "multi_relu":
+        actfuns = ["multi_relu"]
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-3, -2.75)),
+                        "adam_beta_2": np.exp(rng.uniform(-5.75, -5.2)),
+                        "adam_eps": np.exp(rng.uniform(-20.65, -19.7)),
+                        "adam_wd": np.exp(rng.uniform(-12.9, -12.6)),
+                        "max_lr": np.exp(rng.uniform(-6.4, -5.4)),
+                       "cycle_peak": rng.uniform(0.26, 0.295)
+                        }
+    elif curr_model == "combinact":
         actfuns = ['max', 'signed_geomean', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
-    if curr_model == "l1":
-        actfuns = ["l1"]
-    if curr_model == "l2" or curr_model == "abs":
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.9, -2.5)),
+                        "adam_beta_2": np.exp(rng.uniform(-8, -7.25)),
+                        "adam_eps": np.exp(rng.uniform(-17.35, -16.5)),
+                        "adam_wd": np.exp(rng.uniform(-12.95, -12)),
+                        "max_lr": np.exp(rng.uniform(-5.25, -5)),
+                        "cycle_peak": rng.uniform(0.46, 0.49)
+                        }
+    elif curr_model == "l2":
         actfuns = ["l2"]
-    if curr_model == "l2_lae":
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.5, -2.2)),
+                        "adam_beta_2": np.exp(rng.uniform(-6.3, -5.5)),
+                        "adam_eps": np.exp(rng.uniform(-17, -16.5)),
+                        "adam_wd": np.exp(rng.uniform(-14.5, -13.85)),
+                        "max_lr": np.exp(rng.uniform(-5.55, -5.29)),
+                        "cycle_peak": rng.uniform(0.335, 0.37)
+                        }
+    elif curr_model == "abs":
+        actfuns = ["l2"]
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-3.4, -3.05)),
+                        "adam_beta_2": np.exp(rng.uniform(-4.25, -4)),
+                        "adam_eps": np.exp(rng.uniform(-21, -20.1)),
+                        "adam_wd": np.exp(rng.uniform(-13.5, -13)),
+                        "max_lr": np.exp(rng.uniform(-6, -5.7)),
+                        "cycle_peak": rng.uniform(0.3, 0.375)
+                        }
+    elif curr_model == "cf_abs":
+        actfuns = ["l2"]
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-5.1, -4.8)),
+                        "adam_beta_2": np.exp(rng.uniform(-6.05, -5.7)),
+                        "adam_eps": np.exp(rng.uniform(-18.5, -17.6)),
+                        "adam_wd": np.exp(rng.uniform(-15.45, -14.85)),
+                        "max_lr": np.exp(rng.uniform(-6.75, -6.57)),
+                        "cycle_peak": rng.uniform(0.11, 0.13)
+                        }
+    elif curr_model == "l2_lae":
         actfuns = ["l2", "lae"]
-    if curr_model == "max":
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.55, -2.4)),
+                        "adam_beta_2": np.exp(rng.uniform(-5.6, -5)),
+                        "adam_eps": np.exp(rng.uniform(-16.3, -15.6)),
+                        "adam_wd": np.exp(rng.uniform(-12.9, -12.4)),
+                        "max_lr": np.exp(rng.uniform(-5.58, -5.4)),
+                        "cycle_peak": rng.uniform(0.37, 0.44)
+                        }
+    elif curr_model == "max":
         actfuns = ["max"]
-
-    if curr_model == "combinact":
-        curr_alpha_dist = alpha_dist
+        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.35, -2.05)),
+                        "adam_beta_2": np.exp(rng.uniform(-8, -7)),
+                        "adam_eps": np.exp(rng.uniform(-18.56, -18.06)),
+                        "adam_wd": np.exp(rng.uniform(-12.96, -12.81)),
+                        "max_lr": np.exp(rng.uniform(-5.45, -5.4)),
+                        "cycle_peak": rng.uniform(0.26, 0.32)
+                        }
     else:
-        curr_alpha_dist = None
-
-    model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
-                         alpha_dist=curr_alpha_dist, curr_model=curr_model, permute_type=permute_type)
-
-    if torch.cuda.is_available():
-        model = model.cuda()
-
-    print(
-        "\n===================================================================\n\n"
-        "Outfile Path: {} \n"
-        "Network Structure: \n"
-        "{} \n"
-        "Model Type: {} \n"
-        "Alpha Distribution: {} \n"
-        "Permute Type: {} \n"
-        "Activation Functions: \n"
-        "{} \n"
-        "Number of Parameters: {}\n\n"
-            .format(outfile_path, net_struct, curr_model, curr_alpha_dist, permute_type, actfuns, get_n_params(model)), flush=True
-    )
+        actfuns = []
 
     # ---- Create new output file
-    fieldnames = ['seed', 'iteration', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct',
-                  'model_type', 'permute_type', 'actfuns', 'alpha_primes', 'alphas', 'alpha_dist', 'n_params']
+    fieldnames = ['epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
+                  'actfuns', 'alpha_primes', 'alphas', 'hyper_params', 'num_layers', 'num_train_samples']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
 
-    # ---- Use optimized hyperparams for l2 from previous random search
-    # TODO: Optimize these parameters using another random search. Right now params are optimal for only l2
-    hyper_params = {"adam_beta_1": 0.760516,
-                    "adam_beta_2": 0.999983,
-                    "adam_eps": 1.7936 * 10 ** -8,
-                    "adam_wd": 1.33755 * 10 ** -5,
-                    "max_lr": 0.0122491,
-                    "cycle_peak": 0.234177
-                    }
+    for num_layers in range(2, 4):
+        if num_layers == 2:
+            net_struct = torch.tensor([[250, 2, 1, 1],
+                                       [200, 2, 1, 1]])
+        elif num_layers == 3:
+            net_struct = torch.tensor([[250, 2, 1, 1],
+                                       [200, 2, 1, 1],
+                                       [100, 2, 1, 1]])
 
-    # ---- Loading datasets and starting experiment
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
-    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
-    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
-    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
-                                                    pin_memory=True)
+        model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
+                             curr_model=curr_model)
 
-    for iteration in range(10):
-        curr_train_set_indices = train_set_indices[iteration]
-        mnist_train = torch.utils.data.Subset(mnist_train_full, curr_train_set_indices)
-        train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True,
-                                                   pin_memory=True)
-        print("Running Iteration " + str(iteration) + "...")
-        train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, validation_loader, hyper_params)
+        if torch.cuda.is_available():
+            model = model.cuda()
+
+        print(
+            "\n===================================================================\n\n"
+            "Outfile Path: {} \n"
+            "Number of Layers: {} \n"
+            "Network Structure: \n"
+            "{} \n"
+            "Model Type: {} \n"
+            "Activation Functions: \n"
+            "{} \n"
+            "Hyper-Parameters: \n"
+            "{} \n"
+            "Number of Parameters: {}\n\n"
+                .format(outfile_path, num_layers, net_struct, curr_model, actfuns, hyper_params, get_n_params(model)), flush=True
+        )
+
+        # ---- Begin training model
+        print("Running...")
+        seed_all(0)
+        train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers)
         print()
 
 
 # --------------------  Entry Point
-
-
 if __name__ == '__main__':
 
     # ---- Handle running locally
     if len(sys.argv) == 1:
-        seed_all(0)
-        argv_seed = 0
-        argv_curr_model = "relu"  # relu, combinact, l1, l2, l2_lae, abs
-        argv_permute_type = "shuffle"  # roll, roll_grouped, shuffle
-        argv_alpha_dist = "per_cluster"  # per_cluster, per_perm
-        argv_num_layers = 2
-
-        argv_outfile_path = '{}-{}-{}-{}-{}.csv'.format(datetime.date.today(),
-                                                        argv_curr_model,
-                                                        argv_permute_type,
-                                                        argv_alpha_dist,
-                                                        argv_seed)
+        argv_seed = 1 * 50000
+        argv_curr_model = "multi_relu"  # relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max
+        argv_outfile_path = '{}-{}-{}.csv'.format(datetime.date.today(),
+                                                  argv_curr_model,
+                                                  argv_seed)
 
     # ---- Handle running on Vector
     else:
-        argv_seed = int(sys.argv[1])
+        argv_seed = int(sys.argv[1]) * 100
         argv_curr_model = sys.argv[3]
-        argv_permute_type = sys.argv[4]
-        argv_alpha_dist = sys.argv[5]
-        argv_num_layers = int(sys.argv[6])
-        seed_all(argv_seed)
 
         argv_outfile_path = os.path.join(
-            sys.argv[3],
-            '{}-{}_{}-{}-{}-{}.csv'.format(datetime.date.today(),
-                                          argv_curr_model,
-                                          argv_num_layers,
-                                          argv_permute_type,
-                                          argv_alpha_dist,
-                                          argv_seed))
+            sys.argv[2],
+            '{}-{}-{}.csv'.format(datetime.date.today(),
+                                  argv_curr_model,
+                                  argv_seed))
 
     setup_experiment(argv_seed,
                      argv_outfile_path,
-                     argv_curr_model,
-                     argv_permute_type,
-                     argv_alpha_dist,
-                     argv_num_layers)
+                     argv_curr_model
+                     )
+
