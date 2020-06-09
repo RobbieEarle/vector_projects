@@ -293,7 +293,10 @@ class CombinactNet(nn.Module):
         self.num_hidden_layers = net_struct.size()[0]
         self.net_struct = net_struct
         self.actfuns = actfuns
-        self.alpha_dist = alpha_dist
+        if curr_model == 'combinact':
+            self.alpha_dist = alpha_dist
+        else:
+            self.alpha_dist = None
         self.in_size = in_size
         self.out_size = out_size
         self.batch_size = batch_size
@@ -302,6 +305,7 @@ class CombinactNet(nn.Module):
         self.all_batch_norms = nn.ModuleList()
         self.hyper_params = {'M': [], 'k': [], 'p': [], 'g': []}
         self.shuffle_maps = []
+        self.multi_relu_maps = []
 
         # Creating nn.Linear transformations for each layer. Also stores hyperparams in easier to reference dict
         layer_inputs = int(in_size)
@@ -452,17 +456,34 @@ class CombinactNet(nn.Module):
         # Split our M inputs nodes into clusters of size k
         x = x.view(self.batch_size, clusters, k, p)
 
-        # ----------------- max only
-        if self.curr_model == "max":
+        # ----------------- cf_relu
+        if self.curr_model == "cf_relu":
+            shuffle_map = torch.empty(int(M / k), dtype=torch.long).random_(k)
+            x = x[:, torch.arange(x.size(1)), shuffle_map]
+            x = F.relu(x)
+
+        # ----------------- multi_relu
+        elif self.curr_model == "multi_relu":
+            x = _ACTFUNS2D['max'](x)
+            x = F.relu(x)
+
+        # ----------------- max
+        elif self.curr_model == "max":
             x = _ACTFUNS2D['max'](x)
 
-        # ----------------- L1 only
-        if self.curr_model == "l1":
+        # ----------------- L1
+        elif self.curr_model == "l1":
             x = _ACTFUNS2D['l1'](x)
 
-        # ----------------- L2 only
-        if self.curr_model == "l2" or self.curr_model == "abs":
+        # ----------------- L2 or abs
+        elif self.curr_model == "l2" or self.curr_model == "abs":
             x = _ACTFUNS2D['l2'](x)
+
+        # ----------------- cf_abs
+        elif self.curr_model == "cf_abs":
+            shuffle_map = torch.empty(int(M / k), dtype=torch.long).random_(k)
+            x = x[:, torch.arange(x.size(1)), shuffle_map]
+            x = _ACTFUNS2D['l2'](x).unsqueeze(dim=2)
 
         # ----------------- L2 and LAE
         elif self.curr_model == "l2_lae":
@@ -509,7 +530,7 @@ class CombinactNet(nn.Module):
 # -------------------- Setting Up & Running Training Function
 
 
-def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, validation_loader, hyper_params):
+def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers):
     """
     Runs training session for a given randomized model
     :param model: model to train
@@ -524,6 +545,10 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
 
     # ---- Initialization
     model.apply(weights_init)
+
+    for param in model.all_weights[0].parameters():
+        print(param.data.shape, flush=True)
+        print(param.data[:5], flush=True)
 
     model_params = [
         {'params': model.all_weights.parameters()},
@@ -605,7 +630,7 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'iteration': iteration,
+            writer.writerow({'num_train_samples': seed,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -613,13 +638,11 @@ def train_model(model, outfile_path, fieldnames, seed, iteration, train_loader, 
                              'time': (time.time() - start_time),
                              'net_struct': model.net_struct.tolist(),
                              'model_type': model.curr_model,
-                             'permute_type': model.permute_type,
                              'actfuns': model.actfuns,
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
-                             'alpha_dist': model.alpha_dist,
-                             'n_params': get_n_params(model),
-                             'num_training_samples': seed
+                             'hyper_params': hyper_params,
+                             'num_layers': num_layers
                              })
 
         epoch += 1
@@ -735,13 +758,14 @@ def setup_experiment(seed, outfile_path, curr_model):
         actfuns = []
 
     # ---- Create new output file
-    fieldnames = ['epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
-                  'actfuns', 'alpha_primes', 'alphas', 'hyper_params', 'num_layers', 'num_train_samples']
+    fieldnames = ['num_train_samples', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
+                  'actfuns', 'alpha_primes', 'alphas', 'hyper_params', 'num_layers']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
 
     for num_layers in range(2, 4):
+
         if num_layers == 2:
             net_struct = torch.tensor([[250, 2, 1, 1],
                                        [200, 2, 1, 1]])
@@ -749,12 +773,6 @@ def setup_experiment(seed, outfile_path, curr_model):
             net_struct = torch.tensor([[250, 2, 1, 1],
                                        [200, 2, 1, 1],
                                        [100, 2, 1, 1]])
-
-        model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
-                             curr_model=curr_model)
-
-        if torch.cuda.is_available():
-            model = model.cuda()
 
         print(
             "\n===================================================================\n\n"
@@ -767,15 +785,23 @@ def setup_experiment(seed, outfile_path, curr_model):
             "{} \n"
             "Hyper-Parameters: \n"
             "{} \n"
-            "Number of Parameters: {}\n\n"
-                .format(outfile_path, num_layers, net_struct, curr_model, actfuns, hyper_params, get_n_params(model)), flush=True
+            "Number of Training Samples: {}\n\n"
+                .format(outfile_path, num_layers, net_struct, curr_model, actfuns, hyper_params, seed), flush=True
         )
 
-        # ---- Begin training model
-        print("Running...")
-        seed_all(0)
-        train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers)
-        print()
+        for iteration in range(10):
+
+            model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
+                                 curr_model=curr_model)
+
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            # ---- Begin training model
+            print("------------ Iteration " + iteration + "...", flush=True)
+            seed_all(int(10 * num_layers) + iteration)
+            train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers)
+            print()
 
 
 # --------------------  Entry Point
@@ -783,15 +809,15 @@ if __name__ == '__main__':
 
     # ---- Handle running locally
     if len(sys.argv) == 1:
-        argv_seed = 1 * 50000
-        argv_curr_model = "multi_relu"  # relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max
+        argv_seed = 1 * 500
+        argv_curr_model = "combinact"  # relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max
         argv_outfile_path = '{}-{}-{}.csv'.format(datetime.date.today(),
                                                   argv_curr_model,
                                                   argv_seed)
 
     # ---- Handle running on Vector
     else:
-        argv_seed = int(sys.argv[1]) * 100
+        argv_seed = int(sys.argv[1]) * 500
         argv_curr_model = sys.argv[3]
 
         argv_outfile_path = os.path.join(

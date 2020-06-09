@@ -4,7 +4,7 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=1-500%10       # array value
+#SBATCH --array=1-100%10       # array value
 #SBATCH --output=logs/var_train_samples/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=var_train_samples
 
