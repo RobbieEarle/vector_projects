@@ -672,87 +672,86 @@ def setup_experiment(seed, outfile_path, curr_model):
     validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
                                                     pin_memory=True)
 
-    rng = np.random.RandomState(seed)
     if curr_model == "relu":
         actfuns = ["relu"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.65, -2.3)),
-                        "adam_beta_2": np.exp(rng.uniform(-7.2, -6.5)),
-                        "adam_eps": np.exp(rng.uniform(-20, -19.5)),
-                        "adam_wd": np.exp(rng.uniform(-12.2, -11.8)),
-                        "max_lr": np.exp(rng.uniform(-5.85, -5.5)),
-                        "cycle_peak": rng.uniform(0.275, 0.33)
+        hyper_params = {"adam_beta_1": np.exp(-2.375018573261741),
+                        "adam_beta_2": np.exp(-6.565065478550015),
+                        "adam_eps": np.exp(-19.607731090387627),
+                        "adam_wd": np.exp(-11.86635747404571),
+                        "max_lr": np.exp(-5.7662952418075175),
+                        "cycle_peak": 0.2935155263985412
                         }
     elif curr_model == "cf_relu":
         actfuns = ["relu"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-4.5, -4.25)),
-                        "adam_beta_2": np.exp(rng.uniform(-5.4, -4)),
-                        "adam_eps": np.exp(rng.uniform(-17.8, -17.4)),
-                        "adam_wd": np.exp(rng.uniform(-12.8, -12.2)),
-                        "max_lr": np.exp(rng.uniform(-8.9, -8.5)),
-                        "cycle_peak": rng.uniform(0.1, 0.14)
+        hyper_params = {"adam_beta_1": np.exp(-4.44857338551192),
+                        "adam_beta_2": np.exp(-4.669825410890087),
+                        "adam_eps": np.exp(-17.69933166220988),
+                        "adam_wd": np.exp(-12.283288733512373),
+                        "max_lr": np.exp(-8.563504990329884),
+                        "cycle_peak": 0.10393251332079881
                         }
     elif curr_model == "multi_relu":
         actfuns = ["multi_relu"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-3, -2.75)),
-                        "adam_beta_2": np.exp(rng.uniform(-5.75, -5.2)),
-                        "adam_eps": np.exp(rng.uniform(-20.65, -19.7)),
-                        "adam_wd": np.exp(rng.uniform(-12.9, -12.6)),
-                        "max_lr": np.exp(rng.uniform(-6.4, -5.4)),
-                       "cycle_peak": rng.uniform(0.26, 0.295)
+        hyper_params = {"adam_beta_1": np.exp(-2.859441513546877),
+                        "adam_beta_2": np.exp(-5.617992566623951),
+                        "adam_eps": np.exp(-20.559015044774018),
+                        "adam_wd": np.exp(-12.693844976989661),
+                        "max_lr": np.exp(-5.802816398828524),
+                        "cycle_peak": 0.28499869111025217
                         }
     elif curr_model == "combinact":
         actfuns = ['max', 'signed_geomean', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.9, -2.5)),
-                        "adam_beta_2": np.exp(rng.uniform(-8, -7.25)),
-                        "adam_eps": np.exp(rng.uniform(-17.35, -16.5)),
-                        "adam_wd": np.exp(rng.uniform(-12.95, -12)),
-                        "max_lr": np.exp(rng.uniform(-5.25, -5)),
-                        "cycle_peak": rng.uniform(0.46, 0.49)
+        hyper_params = {"adam_beta_1": np.exp(-2.6436039683427253),
+                        "adam_beta_2": np.exp(-7.371516988658699),
+                        "adam_eps": np.exp(-16.989022147994522),
+                        "adam_wd": np.exp(-12.113778466374383),
+                        "max_lr": np.exp(-5.211973674318645),
+                        "cycle_peak": 0.4661308739740898
                         }
     elif curr_model == "l2":
         actfuns = ["l2"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.5, -2.2)),
-                        "adam_beta_2": np.exp(rng.uniform(-6.3, -5.5)),
-                        "adam_eps": np.exp(rng.uniform(-17, -16.5)),
-                        "adam_wd": np.exp(rng.uniform(-14.5, -13.85)),
-                        "max_lr": np.exp(rng.uniform(-5.55, -5.29)),
-                        "cycle_peak": rng.uniform(0.335, 0.37)
+        hyper_params = {"adam_beta_1": np.exp(-2.244614412525641),
+                        "adam_beta_2": np.exp(-5.502197648895974),
+                        "adam_eps": np.exp(-16.919215725249092),
+                        "adam_wd": np.exp(-13.99956243808541),
+                        "max_lr": np.exp(-5.383090612225605),
+                        "cycle_peak": 0.35037784343793205
                         }
     elif curr_model == "abs":
         actfuns = ["l2"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-3.4, -3.05)),
-                        "adam_beta_2": np.exp(rng.uniform(-4.25, -4)),
-                        "adam_eps": np.exp(rng.uniform(-21, -20.1)),
-                        "adam_wd": np.exp(rng.uniform(-13.5, -13)),
-                        "max_lr": np.exp(rng.uniform(-6, -5.7)),
-                        "cycle_peak": rng.uniform(0.3, 0.375)
+        hyper_params = {"adam_beta_1": np.exp(-3.1576858739457845),
+                        "adam_beta_2": np.exp(-4.165206705873042),
+                        "adam_eps": np.exp(-20.430988799955056),
+                        "adam_wd": np.exp(-13.049933891070697),
+                        "max_lr": np.exp(-5.809683797646132),
+                        "cycle_peak": 0.34244342851740034
                         }
     elif curr_model == "cf_abs":
         actfuns = ["l2"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-5.1, -4.8)),
-                        "adam_beta_2": np.exp(rng.uniform(-6.05, -5.7)),
-                        "adam_eps": np.exp(rng.uniform(-18.5, -17.6)),
-                        "adam_wd": np.exp(rng.uniform(-15.45, -14.85)),
-                        "max_lr": np.exp(rng.uniform(-6.75, -6.57)),
-                        "cycle_peak": rng.uniform(0.11, 0.13)
+        hyper_params = {"adam_beta_1": np.exp(-5.453380890632929),
+                        "adam_beta_2": np.exp(-5.879222236954101),
+                        "adam_eps": np.exp(-18.303333640483068),
+                        "adam_wd": np.exp(-15.152599023560422),
+                        "max_lr": np.exp(-6.604045812173043),
+                        "cycle_peak": 0.11189158130301018
                         }
     elif curr_model == "l2_lae":
         actfuns = ["l2", "lae"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.55, -2.4)),
-                        "adam_beta_2": np.exp(rng.uniform(-5.6, -5)),
-                        "adam_eps": np.exp(rng.uniform(-16.3, -15.6)),
-                        "adam_wd": np.exp(rng.uniform(-12.9, -12.4)),
-                        "max_lr": np.exp(rng.uniform(-5.58, -5.4)),
-                        "cycle_peak": rng.uniform(0.37, 0.44)
+        hyper_params = {"adam_beta_1": np.exp(-2.4561852034212),
+                        "adam_beta_2": np.exp(-5.176943480470942),
+                        "adam_eps": np.exp(-16.032458209235187),
+                        "adam_wd": np.exp(-12.860274699438266),
+                        "max_lr": np.exp(-5.540947578537945),
+                        "cycle_peak": 0.40750994546983904
                         }
     elif curr_model == "max":
         actfuns = ["max"]
-        hyper_params = {"adam_beta_1": np.exp(rng.uniform(-2.35, -2.05)),
-                        "adam_beta_2": np.exp(rng.uniform(-8, -7)),
-                        "adam_eps": np.exp(rng.uniform(-18.56, -18.06)),
-                        "adam_wd": np.exp(rng.uniform(-12.96, -12.81)),
-                        "max_lr": np.exp(rng.uniform(-5.45, -5.4)),
-                        "cycle_peak": rng.uniform(0.26, 0.32)
+        hyper_params = {"adam_beta_1": np.exp(-2.2169207045481505),
+                        "adam_beta_2": np.exp(-7.793567052557596),
+                        "adam_eps": np.exp(-18.23187258333265),
+                        "adam_wd": np.exp(-12.867866026516422),
+                        "max_lr": np.exp(-5.416840501318637),
+                        "cycle_peak": 0.28254869607601146
                         }
     else:
         actfuns = []
