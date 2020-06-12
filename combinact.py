@@ -797,7 +797,7 @@ def setup_experiment(seed, outfile_path, curr_model):
                 model = model.cuda()
 
             # ---- Begin training model
-            print("------------ Iteration " + iteration + "...", flush=True)
+            print("------------ Iteration " + str(iteration) + "...", flush=True)
             seed_all(int(10 * num_layers) + iteration)
             train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers)
             print()
