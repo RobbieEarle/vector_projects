@@ -530,7 +530,8 @@ class CombinactNet(nn.Module):
 # -------------------- Setting Up & Running Training Function
 
 
-def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers):
+def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader,
+                hyper_params, num_layers, sample_size):
     """
     Runs training session for a given randomized model
     :param model: model to train
@@ -630,7 +631,7 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'num_train_samples': seed,
+            writer.writerow({'seed': seed,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -642,7 +643,8 @@ def train_model(model, outfile_path, fieldnames, seed, train_loader, validation_
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
                              'hyper_params': hyper_params,
-                             'num_layers': num_layers
+                             'num_layers': num_layers,
+                             'sample_size': sample_size
                              })
 
         epoch += 1
@@ -657,20 +659,6 @@ def setup_experiment(seed, outfile_path, curr_model):
     :param curr_model: model architecture
     :return:
     """
-
-    # ---- Loading MNIST
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
-    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
-    train_set_indices = np.arange(0, seed)
-    validation_set_indices = np.arange(50000, 60000)
-
-    mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
-    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
-    batch_size = 100
-    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True,
-                                               pin_memory=True)
-    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
-                                                    pin_memory=True)
 
     if curr_model == "relu":
         actfuns = ["relu"]
@@ -757,8 +745,8 @@ def setup_experiment(seed, outfile_path, curr_model):
         actfuns = []
 
     # ---- Create new output file
-    fieldnames = ['num_train_samples', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
-                  'actfuns', 'alpha_primes', 'alphas', 'hyper_params', 'num_layers']
+    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
+                  'actfuns', 'alpha_primes', 'alphas', 'hyper_params', 'num_layers', 'sample_size']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -788,7 +776,22 @@ def setup_experiment(seed, outfile_path, curr_model):
                 .format(outfile_path, num_layers, net_struct, curr_model, actfuns, hyper_params, seed), flush=True
         )
 
-        for iteration in range(10):
+        for sample_size in range(5000, 50001, 5000):
+
+            # ---- Loading MNIST
+            seed_all(seed+sample_size)
+            trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
+            mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
+            train_set_indices = np.random.choice(50000, sample_size, replace=False)
+            validation_set_indices = np.arange(50000, 60000)
+
+            mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
+            mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
+            batch_size = 100
+            train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True,
+                                                       pin_memory=True)
+            validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size, shuffle=True,
+                                                            pin_memory=True)
 
             model = CombinactNet(net_struct=net_struct, actfuns=actfuns, in_size=784, out_size=10, batch_size=batch_size,
                                  curr_model=curr_model)
@@ -797,9 +800,10 @@ def setup_experiment(seed, outfile_path, curr_model):
                 model = model.cuda()
 
             # ---- Begin training model
-            print("------------ Iteration " + str(iteration) + "...", flush=True)
-            seed_all(int(10 * num_layers) + iteration)
-            train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader, hyper_params, num_layers)
+            print("------------ Sample Size " + str(sample_size) + "...", flush=True)
+            print(train_set_indices)
+            train_model(model, outfile_path, fieldnames, seed, train_loader, validation_loader,
+                        hyper_params, num_layers, sample_size)
             print()
 
 
@@ -808,15 +812,15 @@ if __name__ == '__main__':
 
     # ---- Handle running locally
     if len(sys.argv) == 1:
-        argv_seed = 1 * 500
-        argv_curr_model = "combinact"  # relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max
+        argv_seed = 0
+        argv_curr_model = "abs"  # relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max
         argv_outfile_path = '{}-{}-{}.csv'.format(datetime.date.today(),
                                                   argv_curr_model,
                                                   argv_seed)
 
     # ---- Handle running on Vector
     else:
-        argv_seed = int(sys.argv[1]) * 500
+        argv_seed = int(sys.argv[1])
         argv_curr_model = sys.argv[3]
 
         argv_outfile_path = os.path.join(

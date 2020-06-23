@@ -4,9 +4,9 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=1-100%10       # array value
-#SBATCH --output=logs/var_train_samples/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=var_train_samples
+#SBATCH --array=0-500%12       # array value
+#SBATCH --output=logs/var_train_samples2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=var_train_samples2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -29,11 +29,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 python combinact.py "$SEED" "$SAVE_PATH" "relu"
-python combinact.py "$SEED" "$SAVE_PATH" "multi_relu"
 python combinact.py "$SEED" "$SAVE_PATH" "abs"
-python combinact.py "$SEED" "$SAVE_PATH" "l2"
-python combinact.py "$SEED" "$SAVE_PATH" "l2_lae"
-python combinact.py "$SEED" "$SAVE_PATH" "max"
-python combinact.py "$SEED" "$SAVE_PATH" "combinact"
-python combinact.py "$SEED" "$SAVE_PATH" "cf_relu"
-python combinact.py "$SEED" "$SAVE_PATH" "cf_abs"
