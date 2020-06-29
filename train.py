@@ -2,8 +2,6 @@ import torch
 import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
 from torch.optim.lr_scheduler import CyclicLR
 
 import models
@@ -88,7 +86,8 @@ _HYPERPARAMS = {
 
 # -------------------- Setting Up & Running Training Function
 
-def train_model(actfun,
+def train_model(dataset,
+                actfun,
                 net_struct,
                 outfile_path,
                 fieldnames,
@@ -99,6 +98,7 @@ def train_model(actfun,
                 device):
     """
     Runs training session for a given randomized model
+    :param dataset: the dataset currently being used to train model
     :param actfun: what activation type is being used by model
     :param net_struct: structure of our neural network
     :param outfile_path: path to save outputs from training session
@@ -112,9 +112,14 @@ def train_model(actfun,
     """
 
     # ---- Initialization
-    model = models.CombinactNN(net_struct=net_struct, actfun=actfun).to(device)
+    if dataset == 'mnist':
+        model = models.CombinactNN(net_struct=net_struct, actfun=actfun, num_inputs=784, num_outputs=10).to(device)
+    elif dataset == 'cifar10':
+        model = models.CombinactNN(net_struct=net_struct, actfun=actfun, num_inputs=3072, num_outputs=10).to(device)
+    util.seed_all(seed)
     model.apply(util.weights_init)
 
+    print("Initial First Layer Weights:")
     for param in model.linear_layers[0].parameters():
         print(param.data.shape, flush=True)
         print(param.data[:5], flush=True)
@@ -147,7 +152,7 @@ def train_model(actfun,
     # ---- Start Training
     epoch = 1
     while epoch <= 10:
-
+        util.seed_all(seed+epoch)
         start_time = time.time()
         final_train_loss = 0
         # ---- Training
@@ -187,7 +192,8 @@ def train_model(actfun,
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'seed': seed,
+            writer.writerow({'dataset': dataset,
+                             'seed': seed,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -203,7 +209,7 @@ def train_model(actfun,
         epoch += 1
 
 
-def setup_experiment(seed, outfile_path, actfun):
+def setup_experiment(args, outfile_path):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
@@ -214,7 +220,7 @@ def setup_experiment(seed, outfile_path, actfun):
     """
 
     # ---- Create new output file
-    fieldnames = ['seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
+    fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
                   'num_layers', 'sample_size', 'hyper_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
@@ -224,7 +230,7 @@ def setup_experiment(seed, outfile_path, actfun):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    if actfun == 'relu' or actfun == 'abs':
+    if args.actfun == 'relu' or args.actfun == 'abs':
         net_struct = {
             'num_layers': 2,
             'M': [250, 200],
@@ -241,30 +247,17 @@ def setup_experiment(seed, outfile_path, actfun):
             'g': [1, 1]
         }
 
-    util.print_exp_settings(seed, outfile_path, net_struct, actfun)
-    sample_size = 50000
+    util.print_exp_settings(args.seed, args.dataset, outfile_path, net_struct, args.actfun)
 
-    # ---- Loading MNIST
-    util.seed_all(seed + sample_size)
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    mnist_train_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
-    train_set_indices = np.random.choice(50000, sample_size, replace=False)
-    validation_set_indices = np.arange(50000, 60000)
-
-    mnist_train = torch.utils.data.Subset(mnist_train_full, train_set_indices)
-    mnist_validation = torch.utils.data.Subset(mnist_train_full, validation_set_indices)
-    batch_size = 100
-    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size,
-                                               shuffle=True, **kwargs)
-    validation_loader = torch.utils.data.DataLoader(dataset=mnist_validation, batch_size=batch_size,
-                                                    shuffle=True, **kwargs)
+    # ---- Loading Dataset
+    curr_seed = args.seed
+    train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
+                                                                     seed=curr_seed,
+                                                                     kwargs=kwargs)
 
     # ---- Begin training model
-    print("------------ Sample Size " + str(sample_size) + "...", flush=True)
-    print()
-    print("Sample of randomized indices and weights:")
-    print(train_set_indices)
-    train_model(actfun, net_struct, outfile_path, fieldnames, seed,
+    util.seed_all(curr_seed)
+    train_model(args.dataset, args.actfun, net_struct, outfile_path, fieldnames, args.seed,
                 train_loader, validation_loader, sample_size, device)
     print()
 
@@ -272,22 +265,23 @@ def setup_experiment(seed, outfile_path, actfun):
 # --------------------  Entry Point
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--seed', type=int, default=0, help='Job seed')
+    parser.add_argument('--seed', type=int, default=1, help='Job seed')
     parser.add_argument('--actfun', type=str, default='max',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
-    parser.add_argument('--dataset', type=str, default='perm_inv_mnist', help='Where to save results')
+    parser.add_argument('--dataset', type=str, default='mnist', help='Where to save results')
+    parser.add_argument('--model', type=str, default='nn', help='Where to save results')
     args = parser.parse_args()
 
     out = os.path.join(
         args.save_path,
-        '{}-{}-{}-{}.csv'.format(datetime.date.today(),
-                                 args.actfun,
-                                 args.seed,
-                                 args.dataset))
+        '{}-{}-{}-{}-{}.csv'.format(
+            datetime.date.today(),
+            args.actfun,
+            args.seed,
+            args.dataset,
+            args.model)
+    )
 
-    setup_experiment(args.seed,
-                     out,
-                     args.actfun
-                     )
+    setup_experiment(args, out)

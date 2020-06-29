@@ -83,8 +83,6 @@ class CombinactNN(nn.Module):
                 permutation = util.permute(x,
                                            self.permute_type,
                                            offset=i,
-                                           num_groups=2,
-                                           layer=layer,
                                            shuffle_map=self.shuffle_maps[layer][i]).view(batch_size, M, 1)
                 x = torch.cat((x[:, :, :i], permutation), dim=2)
 
@@ -101,7 +99,7 @@ class CombinactNN(nn.Module):
 
     def forward(self, x):
 
-        # x is initially torch.Size([100, 1, 28, 28]), this step converts to torch.Size([100, 784])
+        # For MNIST, x is initially torch.Size([100, 1, 28, 28]), this step converts to torch.Size([100, 784])
         batch_size = x.shape[0]
         x = x.reshape(batch_size, -1)
         curr_inputs = self.num_inputs

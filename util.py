@@ -1,6 +1,9 @@
 import torch
 import torch.utils.data
 import torch.nn as nn
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+
 import numpy as np
 import random
 import activation_functions as actfuns
@@ -135,16 +138,17 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def print_exp_settings(seed, outfile_path, net_struct, curr_model):
+def print_exp_settings(seed, dataset, outfile_path, net_struct, curr_model):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
+        "Data Set: {} \n"
         "Outfile Path: {} \n"
         "Number of Layers: {} \n"
         "Network Structure: \n"
         "{} \n"
         "Model Type: {} \n\n"
-            .format(seed, outfile_path, net_struct['num_layers'], net_struct, curr_model), flush=True
+            .format(seed, dataset, outfile_path, net_struct['num_layers'], net_struct, curr_model), flush=True
     )
 
 
@@ -184,7 +188,7 @@ def test_net_inputs(actfun, net_struct, in_size):
     return None
 
 
-def permute(self, x, method, offset, num_groups=1, layer=None, shuffle_map=None):
+def permute(x, method, offset, num_groups=2, shuffle_map=None):
     if method == "roll":
         return torch.cat((x[:, offset:, 0], x[:, :offset, 0]), dim=1)
     elif method == "roll_grouped":
@@ -204,3 +208,49 @@ def permute(self, x, method, offset, num_groups=1, layer=None, shuffle_map=None)
         return output
     elif method == "shuffle":
         return x[:, shuffle_map, [0]]
+
+
+def load_dataset(dataset,
+                 seed=0,
+                 batch_size=None,
+                 kwargs=None,
+                 sample_size=None):
+
+    seed_all(seed)
+
+    if dataset == 'mnist':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 60000
+        if batch_size is None:
+            batch_size = 100
+
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'cifar10':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 50000
+        if batch_size is None:
+            batch_size = 4
+
+        train_set_indices = np.random.choice(50000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    print("------------ Sample Size " + str(sample_size) + "...", flush=True)
+    print()
+
+    train_set = torch.utils.data.Subset(train_set_full, train_set_indices)
+    test_set = torch.utils.data.Subset(test_set_full, test_set_indices)
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
+    validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
+
+    return train_loader, validation_loader, sample_size
