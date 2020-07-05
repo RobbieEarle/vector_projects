@@ -28,6 +28,6 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun relu --dataset mnist --sample_size 60000 --batch_size 64
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun abs --dataset mnist --sample_size 60000 --batch_size 64
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun combinact --dataset mnist --sample_size 60000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun relu --dataset mnist --sample_size 60000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun abs --dataset mnist --sample_size 60000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --dataset mnist --sample_size 60000 --batch_size 64
