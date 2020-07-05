@@ -1,63 +1,81 @@
 import torch
 import torch.nn.functional as F
 from torch import logsumexp
+import util
 
 import math
 import numbers
+import time
 
 
-def calc(actfun, x, layer, M_in, k_in, p_in, g_in, alpha_primes=None, alpha_dist=None):
-
-    global M, k, p, g
-    M, k, p, g = M_in, k_in, p_in, g_in
-
-    if actfun == 'combinact':
-        batch_size = x.shape[0]
-        num_clusters = int(M / k) # Retrieve layer alpha primes
-        layer_alphas = F.softmax(alpha_primes, dim=1)  # Convert alpha prime to alpha
-
-        # Outputs collapse our k dimension to give [batch_size, num_clusters, p]
-        # We repeat this process once for each activation function, hence the extra dim
-        outputs = torch.zeros((batch_size, num_clusters, p, len(_COMBINACT_ACTFUNS)), device=x.device)
-        for i, actfun in enumerate(_COMBINACT_ACTFUNS):
-            outputs[:, :, :, i] = _ACTFUNS[actfun](x)
-
-        # per_perm -> layer_alphas = [p, num_actfuns]
-        if alpha_dist == "per_perm":
-            outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
-            outputs = torch.sum(outputs, dim=3)  # Sum across all actfuns
-
-        # per_cluster -> layer_alphas = [num_clusters * p, num_actfuns]
-        elif alpha_dist == "per_cluster":
-            outputs = outputs.reshape([batch_size, num_clusters * p, len(_COMBINACT_ACTFUNS)])
-            outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
-            outputs = torch.sum(outputs, dim=2)  # Sum across all actfuns
-
-        outputs = outputs.reshape([batch_size, num_clusters, p])
-        return outputs
-
-    elif actfun == "l2_lae":
-        if layer == 0 or layer == 1:
-            return _ACTFUNS['l2'](x)
-        else:
-            return _ACTFUNS['lae'](x)
-
+def activate(x, actfun, p=1, k=1, M=None,
+             layer_type='conv',
+             permute_type='shuffle',
+             shuffle_maps=None,
+             alpha_primes=None,
+             alpha_dist=None
+             ):
+    if actfun == 'relu':
+        return _ACTFUNS['relu'](x)
+    elif actfun == 'abs':
+        return _ACTFUNS['abs'](x)
     else:
-        return _ACTFUNS[actfun](x)
+
+        # Unsqueeze a dimension and populate it with permutations of our inputs
+        x = x.unsqueeze(2)
+        for i in range(1, p):
+            permutation = util.permute(x, permute_type, offset=i, shuffle_map=shuffle_maps[i])
+            x = torch.cat((x[:, :, :i, ...], permutation), dim=2)
+
+        # This transpose makes it so that during the next reshape (when we combine our p permutations
+        # into a single dimension), the order goes one full permutation after another (instead of
+        # interleaving the permutations)
+        x = torch.transpose(x, dim0=1, dim1=2)
+
+        # Combine p permutations into a single dimension, then cluster into groups of size k
+        batch_size = x.shape[0]
+        if layer_type == 'conv':
+            num_channels = x.shape[2]
+            height = x.shape[3]
+            width = x.shape[4]
+            x = x.reshape(batch_size,
+                          int(num_channels * p / k),
+                          k,
+                          height,
+                          width)
+        elif layer_type == 'linear':
+            num_channels = M
+            x = x.reshape(batch_size,
+                          int(num_channels * p / k),
+                          k)
+
+        if actfun == 'combinact':
+            x = combinact(x,
+                          p=p,
+                          layer_type=layer_type,
+                          alpha_primes=alpha_primes,
+                          alpha_dist=alpha_dist)
+        elif actfun == 'cf_relu' or actfun == 'cf_abs':
+            x = coin_flip(x, actfun, M=num_channels, k=k)
+        else:
+            x = _ACTFUNS[actfun](x)
+
+        return x
 
 
-def get_actfuns():
-    return _ACTFUNS
+# -------------------- Activation Functions
+
+_COMBINACT_ACTFUNS = ['max', 'signed_geomean', 'swishk', 'l1', 'l2',
+                      'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
 
 
 def get_combinact_actfuns():
     return _COMBINACT_ACTFUNS
 
 
-# -------------------- Activation Functions
-
-_COMBINACT_ACTFUNS = ['max', 'signed_geomean', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
 _ACTFUNS = {
+    'combinact':
+        lambda z: combinact(z),
     'relu':
         lambda z: F.relu_(z),
     'abs':
@@ -102,15 +120,69 @@ _ACTFUNS = {
         lambda z: multi_relu(z)
 }
 _ln2 = 0.6931471805599453
-M, k, p, g = None, None, None, None
 
 
-def coin_flip(z, actfun):
+def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
+
+    # Recording current input shape
+    batch_size = x.shape[0]
+    num_clusters = x.shape[1]
+    img_size = x.shape[-1]
+
+    # print(alpha_primes.shape)
+    layer_alphas = F.softmax(alpha_primes, dim=1)  # Convert alpha prime to alpha
+
+    # Computing all activation functions
+    outputs = None
+    for i, actfun in enumerate(_COMBINACT_ACTFUNS):
+        if i == 0:
+            outputs = _ACTFUNS[actfun](x).to(x.device)
+            outputs = outputs.unsqueeze(dim=2)
+        else:
+            outputs = torch.cat((outputs, _ACTFUNS[actfun](x).unsqueeze(dim=2)), dim=2)
+
+    # Handling per-permutation alpha vector
+    if alpha_dist == "per_perm":
+        if layer_type == 'conv':
+            layer_alphas = layer_alphas.reshape([1, 1,
+                                                 layer_alphas.shape[0], layer_alphas.shape[1],
+                                                 1, 1])
+            outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
+                                       len(_COMBINACT_ACTFUNS), img_size, img_size])
+        elif layer_type == 'linear':
+            layer_alphas = layer_alphas.reshape([1, 1,
+                                                 layer_alphas.shape[0], layer_alphas.shape[1]])
+            outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
+                                       len(_COMBINACT_ACTFUNS)])
+        outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
+        outputs = torch.sum(outputs, dim=3)  # Sum across all actfuns
+        if layer_type == 'conv':
+            outputs = outputs.reshape([batch_size, num_clusters, img_size, img_size])
+        elif layer_type == 'linear':
+            outputs = outputs.reshape([batch_size, num_clusters])
+
+    # Handling per-cluster alpha vector
+    elif alpha_dist == "per_cluster":
+        if layer_type == 'conv':
+            layer_alphas = layer_alphas.reshape([1,
+                                                 layer_alphas.shape[0], layer_alphas.shape[1],
+                                                 1, 1])
+        elif layer_type == 'linear':
+            layer_alphas = layer_alphas.reshape([1,
+                                                 layer_alphas.shape[0], layer_alphas.shape[1]])
+        # print(outputs.shape, layer_alphas.shape)
+        outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
+        outputs = torch.sum(outputs, dim=2)  # Sum across all actfuns
+
+    return outputs
+
+
+def coin_flip(z, actfun, M, k):
     shuffle_map = torch.empty(int(M / k), dtype=torch.long).random_(k)
     z = z[:, torch.arange(z.size(1)), shuffle_map]
-    if actfun == 'relu':
+    if actfun == 'cf_relu':
         return F.relu_(z)
-    elif actfun == 'abs':
+    elif actfun == 'cf_abs':
         return torch.abs_(z)
 
 

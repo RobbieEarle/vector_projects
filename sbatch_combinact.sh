@@ -3,10 +3,10 @@
 #SBATCH --gres=gpu:1           # request GPU(s)
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
-#SBATCH --time=12:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-100%12       # array value
-#SBATCH --output=logs/simple_net/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=simple_net
+#SBATCH --time=24:00:00        # max walltime, hh:mm:ss
+#SBATCH --array=0-10%10        # array value
+#SBATCH --output=logs/cnn_combinact1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_combinact1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -28,5 +28,6 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python perm_inv_MNIST.py --seed $SEED --save_path $SAVE_PATH --actfun relu
-python perm_inv_MNIST.py --seed $SEED --save_path $SAVE_PATH --actfun abs
+python train.py --seed $SEED --save_path $SAVE_PATH --actfun relu --dataset cifar10 --sample_size 50000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --actfun abs --dataset cifar10 --sample_size 50000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --actfun combinact --dataset cifar10 --sample_size 50000 --batch_size 64

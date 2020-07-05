@@ -86,24 +86,18 @@ _HYPERPARAMS = {
 
 # -------------------- Setting Up & Running Training Function
 
-def train_model(dataset,
-                actfun,
-                net_struct,
+def train_model(args,
                 outfile_path,
                 fieldnames,
-                seed,
                 train_loader,
                 validation_loader,
                 sample_size,
                 device):
     """
     Runs training session for a given randomized model
-    :param dataset: the dataset currently being used to train model
-    :param actfun: what activation type is being used by model
-    :param net_struct: structure of our neural network
+    :param args: arguments for this job
     :param outfile_path: path to save outputs from training session
     :param fieldnames: column names for output file
-    :param seed: seed for randomization
     :param train_loader: training data loader
     :param validation_loader: validation data loader
     :param sample_size: number of training samples used in this experiment
@@ -112,28 +106,32 @@ def train_model(dataset,
     """
 
     # ---- Initialization
-    if dataset == 'mnist':
-        model = models.CombinactNN(net_struct=net_struct, actfun=actfun, num_inputs=784, num_outputs=10).to(device)
-    elif dataset == 'cifar10':
-        model = models.CombinactNN(net_struct=net_struct, actfun=actfun, num_inputs=3072, num_outputs=10).to(device)
-    util.seed_all(seed)
+
+    model_params = []
+    if args.dataset == 'mnist':
+        model = models.CombinactNN(actfun=args.actfun, input_dim=784,
+                                   output_dim=10, num_layers=2, k=2, p=1).to(device)
+    if args.model == 'nn':
+        pass
+    elif args.model == 'cnn':
+        if args.dataset == 'mnist':
+            model = models.CombinactCNN(actfun=args.actfun, num_input_channels=1, input_dim=28,
+                                        num_outputs=10, k=2, p=1).to(device)
+        elif args.dataset == 'cifar10':
+            model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
+                                        num_outputs=10, k=2, p=1).to(device)
+        model_params.append({'params': model.conv_layers.parameters()})
+        model_params.append({'params': model.pooling.parameters()})
+
+    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+    model_params.append({'params': model.linear_layers.parameters()})
+    if args.actfun == 'combinact':
+        model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+
+    util.seed_all(args.seed)
     model.apply(util.weights_init)
 
-    print("Initial First Layer Weights:")
-    for param in model.linear_layers[0].parameters():
-        print(param.data.shape, flush=True)
-        print(param.data[:5], flush=True)
-    print()
-
-    model_params = [
-        {'params': model.linear_layers.parameters()},
-        {'params': model.all_batch_norms.parameters(), 'weight_decay': 0}
-    ]
-    if model.actfun == "combinact":
-        model_params.append({'params': model.all_alpha_primes.parameters(),
-                             })
-
-    hyper_params = _HYPERPARAMS[actfun]
+    hyper_params = _HYPERPARAMS[args.actfun]
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
@@ -141,23 +139,25 @@ def train_model(dataset,
                            weight_decay=hyper_params['adam_wd']
                            )
     criterion = nn.CrossEntropyLoss()
+    num_batches = args.sample_size / args.batch_size * args.num_epochs
     scheduler = CyclicLR(optimizer,
                          base_lr=10 ** -8,
                          max_lr=hyper_params['max_lr'],
-                         step_size_up=int(hyper_params['cycle_peak'] * 5000),  # 5000 = tot number of batches: 500 * 10
-                         step_size_down=int((1 - hyper_params['cycle_peak']) * 5000),
+                         step_size_up=int(hyper_params['cycle_peak'] * num_batches),
+                         step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
                          cycle_momentum=False
                          )
 
     # ---- Start Training
     epoch = 1
-    while epoch <= 10:
-        util.seed_all(seed+epoch)
+    while args.num_epochs <= 10:
+        util.seed_all(args.seed+epoch)
         start_time = time.time()
         final_train_loss = 0
         # ---- Training
         model.train()
         for batch_idx, (x, targetx) in enumerate(train_loader):
+            print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             optimizer.zero_grad()
             output = model(x)
@@ -192,18 +192,18 @@ def train_model(dataset,
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'dataset': dataset,
-                             'seed': seed,
+            writer.writerow({'dataset': args.dataset,
+                             'seed': args.seed,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
                              'acc': float(accuracy),
                              'time': (time.time() - start_time),
-                             'net_struct': model.net_struct,
-                             'model_type': model.actfun,
-                             'num_layers': net_struct['num_layers'],
+                             'actfun': model.actfun,
                              'sample_size': sample_size,
-                             'hyper_params': hyper_params
+                             'hyper_params': hyper_params,
+                             'model': args.model,
+                             'batch_size': args.batch_size
                              })
 
         epoch += 1
@@ -220,8 +220,8 @@ def setup_experiment(args, outfile_path):
     """
 
     # ---- Create new output file
-    fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'net_struct', 'model_type',
-                  'num_layers', 'sample_size', 'hyper_params']
+    fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
+                  'sample_size', 'hyper_params', 'model', 'batch_size']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -230,35 +230,19 @@ def setup_experiment(args, outfile_path):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    if args.actfun == 'relu' or args.actfun == 'abs':
-        net_struct = {
-            'num_layers': 2,
-            'M': [250, 200],
-            'k': [1, 1],
-            'p': [1, 1],
-            'g': [1, 1]
-        }
-    else:
-        net_struct = {
-            'num_layers': 2,
-            'M': [250, 200],
-            'k': [2, 2],
-            'p': [1, 1],
-            'g': [1, 1]
-        }
-
-    util.print_exp_settings(args.seed, args.dataset, outfile_path, net_struct, args.actfun)
+    util.print_exp_settings(args.seed, args.dataset, outfile_path, args.model, args.actfun)
 
     # ---- Loading Dataset
     curr_seed = args.seed
     train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
                                                                      seed=curr_seed,
+                                                                     batch_size=args.batch_size,
+                                                                     sample_size=args.sample_size,
                                                                      kwargs=kwargs)
 
     # ---- Begin training model
     util.seed_all(curr_seed)
-    train_model(args.dataset, args.actfun, net_struct, outfile_path, fieldnames, args.seed,
-                train_loader, validation_loader, sample_size, device)
+    train_model(args, outfile_path, fieldnames, train_loader, validation_loader, sample_size, device)
     print()
 
 
@@ -266,12 +250,15 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='max',
+    parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
-    parser.add_argument('--dataset', type=str, default='mnist', help='Where to save results')
-    parser.add_argument('--model', type=str, default='nn', help='Where to save results')
+    parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
+    parser.add_argument('--model', type=str, default='nn', help='What type of model to use')
+    parser.add_argument('--sample_size', type=int, default=60000, help='Training sample size')
+    parser.add_argument('--batch_size', type=int, default=100, help='Batch size during training')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     args = parser.parse_args()
 
     out = os.path.join(

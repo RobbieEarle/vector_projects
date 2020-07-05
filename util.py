@@ -138,23 +138,21 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def print_exp_settings(seed, dataset, outfile_path, net_struct, curr_model):
+def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
         "Data Set: {} \n"
         "Outfile Path: {} \n"
-        "Number of Layers: {} \n"
-        "Network Structure: \n"
-        "{} \n"
-        "Model Type: {} \n\n"
-            .format(seed, dataset, outfile_path, net_struct['num_layers'], net_struct, curr_model), flush=True
+        "Model Type: {} \n"
+        "Activation Function: {} \n\n"
+            .format(seed, dataset, outfile_path, curr_model, curr_actfun), flush=True
     )
 
 
 # -------------------- Model Utils
 
-def test_net_inputs(actfun, net_struct, in_size):
+def test_nn_inputs(actfun, net_struct, in_size):
     """
     Tests network structure and activation hyperparameters to make sure they are valid
     :param actfun: activation function used by network
@@ -188,9 +186,17 @@ def test_net_inputs(actfun, net_struct, in_size):
     return None
 
 
+def add_shuffle_map(shuffle_maps, num_nodes, p):
+    new_maps = []
+    for perm in range(p):
+        new_maps.append(torch.randperm(num_nodes))
+    shuffle_maps.append(new_maps)
+    return shuffle_maps
+
+
 def permute(x, method, offset, num_groups=2, shuffle_map=None):
     if method == "roll":
-        return torch.cat((x[:, offset:, 0], x[:, :offset, 0]), dim=1)
+        return torch.cat((x[:, offset:, ...], x[:, :offset, ...]), dim=1)
     elif method == "roll_grouped":
         group_size = int(x.shape[1] / num_groups)
         output = None
@@ -199,7 +205,7 @@ def permute(x, method, offset, num_groups=2, shuffle_map=None):
             if i == num_groups - 1:
                 group_size += x.shape[1] % num_groups
             end = start + group_size - offset
-            curr_roll = torch.cat((x[:, start:end, 0], x[:, start - offset:start, 0]),
+            curr_roll = torch.cat((x[:, start:end, ...], x[:, start - offset:start, ...]),
                                   dim=1)
             if group == 0:
                 output = curr_roll
@@ -207,14 +213,14 @@ def permute(x, method, offset, num_groups=2, shuffle_map=None):
                 output = torch.cat((output, curr_roll), dim=1)
         return output
     elif method == "shuffle":
-        return x[:, shuffle_map, [0]]
+        return x[:, shuffle_map, ...]
 
 
 def load_dataset(dataset,
                  seed=0,
                  batch_size=None,
-                 kwargs=None,
-                 sample_size=None):
+                 sample_size=60000,
+                 kwargs=None):
 
     seed_all(seed)
 
