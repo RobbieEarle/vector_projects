@@ -150,7 +150,7 @@ def train_model(args,
 
     # ---- Start Training
     epoch = 1
-    while args.num_epochs <= 10:
+    while epoch <= args.num_epochs:
         util.seed_all(args.seed+epoch)
         start_time = time.time()
         final_train_loss = 0
