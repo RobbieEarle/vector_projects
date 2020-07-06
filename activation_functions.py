@@ -56,7 +56,7 @@ def activate(x, actfun, p=1, k=1, M=None,
                           alpha_primes=alpha_primes,
                           alpha_dist=alpha_dist)
         elif actfun == 'cf_relu' or actfun == 'cf_abs':
-            x = coin_flip(x, actfun, M=num_channels, k=k)
+            x = coin_flip(x, actfun, M=num_channels * p, k=k)
         else:
             x = _ACTFUNS[actfun](x)
 
@@ -179,7 +179,7 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
 
 def coin_flip(z, actfun, M, k):
     shuffle_map = torch.empty(int(M / k), dtype=torch.long).random_(k)
-    z = z[:, torch.arange(z.size(1)), shuffle_map]
+    z = z[:, torch.arange(z.size(1)), shuffle_map, ...]
     if actfun == 'cf_relu':
         return F.relu_(z)
     elif actfun == 'cf_abs':

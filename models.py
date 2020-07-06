@@ -176,14 +176,20 @@ class CombinactCNN(nn.Module):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
     def forward(self, x):
+
+        if self.actfun == 'l2_lae':
+            actfun = 'l2'
+        else:
+            actfun = self.actfun
+
         for block in range(3):
             x = self.conv_layers[block][0](x)
             x = self.batch_norms[block](x)
-            if self.actfun == 'combinact':
+            if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[block * 2]
             else:
                 alpha_primes = None
-            x = actfuns.activate(x, actfun=self.actfun,
+            x = actfuns.activate(x, actfun=actfun,
                                  k=self.k, p=self.p, M=x.shape[1],
                                  layer_type='conv',
                                  permute_type=self.permute_type,
@@ -191,11 +197,11 @@ class CombinactCNN(nn.Module):
                                  alpha_primes=alpha_primes,
                                  alpha_dist=self.alpha_dist)
             x = self.conv_layers[block][1](x)
-            if self.actfun == 'combinact':
+            if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[(block * 2) + 1]
             else:
                 alpha_primes = None
-            x = actfuns.activate(x, actfun=self.actfun,
+            x = actfuns.activate(x, actfun=actfun,
                                  k=self.k, p=self.p, M=x.shape[1],
                                  layer_type='conv',
                                  permute_type=self.permute_type,
@@ -206,14 +212,17 @@ class CombinactCNN(nn.Module):
 
         x = x.view(x.size(0), -1)
 
+        if self.actfun == 'l2_lae':
+            actfun = 'lae'
+
         for i, fc in enumerate(self.linear_layers):
             x = fc(x)
             if i < len(self.linear_layers) - 1:
-                if self.actfun == 'combinact':
+                if actfun == 'combinact':
                     alpha_primes = self.all_alpha_primes[6 + i]
                 else:
                     alpha_primes = None
-                x = actfuns.activate(x, actfun=self.actfun,
+                x = actfuns.activate(x, actfun=actfun,
                                      k=self.k, p=self.p, M=x.shape[1],
                                      layer_type='linear',
                                      permute_type=self.permute_type,

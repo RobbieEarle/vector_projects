@@ -42,7 +42,7 @@ _HYPERPARAMS = {
                   "adam_beta_2": np.exp(-7.371516988658699),
                   "adam_eps": np.exp(-16.989022147994522),
                   "adam_wd": np.exp(-12.113778466374383),
-                  "max_lr": np.exp(-5.211973674318645),
+                  "max_lr": np.exp(-8),
                   "cycle_peak": 0.4661308739740898
                   },
     "l2": {"adam_beta_1": np.exp(-2.244614412525641),
@@ -162,6 +162,8 @@ def train_model(args,
             optimizer.zero_grad()
             output = model(x)
             train_loss = criterion(output, targetx)
+            # if batch_idx % 10 == 0:
+            #     print(batch_idx, train_loss)
             train_loss.backward()
             optimizer.step()
             scheduler.step()
@@ -250,7 +252,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='combinact',
+    parser.add_argument('--actfun', type=str, default='cf_relu',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
