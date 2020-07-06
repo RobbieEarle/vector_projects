@@ -255,9 +255,9 @@ if __name__ == '__main__':
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
-    parser.add_argument('--model', type=str, default='nn', help='What type of model to use')
+    parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')
     parser.add_argument('--sample_size', type=int, default=60000, help='Training sample size')
-    parser.add_argument('--batch_size', type=int, default=100, help='Batch size during training')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     args = parser.parse_args()
 

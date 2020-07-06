@@ -179,20 +179,28 @@ class CombinactCNN(nn.Module):
         for block in range(3):
             x = self.conv_layers[block][0](x)
             x = self.batch_norms[block](x)
+            if self.actfun == 'combinact':
+                alpha_primes = self.all_alpha_primes[block * 2]
+            else:
+                alpha_primes = None
             x = actfuns.activate(x, actfun=self.actfun,
                                  k=self.k, p=self.p, M=x.shape[1],
                                  layer_type='conv',
                                  permute_type=self.permute_type,
                                  shuffle_maps=self.shuffle_maps[block * 2],
-                                 alpha_primes=self.all_alpha_primes[block * 2],
+                                 alpha_primes=alpha_primes,
                                  alpha_dist=self.alpha_dist)
             x = self.conv_layers[block][1](x)
+            if self.actfun == 'combinact':
+                alpha_primes = self.all_alpha_primes[(block * 2) + 1]
+            else:
+                alpha_primes = None
             x = actfuns.activate(x, actfun=self.actfun,
                                  k=self.k, p=self.p, M=x.shape[1],
                                  layer_type='conv',
                                  permute_type=self.permute_type,
                                  shuffle_maps=self.shuffle_maps[(block * 2) + 1],
-                                 alpha_primes=self.all_alpha_primes[(block * 2) + 1],
+                                 alpha_primes=alpha_primes,
                                  alpha_dist=self.alpha_dist)
             x = self.pooling[block](x)
 
@@ -201,11 +209,15 @@ class CombinactCNN(nn.Module):
         for i, fc in enumerate(self.linear_layers):
             x = fc(x)
             if i < len(self.linear_layers) - 1:
+                if self.actfun == 'combinact':
+                    alpha_primes = self.all_alpha_primes[6 + i]
+                else:
+                    alpha_primes = None
                 x = actfuns.activate(x, actfun=self.actfun,
                                      k=self.k, p=self.p, M=x.shape[1],
                                      layer_type='linear',
                                      permute_type=self.permute_type,
-                                     alpha_primes=self.all_alpha_primes[6 + i],
+                                     alpha_primes=alpha_primes,
                                      alpha_dist=self.alpha_dist)
 
         return x
