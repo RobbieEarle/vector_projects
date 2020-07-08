@@ -5,8 +5,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=24:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-20%10        # array value
-#SBATCH --output=logs/cnn_combinact_dbg_vb/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cnn_combinact_dbg_vb
+#SBATCH --output=logs/cnn_combinact4/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_combinact4
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -28,4 +28,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --dataset cifar10 --sample_size 50000 --batch_size 64 --num_epochs 1 --verbose
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --dataset cifar10 --sample_size 50000 --batch_size 64
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --dataset mnist --sample_size 60000 --batch_size 64

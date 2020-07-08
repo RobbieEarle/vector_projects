@@ -161,7 +161,6 @@ def train_model(args,
         # ---- Training
         model.train()
         for batch_idx, (x, targetx) in enumerate(train_loader):
-            # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             optimizer.zero_grad()
             output = model(x)
@@ -269,14 +268,14 @@ def setup_experiment(args, outfile_path):
 # --------------------  Entry Point
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--seed', type=int, default=1, help='Job seed')
+    parser.add_argument('--seed', type=int, default=0, help='Job seed')
     parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
-    parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
+    parser.add_argument('--dataset', type=str, default='cifar10', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')
-    parser.add_argument('--sample_size', type=int, default=60000, help='Training sample size')
+    parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--max_lr_exp', type=float, default=0, help='Exponent for max lr during training')
