@@ -140,9 +140,13 @@ def train_model(args,
                            )
     criterion = nn.CrossEntropyLoss()
     num_batches = args.sample_size / args.batch_size * args.num_epochs
+    if args.max_lr_exp == 0:
+        max_lr = hyper_params['max_lr']
+    else:
+        max_lr = np.exp(args.max_lr_exp)
     scheduler = CyclicLR(optimizer,
                          base_lr=10 ** -8,
-                         max_lr=hyper_params['max_lr'],
+                         max_lr=max_lr,
                          step_size_up=int(hyper_params['cycle_peak'] * num_batches),
                          step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
                          cycle_momentum=False
@@ -261,6 +265,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=60000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+    parser.add_argument('--max_lr_exp', type=float, default=0, help='Exponent for max lr during training')
     args = parser.parse_args()
 
     out = os.path.join(
