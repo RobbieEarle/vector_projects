@@ -166,9 +166,23 @@ def train_model(args,
             optimizer.zero_grad()
             output = model(x)
             train_loss = criterion(output, targetx)
-            # if batch_idx % 10 == 0:
-            #     print(batch_idx, train_loss)
             train_loss.backward()
+            if args.verbose:
+                if batch_idx % 10 == 0:
+                    print()
+                    print()
+                    print("========================================", batch_idx, "Train loss: {}".format(train_loss))
+                    print()
+                    for param in model.parameters():
+                        if len(param.shape) > 1:
+                            print("Parameters Shape: {}".format(param.shape))
+                            print("Parameter Example: {}".format(param[0, 0, ...]))
+                            print("Gradient Shape: {}".format(param.grad.shape))
+                            if param.grad.shape[1] == 11:
+                                print("Gradient Example: {}".format(param.grad[0, ...]))
+                            else:
+                                print("Gradient Example: {}".format(param.grad[0, 0, ...]))
+                            print()
             optimizer.step()
             scheduler.step()
             final_train_loss = train_loss
@@ -256,7 +270,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='cf_relu',
+    parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
@@ -266,6 +280,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--max_lr_exp', type=float, default=0, help='Exponent for max lr during training')
+    parser.add_argument('--verbose', action='store_true', help='When true, shows intermediate weights and gradients')
     args = parser.parse_args()
 
     out = os.path.join(
