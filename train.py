@@ -129,9 +129,16 @@ def train_model(args,
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     util.seed_all(args.seed)
+    rng = np.random.RandomState(args.seed)
     model.apply(util.weights_init)
 
-    hyper_params = _HYPERPARAMS[args.actfun]
+    if args.randsearch:
+        hyper_params = util.get_random_hyper_params(rng)[args.actfun]
+    else:
+        hyper_params = _HYPERPARAMS[args.actfun]
+
+    util.print_exp_settings(args.seed, args.dataset, outfile_path, args.model, args.actfun, hyper_params)
+
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
@@ -140,13 +147,9 @@ def train_model(args,
                            )
     criterion = nn.CrossEntropyLoss()
     num_batches = args.sample_size / args.batch_size * args.num_epochs
-    if args.max_lr_exp == 0:
-        max_lr = hyper_params['max_lr']
-    else:
-        max_lr = np.exp(args.max_lr_exp)
     scheduler = CyclicLR(optimizer,
                          base_lr=10 ** -8,
-                         max_lr=max_lr,
+                         max_lr=hyper_params['max_lr'],
                          step_size_up=int(hyper_params['cycle_peak'] * num_batches),
                          step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
                          cycle_momentum=False
@@ -166,22 +169,6 @@ def train_model(args,
             output = model(x)
             train_loss = criterion(output, targetx)
             train_loss.backward()
-            if args.verbose:
-                if batch_idx % 10 == 0:
-                    print()
-                    print()
-                    print("========================================", batch_idx, "Train loss: {}".format(train_loss))
-                    print()
-                    for param in model.parameters():
-                        if len(param.shape) > 1:
-                            print("Parameters Shape: {}".format(param.shape))
-                            print("Parameter Example: {}".format(param[0, 0, ...]))
-                            print("Gradient Shape: {}".format(param.grad.shape))
-                            if param.grad.shape[1] == 11:
-                                print("Gradient Example: {}".format(param.grad[0, ...]))
-                            else:
-                                print("Gradient Example: {}".format(param.grad[0, 0, ...]))
-                            print()
             optimizer.step()
             scheduler.step()
             final_train_loss = train_loss
@@ -249,10 +236,9 @@ def setup_experiment(args, outfile_path):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    util.print_exp_settings(args.seed, args.dataset, outfile_path, args.model, args.actfun)
-
     # ---- Loading Dataset
     curr_seed = args.seed
+    print()
     train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
                                                                      seed=curr_seed,
                                                                      batch_size=args.batch_size,
@@ -269,7 +255,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='combinact',
+    parser.add_argument('--actfun', type=str, default='relu',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
@@ -278,8 +264,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
-    parser.add_argument('--max_lr_exp', type=float, default=0, help='Exponent for max lr during training')
-    parser.add_argument('--verbose', action='store_true', help='When true, shows intermediate weights and gradients')
+    parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
     args = parser.parse_args()
 
     out = os.path.join(

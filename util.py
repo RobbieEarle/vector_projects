@@ -138,16 +138,86 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun):
+def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
         "Data Set: {} \n"
         "Outfile Path: {} \n"
         "Model Type: {} \n"
-        "Activation Function: {} \n\n"
-            .format(seed, dataset, outfile_path, curr_model, curr_actfun), flush=True
+        "Activation Function: {} \n"
+        "Hyper-params: {} \n\n"
+            .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params), flush=True
     )
+
+
+def get_random_hyper_params(rng):
+    return {
+        "relu": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                 "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                 "adam_eps": np.exp(rng.uniform(-21, -15.5)),
+                 "adam_wd": np.exp(rng.uniform(-14, -11)),
+                 "max_lr": np.exp(rng.uniform(-7, -5)),
+                 "cycle_peak": rng.uniform(0.1, 0.45)
+                 },
+        "cf_relu": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
+                    "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                    "adam_eps": np.exp(rng.uniform(-20, -14)),
+                    "adam_wd": np.exp(rng.uniform(-16, -12)),
+                    "max_lr": np.exp(rng.uniform(-9, -6.5)),
+                    "cycle_peak": rng.uniform(0.1, 0.45)
+                    },
+        "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                       "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                       "adam_eps": np.exp(rng.uniform(-21, -16)),
+                       "adam_wd": np.exp(rng.uniform(-14, -11)),
+                       "max_lr": np.exp(rng.uniform(-7, -5)),
+                       "cycle_peak": rng.uniform(0.15, 0.4)
+                       },
+        "combinact": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                      "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                      "adam_eps": np.exp(rng.uniform(-21, -16)),
+                      "adam_wd": np.exp(rng.uniform(-15, -11)),
+                      "max_lr": np.exp(rng.uniform(-7, -4.5)),
+                      "cycle_peak": rng.uniform(0.15, 0.5)
+                      },
+        "l2": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+               "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+               "adam_eps": np.exp(rng.uniform(-21, -15)),
+               "adam_wd": np.exp(rng.uniform(-15.5, -9.5)),
+               "max_lr": np.exp(rng.uniform(-7, -4.5)),
+               "cycle_peak": rng.uniform(0.1, 0.45)
+               },
+        "abs": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                "adam_beta_2": np.exp(rng.uniform(-9, -4)),
+                "adam_eps": np.exp(rng.uniform(-21, -15)),
+                "adam_wd": np.exp(rng.uniform(-14.5, -10)),
+                "max_lr": np.exp(rng.uniform(-7, -4.5)),
+                "cycle_peak": rng.uniform(0.1, 0.45)
+                },
+        "cf_abs": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
+                   "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                   "adam_eps": np.exp(rng.uniform(-20, -14)),
+                   "adam_wd": np.exp(rng.uniform(-16, -11)),
+                   "max_lr": np.exp(rng.uniform(-9, -6.5)),
+                   "cycle_peak": rng.uniform(0.1, 0.4)
+                   },
+        "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                   "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                   "adam_eps": np.exp(rng.uniform(-21, -15)),
+                   "adam_wd": np.exp(rng.uniform(-14, -10)),
+                   "max_lr": np.exp(rng.uniform(-7, -4.5)),
+                   "cycle_peak": rng.uniform(0.1, 0.45)
+                   },
+        "max": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
+                "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+                "adam_eps": np.exp(rng.uniform(-21, -15)),
+                "adam_wd": np.exp(rng.uniform(-14, -9)),
+                "max_lr": np.exp(rng.uniform(-6, -5)),
+                "cycle_peak": rng.uniform(0.1, 0.45)
+                }
+
+    }
 
 
 # -------------------- Model Utils
