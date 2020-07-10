@@ -65,7 +65,7 @@ def activate(x, actfun, p=1, k=1, M=None,
 
 # -------------------- Activation Functions
 
-_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2',
+_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2', 'signed_geomean',
                       'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
 
 
@@ -140,6 +140,13 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
             outputs = outputs.unsqueeze(dim=2)
         else:
             outputs = torch.cat((outputs, _ACTFUNS[actfun](x).unsqueeze(dim=2)), dim=2)
+        # if actfun == 'signed_geomean':
+        #     print("---------------")
+        #     print(x.shape)
+        #     print(x[0, 0, ...])
+        #     print(outputs.shape)
+        #     print(outputs[0, 0, -1, ...])
+        #     print()
 
     # Handling per-permutation alpha vector
     if alpha_dist == "per_perm":

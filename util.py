@@ -152,72 +152,107 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun, hyp
 
 
 def get_random_hyper_params(rng):
+    # LOOK BACK AT PREVIOUS STEP BEFORE UPDATING
     return {
-        "relu": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                 "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                 "adam_eps": np.exp(rng.uniform(-21, -15.5)),
-                 "adam_wd": np.exp(rng.uniform(-14, -11)),
-                 "max_lr": np.exp(rng.uniform(-7, -5)),
-                 "cycle_peak": rng.uniform(0.1, 0.45)
+        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.75, -1.75)),
+                 "adam_beta_2": np.exp(rng.uniform(-10, -8)),
+                 "adam_eps": np.exp(rng.uniform(-19, -16.5)),
+                 "adam_wd": np.exp(rng.uniform(-14, -12)),
+                 "max_lr": np.exp(rng.uniform(-7.5, -6.75)),
+                 "cycle_peak": rng.uniform(0.35, 0.55)
                  },
-        "cf_relu": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
-                    "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                    "adam_eps": np.exp(rng.uniform(-20, -14)),
-                    "adam_wd": np.exp(rng.uniform(-16, -12)),
-                    "max_lr": np.exp(rng.uniform(-9, -6.5)),
-                    "cycle_peak": rng.uniform(0.1, 0.45)
-                    },
-        "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                       "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                       "adam_eps": np.exp(rng.uniform(-21, -16)),
-                       "adam_wd": np.exp(rng.uniform(-14, -11)),
-                       "max_lr": np.exp(rng.uniform(-7, -5)),
-                       "cycle_peak": rng.uniform(0.15, 0.4)
+        # "cf_relu": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
+        #             "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+        #             "adam_eps": np.exp(rng.uniform(-20, -14)),
+        #             "adam_wd": np.exp(rng.uniform(-16, -12)),
+        #             "max_lr": np.exp(rng.uniform(-9, -6.5)),
+        #             "cycle_peak": rng.uniform(0.1, 0.45)
+        #             },
+        "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-2.5, -1.5)),
+                       "adam_beta_2": np.exp(rng.uniform(-9, -7)),
+                       "adam_eps": np.exp(rng.uniform(-21, -19)),
+                       "adam_wd": np.exp(rng.uniform(-12, -10.5)),
+                       "max_lr": np.exp(rng.uniform(-7, -6.25)),
+                       "cycle_peak": rng.uniform(0.35, 0.45)
                        },
-        "combinact": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                      "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                      "adam_eps": np.exp(rng.uniform(-21, -16)),
-                      "adam_wd": np.exp(rng.uniform(-15, -11)),
-                      "max_lr": np.exp(rng.uniform(-7, -4.5)),
-                      "cycle_peak": rng.uniform(0.15, 0.5)
+        "combinact": {"adam_beta_1": np.exp(rng.uniform(-2.75, -1.75)),
+                      "adam_beta_2": np.exp(rng.uniform(-8.5, -7.5)),
+                      "adam_eps": np.exp(rng.uniform(-18.5, -17.75)),
+                      "adam_wd": np.exp(rng.uniform(-15, -14)),
+                      "max_lr": np.exp(rng.uniform(-7.5, -6.5)),
+                      "cycle_peak": rng.uniform(0.4, 0.55)
                       },
-        "l2": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-               "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-               "adam_eps": np.exp(rng.uniform(-21, -15)),
-               "adam_wd": np.exp(rng.uniform(-15.5, -9.5)),
-               "max_lr": np.exp(rng.uniform(-7, -4.5)),
-               "cycle_peak": rng.uniform(0.1, 0.45)
+        "l2": {"adam_beta_1": np.exp(rng.uniform(-2.75, -1.75)),
+               "adam_beta_2": np.exp(rng.uniform(-6, -3.5)),
+               "adam_eps": np.exp(rng.uniform(-18.5, -17.5)),
+               "adam_wd": np.exp(rng.uniform(-16, -12)),
+               "max_lr": np.exp(rng.uniform(-7.5, -6)),
+               "cycle_peak": rng.uniform(0.4, 0.5)
                },
-        "abs": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                "adam_beta_2": np.exp(rng.uniform(-9, -4)),
-                "adam_eps": np.exp(rng.uniform(-21, -15)),
-                "adam_wd": np.exp(rng.uniform(-14.5, -10)),
-                "max_lr": np.exp(rng.uniform(-7, -4.5)),
-                "cycle_peak": rng.uniform(0.1, 0.45)
+        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.5, -1.5)),
+                "adam_beta_2": np.exp(rng.uniform(-6.5, -5)),
+                "adam_eps": np.exp(rng.uniform(-19, -16.5)),
+                "adam_wd": np.exp(rng.uniform(-13, -11)),
+                "max_lr": np.exp(rng.uniform(-7.5, -6.5)),
+                "cycle_peak": rng.uniform(0.35, 0.5)
                 },
-        "cf_abs": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
-                   "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                   "adam_eps": np.exp(rng.uniform(-20, -14)),
-                   "adam_wd": np.exp(rng.uniform(-16, -11)),
-                   "max_lr": np.exp(rng.uniform(-9, -6.5)),
-                   "cycle_peak": rng.uniform(0.1, 0.4)
+        # "cf_abs": {"adam_beta_1": np.exp(rng.uniform(-6, -3)),
+        #            "adam_beta_2": np.exp(rng.uniform(-10, -4)),
+        #            "adam_eps": np.exp(rng.uniform(-20, -14)),
+        #            "adam_wd": np.exp(rng.uniform(-16, -11)),
+        #            "max_lr": np.exp(rng.uniform(-9, -6.5)),
+        #            "cycle_peak": rng.uniform(0.1, 0.4)
+        #            },
+        "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-2.5, -1.5)),
+                   "adam_beta_2": np.exp(rng.uniform(-6, -4.5)),
+                   "adam_eps": np.exp(rng.uniform(-21, -18)),
+                   "adam_wd": np.exp(rng.uniform(-13, -11)),
+                   "max_lr": np.exp(rng.uniform(-7.5, -6.5)),
+                   "cycle_peak": rng.uniform(0.3, 0.5)
                    },
-        "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                   "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                   "adam_eps": np.exp(rng.uniform(-21, -15)),
-                   "adam_wd": np.exp(rng.uniform(-14, -10)),
-                   "max_lr": np.exp(rng.uniform(-7, -4.5)),
-                   "cycle_peak": rng.uniform(0.1, 0.45)
-                   },
-        "max": {"adam_beta_1": np.exp(rng.uniform(-4.5, -2)),
-                "adam_beta_2": np.exp(rng.uniform(-10, -4)),
-                "adam_eps": np.exp(rng.uniform(-21, -15)),
-                "adam_wd": np.exp(rng.uniform(-14, -9)),
-                "max_lr": np.exp(rng.uniform(-6, -5)),
-                "cycle_peak": rng.uniform(0.1, 0.45)
+        "max": {"adam_beta_1": np.exp(rng.uniform(-4, -2.5)),
+                "adam_beta_2": np.exp(rng.uniform(-5, -3.5)),
+                "adam_eps": np.exp(rng.uniform(-21, -19)),
+                "adam_wd": np.exp(rng.uniform(-10, -8.5)),
+                "max_lr": np.exp(rng.uniform(-6.5, -5.5)),
+                "cycle_peak": rng.uniform(0.3, 0.5)
                 }
 
     }
+
+
+def hook_f(module, input, output):
+    print("FORWARD")
+    print(module)
+    print(input[0].shape)
+    if len(input[0].shape) == 4:
+        print(input[0][0, 0, :4, :4])
+    elif len(input[0].shape) == 2:
+        print(input[0][0, :16])
+    # print("IN: {} {}".format(type(input), len(input)))
+    # for curr_in in input:
+    #     print("     {}".format(curr_in.shape))
+    # print("OUT: {} {}".format(type(output), len(output)))
+    # for curr_out in output:
+    #     print("     {}".format(curr_out.shape))
+    print()
+
+
+def hook_b(module, input, output):
+    print("BACKWARD")
+    print(module)
+    print(input[0].shape)
+    if len(input[0].shape) == 4:
+        print(input[0][0, 0, :4, :4])
+    elif len(input[0].shape) == 2:
+        print(input[0][0, :10])
+    # print("IN: {} {}".format(type(input), len(input)))
+    # for curr_in in input:
+    #     print("     {}".format(curr_in.shape))
+    # print("OUT: {} {}".format(type(output), len(output)))
+    # for curr_out in output:
+    #     print("     {}".format(curr_out.shape))
+    print()
 
 
 # -------------------- Model Utils

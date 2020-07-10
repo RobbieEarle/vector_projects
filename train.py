@@ -155,6 +155,21 @@ def train_model(args,
                          cycle_momentum=False
                          )
 
+    # for layer in model.conv_layers:
+    #     print(layer)
+
+    # print(list(model._modules.items()))
+    # for mod_list in list(model._modules.items()):
+    #     if mod_list[0] == 'conv_layers':
+    #         for mod_list2 in mod_list[1]:
+    #             for layer in mod_list2:
+    #                 layer.register_forward_hook(util.hook_f)
+    #                 layer.register_backward_hook(util.hook_b)
+    #     elif mod_list[0] != 'all_alpha_primes':
+    #         for layer in mod_list[1]:
+    #             layer.register_forward_hook(util.hook_f)
+    #             layer.register_backward_hook(util.hook_b)
+
     # ---- Start Training
     epoch = 1
     while epoch <= args.num_epochs:
@@ -169,6 +184,7 @@ def train_model(args,
             output = model(x)
             train_loss = criterion(output, targetx)
             train_loss.backward()
+            # train_loss.backward(retain_graph=True)
             optimizer.step()
             scheduler.step()
             final_train_loss = train_loss
@@ -255,7 +271,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='relu',
+    parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
