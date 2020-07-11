@@ -179,6 +179,7 @@ def train_model(args,
         # ---- Training
         model.train()
         for batch_idx, (x, targetx) in enumerate(train_loader):
+            # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             optimizer.zero_grad()
             output = model(x)
