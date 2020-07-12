@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=12:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-200%10        # array value
-#SBATCH --output=logs/cnn_combinact_rands3/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cnn_combinact_rands3
+#SBATCH --output=logs/cnn_combinact_rands4/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_combinact_rands4
 
 source ~/.bashrc
 source activate ~/venvs/combinact
