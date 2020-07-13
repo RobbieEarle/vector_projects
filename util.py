@@ -138,7 +138,8 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params):
+def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
+                       hyper_params, num_params, sample_size):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
@@ -146,8 +147,11 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun, hyp
         "Outfile Path: {} \n"
         "Model Type: {} \n"
         "Activation Function: {} \n"
-        "Hyper-params: {} \n\n"
-            .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params), flush=True
+        "Hyper-params: {} \n"
+        "Num Params: {}\n"
+        "Sample Size: {}\n\n"
+            .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
+                    num_params, sample_size), flush=True
     )
 
 

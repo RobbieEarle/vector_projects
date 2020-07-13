@@ -15,94 +15,29 @@ import datetime
 import csv
 import time
 
-# -------------------- Optimized Hyper Parameter Settings
-
-_HYPERPARAMS = {
-    "relu": {"adam_beta_1": np.exp(-2.375018573261741),
-             "adam_beta_2": np.exp(-6.565065478550015),
-             "adam_eps": np.exp(-19.607731090387627),
-             "adam_wd": np.exp(-11.86635747404571),
-             "max_lr": np.exp(-5.7662952418075175),
-             "cycle_peak": 0.2935155263985412
-             },
-    "cf_relu": {"adam_beta_1": np.exp(-4.44857338551192),
-                "adam_beta_2": np.exp(-4.669825410890087),
-                "adam_eps": np.exp(-17.69933166220988),
-                "adam_wd": np.exp(-12.283288733512373),
-                "max_lr": np.exp(-8.563504990329884),
-                "cycle_peak": 0.10393251332079881
-                },
-    "multi_relu": {"adam_beta_1": np.exp(-2.859441513546877),
-                   "adam_beta_2": np.exp(-5.617992566623951),
-                   "adam_eps": np.exp(-20.559015044774018),
-                   "adam_wd": np.exp(-12.693844976989661),
-                   "max_lr": np.exp(-5.802816398828524),
-                   "cycle_peak": 0.28499869111025217
-                   },
-    "combinact": {"adam_beta_1": np.exp(-2.6436039683427253),
-                  "adam_beta_2": np.exp(-7.371516988658699),
-                  "adam_eps": np.exp(-16.989022147994522),
-                  "adam_wd": np.exp(-12.113778466374383),
-                  "max_lr": np.exp(-8),
-                  "cycle_peak": 0.4661308739740898
-                  },
-    "l2": {"adam_beta_1": np.exp(-2.244614412525641),
-           "adam_beta_2": np.exp(-5.502197648895974),
-           "adam_eps": np.exp(-16.919215725249092),
-           "adam_wd": np.exp(-13.99956243808541),
-           "max_lr": np.exp(-5.383090612225605),
-           "cycle_peak": 0.35037784343793205
-           },
-    "abs": {"adam_beta_1": np.exp(-3.1576858739457845),
-            "adam_beta_2": np.exp(-4.165206705873042),
-            "adam_eps": np.exp(-20.430988799955056),
-            "adam_wd": np.exp(-13.049933891070697),
-            "max_lr": np.exp(-5.809683797646132),
-            "cycle_peak": 0.34244342851740034
-            },
-    "cf_abs": {"adam_beta_1": np.exp(-5.453380890632929),
-               "adam_beta_2": np.exp(-5.879222236954101),
-               "adam_eps": np.exp(-18.303333640483068),
-               "adam_wd": np.exp(-15.152599023560422),
-               "max_lr": np.exp(-6.604045812173043),
-               "cycle_peak": 0.11189158130301018
-               },
-    "l2_lae": {"adam_beta_1": np.exp(-2.4561852034212),
-               "adam_beta_2": np.exp(-5.176943480470942),
-               "adam_eps": np.exp(-16.032458209235187),
-               "adam_wd": np.exp(-12.860274699438266),
-               "max_lr": np.exp(-5.540947578537945),
-               "cycle_peak": 0.40750994546983904
-               },
-    "max": {"adam_beta_1": np.exp(-2.2169207045481505),
-            "adam_beta_2": np.exp(-7.793567052557596),
-            "adam_eps": np.exp(-18.23187258333265),
-            "adam_wd": np.exp(-12.867866026516422),
-            "max_lr": np.exp(-5.416840501318637),
-            "cycle_peak": 0.28254869607601146
-            }
-
-}
-
 
 # -------------------- Setting Up & Running Training Function
 
 def train_model(args,
+                curr_seed,
                 outfile_path,
                 fieldnames,
                 train_loader,
                 validation_loader,
                 sample_size,
-                device):
+                device,
+                pfact=1):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
+    :param curr_seed: seed being used by current job
     :param outfile_path: path to save outputs from training session
     :param fieldnames: column names for output file
     :param train_loader: training data loader
     :param validation_loader: validation data loader
     :param sample_size: number of training samples used in this experiment
     :param device: reference to CUDA device for GPU support
+    :param pfact: factor by which we reduce the size of our network layers
     :return:
     """
 
@@ -117,10 +52,12 @@ def train_model(args,
     elif args.model == 'cnn':
         if args.dataset == 'mnist':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=1, input_dim=28,
-                                        num_outputs=10, k=2, p=1, sgm=args.sgm).to(device)
+                                        num_outputs=10, k=2, p=1,
+                                        pfact=pfact).to(device)
         elif args.dataset == 'cifar10':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
-                                        num_outputs=10, k=2, p=1, sgm=args.sgm).to(device)
+                                        num_outputs=10, k=2, p=1,
+                                        pfact=pfact).to(device)
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
@@ -129,16 +66,17 @@ def train_model(args,
     if args.actfun == 'combinact':
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
-    util.seed_all(args.seed)
-    rng = np.random.RandomState(args.seed)
+    util.seed_all(curr_seed)
+    rng = np.random.RandomState(curr_seed)
     model.apply(util.weights_init)
 
     if args.randsearch:
         hyper_params = util.get_random_hyper_params(rng)[args.actfun]
     else:
-        hyper_params = _HYPERPARAMS[args.actfun]
+        hyper_params = model.hyper_params[args.actfun]
 
-    util.print_exp_settings(args.seed, args.dataset, outfile_path, args.model, args.actfun, hyper_params)
+    util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, args.actfun, hyper_params,
+                            util.get_n_params(model), args.sample_size)
 
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,
@@ -156,21 +94,10 @@ def train_model(args,
                          cycle_momentum=False
                          )
 
-    # for mod_list in list(model._modules.items()):
-    #     if mod_list[0] == 'conv_layers':
-    #         for mod_list2 in mod_list[1]:
-    #             for layer in mod_list2:
-    #                 layer.register_forward_hook(util.hook_f)
-    #                 layer.register_backward_hook(util.hook_b)
-    #     elif mod_list[0] != 'all_alpha_primes':
-    #         for layer in mod_list[1]:
-    #             layer.register_forward_hook(util.hook_f)
-    #             layer.register_backward_hook(util.hook_b)
-
     # ---- Start Training
     epoch = 1
     while epoch <= args.num_epochs:
-        util.seed_all(args.seed+epoch)
+        util.seed_all(curr_seed+epoch)
         start_time = time.time()
         final_train_loss = 0
         # ---- Training
@@ -222,7 +149,7 @@ def train_model(args,
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writerow({'dataset': args.dataset,
-                             'seed': args.seed,
+                             'seed': curr_seed,
                              'epoch': epoch,
                              'train_loss': float(final_train_loss),
                              'val_loss': float(final_val_loss),
@@ -234,7 +161,8 @@ def train_model(args,
                              'model': args.model,
                              'batch_size': args.batch_size,
                              'alpha_primes': alpha_primes,
-                             'alphas': alphas
+                             'alphas': alphas,
+                             'num_params': util.get_n_params(model)
                              })
 
         epoch += 1
@@ -252,7 +180,8 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas']
+                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
+                  'num_params']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -261,19 +190,25 @@ def setup_experiment(args, outfile_path):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    # ---- Loading Dataset
-    curr_seed = args.seed
-    print()
-    train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
-                                                                     seed=curr_seed,
-                                                                     batch_size=args.batch_size,
-                                                                     sample_size=args.sample_size,
-                                                                     kwargs=kwargs)
+    if args.var_n_params:
+        param_factors = [1.01, 0.925, 0.83, 0.72, 0.59, 0.41, 0.29]
+    else:
+        param_factors = [1]
 
-    # ---- Begin training model
-    util.seed_all(curr_seed)
-    train_model(args, outfile_path, fieldnames, train_loader, validation_loader, sample_size, device)
-    print()
+    for i, pfact in enumerate(param_factors):
+        # ---- Loading Dataset
+        curr_seed = args.seed + (i * 50)
+        print()
+        train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
+                                                                         seed=curr_seed,
+                                                                         batch_size=args.batch_size,
+                                                                         sample_size=args.sample_size,
+                                                                         kwargs=kwargs)
+
+        # ---- Begin training model
+        util.seed_all(curr_seed)
+        train_model(args, curr_seed, outfile_path, fieldnames, train_loader, validation_loader, sample_size, device, pfact=pfact)
+        print()
 
 
 # --------------------  Entry Point
@@ -290,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
-    parser.add_argument('--sgm', action='store_true', help='Tells our network to use signed_geomean actfun')
+    parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     args = parser.parse_args()
 
     out = os.path.join(

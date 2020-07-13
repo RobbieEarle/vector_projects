@@ -65,7 +65,7 @@ def activate(x, actfun, p=1, k=1, M=None,
 
 # -------------------- Activation Functions
 
-_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
+_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen', 'signed_geomean']
 
 
 def get_combinact_actfuns():
