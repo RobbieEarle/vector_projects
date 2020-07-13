@@ -359,6 +359,19 @@ def load_dataset(dataset,
         train_set_indices = np.random.choice(50000, sample_size, replace=False)
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
+    elif dataset == 'cifar100':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 50000
+        if batch_size is None:
+            batch_size = 4
+
+        train_set_indices = np.random.choice(50000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
     print("------------ Sample Size " + str(sample_size) + "...", flush=True)
     print()
 

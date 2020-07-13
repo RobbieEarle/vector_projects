@@ -59,6 +59,10 @@ def train_model(args,
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
                                         num_outputs=10, k=2, p=1,
                                         pfact=pfact).to(device)
+        elif args.dataset == 'cifar100':
+            model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
+                                        num_outputs=100, k=2, p=1,
+                                        pfact=pfact).to(device)
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
@@ -110,7 +114,6 @@ def train_model(args,
             output = model(x)
             train_loss = criterion(output, targetx)
             train_loss.backward()
-            # train_loss.backward(retain_graph=True)
             optimizer.step()
             scheduler.step()
             final_train_loss = train_loss
@@ -224,11 +227,11 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='abs',
+    parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
-    parser.add_argument('--dataset', type=str, default='cifar10', help='Dataset being used. mnist or cifar10')
+    parser.add_argument('--dataset', type=str, default='cifar100', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')
     parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
