@@ -104,13 +104,17 @@ class CombinactCNN(nn.Module):
                  num_outputs=10,
                  k=2, p=1,
                  alpha_dist="per_cluster",
-                 permute_type="shuffle"):
+                 permute_type="shuffle",
+                 sgm=False):
         super(CombinactCNN, self).__init__()
 
         # Validate input
         # error = util.test_net_inputs(actfun, net_struct)
         # if error is not None:
         #     raise ValueError(error)
+
+        if sgm:
+            actfuns.get_combinact_actfuns().append('signed_geomean')
 
         self.actfun = actfun
         self.k, self.p = k, p

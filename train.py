@@ -3,6 +3,7 @@ import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR
+import torch.nn.functional as F
 
 import models
 import util
@@ -116,10 +117,10 @@ def train_model(args,
     elif args.model == 'cnn':
         if args.dataset == 'mnist':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=1, input_dim=28,
-                                        num_outputs=10, k=2, p=1).to(device)
+                                        num_outputs=10, k=2, p=1, sgm=args.sgm).to(device)
         elif args.dataset == 'cifar10':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
-                                        num_outputs=10, k=2, p=1).to(device)
+                                        num_outputs=10, k=2, p=1, sgm=args.sgm).to(device)
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
@@ -155,10 +156,6 @@ def train_model(args,
                          cycle_momentum=False
                          )
 
-    # for layer in model.conv_layers:
-    #     print(layer)
-
-    # print(list(model._modules.items()))
     # for mod_list in list(model._modules.items()):
     #     if mod_list[0] == 'conv_layers':
     #         for mod_list2 in mod_list[1]:
@@ -212,6 +209,15 @@ def train_model(args,
                 .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
 
+        alpha_primes = []
+        alphas = []
+        for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+            curr_alpha_primes = curr_alpha_primes.tolist()
+            alpha_primes.append(curr_alpha_primes)
+            alphas.append(curr_alphas)
+
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
@@ -226,7 +232,9 @@ def train_model(args,
                              'sample_size': sample_size,
                              'hyper_params': hyper_params,
                              'model': args.model,
-                             'batch_size': args.batch_size
+                             'batch_size': args.batch_size,
+                             'alpha_primes': alpha_primes,
+                             'alphas': alphas
                              })
 
         epoch += 1
@@ -244,7 +252,7 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size']
+                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas']
     with open(outfile_path, mode='w') as out_file:
         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
         writer.writeheader()
@@ -282,6 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
+    parser.add_argument('--sgm', action='store_true', help='Tells our network to use signed_geomean actfun')
     args = parser.parse_args()
 
     out = os.path.join(

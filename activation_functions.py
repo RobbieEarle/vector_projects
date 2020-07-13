@@ -65,8 +65,7 @@ def activate(x, actfun, p=1, k=1, M=None,
 
 # -------------------- Activation Functions
 
-_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2',
-                      'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
+_COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen']
 
 
 def get_combinact_actfuns():
@@ -85,7 +84,7 @@ _ACTFUNS = {
     'min':
         lambda z: torch.min(z, dim=2).values,
     'signed_geomean':
-        lambda z: signed_geomean(z, dim=2),
+        lambda z: sgm(z),
     'swishk':
         lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
     'l1':
@@ -140,13 +139,6 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
             outputs = outputs.unsqueeze(dim=2)
         else:
             outputs = torch.cat((outputs, _ACTFUNS[actfun](x).unsqueeze(dim=2)), dim=2)
-        # if actfun == 'signed_geomean':
-        #     print("---------------")
-        #     print(x.shape)
-        #     print(x[0, 0, ...])
-        #     print(outputs.shape)
-        #     print(outputs[0, 0, -1, ...])
-        #     print()
 
     # Handling per-permutation alpha vector
     if alpha_dist == "per_perm":
@@ -198,10 +190,28 @@ def multi_relu(z):
     return F.relu(z)
 
 
-def signed_geomean(z, dim=2):
-    prod = torch.prod(z, dim=dim)
-    signs = prod.sign()
-    return signs * prod.abs().sqrt()
+class SignedGeomean(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        prod = torch.prod(input, dim=2)
+        signs = prod.sign()
+        return signs * prod.abs().sqrt()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, = ctx.saved_tensors
+
+        prod = input.prod(dim=2).unsqueeze(2)
+        signs = prod.sign()
+
+        A = (prod.expand(input.shape) / input).abs().sqrt() * input
+        B = 2 * input.abs().pow(3 / 2)
+
+        grad_input = signs * A / B * grad_output.unsqueeze(2).expand(input.shape)
+        grad_input[input.abs() == 0] = 0
+
+        return grad_input
 
 
 def signed_l3(z):
@@ -228,3 +238,6 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
     if not keepdim:
         lae = lae.squeeze(dim)
     return lae.to(input_dtype)
+
+
+sgm = SignedGeomean.apply
