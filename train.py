@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 import models
 import util
+import hyper_params as hp
 
 import argparse
 import os
@@ -73,7 +74,7 @@ def train_model(args,
     if args.randsearch:
         hyper_params = util.get_random_hyper_params(rng)[args.actfun]
     else:
-        hyper_params = model.hyper_params[args.actfun]
+        hyper_params = hp.get_hyper_params(args.model, args.dataset, args.actfun)
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, args.actfun, hyper_params,
                             util.get_n_params(model), sample_size)
