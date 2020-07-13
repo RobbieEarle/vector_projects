@@ -231,7 +231,7 @@ if __name__ == '__main__':
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
-    parser.add_argument('--dataset', type=str, default='cifar100', help='Dataset being used. mnist or cifar10')
+    parser.add_argument('--dataset', type=str, default='cifar10', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')
     parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
