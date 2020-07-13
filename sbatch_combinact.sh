@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-50%10        # array value
-#SBATCH --output=logs/cnn_combinact_nparam/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cnn_combinact_nparam
+#SBATCH --output=logs/cnn_combinact_ntsamp/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_combinact_ntsamp
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -30,10 +30,10 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 'relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun relu --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun multi_relu --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun l2 --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun l2_lae --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun abs --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun max --var_n_params
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun relu --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun multi_relu --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun l2 --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun l2_lae --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun abs --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun max --var_n_samples

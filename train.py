@@ -76,7 +76,7 @@ def train_model(args,
         hyper_params = model.hyper_params[args.actfun]
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, args.actfun, hyper_params,
-                            util.get_n_params(model), args.sample_size)
+                            util.get_n_params(model), sample_size)
 
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,
@@ -195,20 +195,26 @@ def setup_experiment(args, outfile_path):
     else:
         param_factors = [1]
 
-    for i, pfact in enumerate(param_factors):
-        # ---- Loading Dataset
-        curr_seed = args.seed + (i * 50)
-        print()
-        train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
-                                                                         seed=curr_seed,
-                                                                         batch_size=args.batch_size,
-                                                                         sample_size=args.sample_size,
-                                                                         kwargs=kwargs)
+    if args.var_n_samples:
+        train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
+    else:
+        train_samples = [args.sample_size]
 
-        # ---- Begin training model
-        util.seed_all(curr_seed)
-        train_model(args, curr_seed, outfile_path, fieldnames, train_loader, validation_loader, sample_size, device, pfact=pfact)
-        print()
+    for i, pfact in enumerate(param_factors):
+        for j, curr_sample_size in enumerate(train_samples):
+
+            # ---- Loading Dataset
+            print()
+            curr_seed = args.seed + ((i+j) * 50)
+            train_loader, validation_loader, sample_size = util.load_dataset(args.dataset,
+                                                                             seed=curr_seed,
+                                                                             batch_size=args.batch_size,
+                                                                             sample_size=curr_sample_size,
+                                                                             kwargs=kwargs)
+            # ---- Begin training model
+            util.seed_all(curr_seed)
+            train_model(args, curr_seed, outfile_path, fieldnames, train_loader, validation_loader, sample_size, device, pfact=pfact)
+            print()
 
 
 # --------------------  Entry Point
@@ -226,6 +232,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
+    parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
     args = parser.parse_args()
 
     out = os.path.join(
