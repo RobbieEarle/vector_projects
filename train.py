@@ -192,6 +192,8 @@ def setup_experiment(args, outfile_path):
 
     if args.var_n_params:
         param_factors = [1.01, 0.925, 0.83, 0.72, 0.59, 0.41, 0.29]
+    elif args.var_n_relu_params:
+        param_factors = [0.36, 0.33, 0.295, 0.255, 0.21, 0.1475, 0.105]
     else:
         param_factors = [1]
 
@@ -221,7 +223,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='combinact',
+    parser.add_argument('--actfun', type=str, default='abs',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
@@ -232,6 +234,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
+    parser.add_argument('--var_n_relu_params', action='store_true', help='Same as var_n_params, but for 1d actfuns')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
     args = parser.parse_args()
 
