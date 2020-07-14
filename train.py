@@ -199,7 +199,10 @@ def setup_experiment(args, outfile_path):
     elif args.var_n_relu_params:
         param_factors = [0.36, 0.33, 0.295, 0.255, 0.21, 0.1475, 0.105]
     else:
-        param_factors = [1]
+        if args.actfun == 'relu' or args.actfun == 'abs':
+            param_factors = [0.36]
+        else:
+            param_factors = [1]
 
     if args.var_n_samples:
         train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
@@ -227,7 +230,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='combinact',
+    parser.add_argument('--actfun', type=str, default='relu',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')

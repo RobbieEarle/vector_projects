@@ -5,9 +5,9 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-200%10        # array value
-#SBATCH --output=logs/cmbnct_rs1_cnn_mnist/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cmbnct_rs1_cnn_mnist
+#SBATCH --array=0-50%10        # array value
+#SBATCH --output=logs/cnn_combinact_ntsamp1d/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_combinact_ntsamp1d
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -30,10 +30,5 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 'relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun combinact --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun relu --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun multi_relu --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun l2 --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun l2_lae --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun abs --dataset mnist --sample_size 60000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun max --dataset mnist --sample_size 60000 --randsearch
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun relu --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun abs --var_n_samples
