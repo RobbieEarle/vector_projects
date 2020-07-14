@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-200%10        # array value
-#SBATCH --output=logs/cmbnct_rs1_cnn_cifar100/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cmbnct_rs1_cnn_cifar100
+#SBATCH --output=logs/cmbnct_rs1_cnn_cifar101d/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cmbnct_rs1_cnn_cifar101d
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -30,10 +30,5 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 'relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun combinact --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun relu --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun multi_relu --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun l2 --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun l2_lae --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun abs --dataset cifar100 --sample_size 50000 --randsearch
-python train.py --seed $SEED --save_path $SAVE_PATH --actfun max --dataset cifar100 --sample_size 50000 --randsearch
+python train.py --seed $SEED --save_path $SAVE_PATH --actfun relu --dataset cifar10 --sample_size 50000 --randsearch
+python train.py --seed $SEED --save_path $SAVE_PATH --actfun abs --dataset cifar10 --sample_size 50000 --randsearch
