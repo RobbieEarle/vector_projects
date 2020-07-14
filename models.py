@@ -15,7 +15,8 @@ class CombinactNN(nn.Module):
                  num_layers=2,
                  k=2, p=1,
                  alpha_dist="per_cluster",
-                 permute_type="shuffle"):
+                 permute_type="shuffle",
+                 reduce_actfuns=False):
         super(CombinactNN, self).__init__()
 
         # Validate input
@@ -32,6 +33,7 @@ class CombinactNN(nn.Module):
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
+        self.reduce_actfuns = reduce_actfuns
 
         pk_ratio = self.p / self.k
         if num_layers == 2:
@@ -68,7 +70,7 @@ class CombinactNN(nn.Module):
         self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
         self.alpha_dist = alpha_dist  # Reference to chosen alpha distribution
         if self.actfun == "combinact":
-            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns())  # Number of actfuns used by combinact
+            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(reduce_actfuns))  # Number of actfuns used by combinact
             # self.shuffle_maps = []  # List of shuffle maps used for shuffle permutations
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(250 * self.p / self.k), self.num_combinact_actfuns)))
@@ -94,7 +96,8 @@ class CombinactNN(nn.Module):
                                      permute_type=self.permute_type,
                                      shuffle_maps=self.shuffle_maps[i],
                                      alpha_primes=self.all_alpha_primes[i],
-                                     alpha_dist=self.alpha_dist)
+                                     alpha_dist=self.alpha_dist,
+                                     reduce_actfuns=self.reduce_actfuns)
 
         return x
 
@@ -108,6 +111,7 @@ class CombinactCNN(nn.Module):
                  k=2, p=1,
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
+                 reduce_actfuns=False,
                  pfact=1):
         super(CombinactCNN, self).__init__()
 
@@ -118,6 +122,7 @@ class CombinactCNN(nn.Module):
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
+        self.reduce_actfuns = reduce_actfuns
 
         pk_ratio = self.p / self.k
 
@@ -171,7 +176,7 @@ class CombinactCNN(nn.Module):
         self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
         self.alpha_dist = alpha_dist  # Reference to chosen alpha distribution
         if self.actfun == "combinact":
-            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns())  # Number of actfuns used by combinact
+            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(reduce_actfuns))  # Number of actfuns used by combinact
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(sizes[0] * self.p / self.k), self.num_combinact_actfuns)))
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(sizes[1] * self.p / self.k), self.num_combinact_actfuns)))
@@ -205,7 +210,8 @@ class CombinactCNN(nn.Module):
                                  permute_type=self.permute_type,
                                  shuffle_maps=self.shuffle_maps[block * 2],
                                  alpha_primes=alpha_primes,
-                                 alpha_dist=self.alpha_dist)
+                                 alpha_dist=self.alpha_dist,
+                                 reduce_actfuns=self.reduce_actfuns)
             x = self.conv_layers[block][1](x)
             if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[(block * 2) + 1]
@@ -217,7 +223,8 @@ class CombinactCNN(nn.Module):
                                  permute_type=self.permute_type,
                                  shuffle_maps=self.shuffle_maps[(block * 2) + 1],
                                  alpha_primes=alpha_primes,
-                                 alpha_dist=self.alpha_dist)
+                                 alpha_dist=self.alpha_dist,
+                                 reduce_actfuns=self.reduce_actfuns)
             x = self.pooling[block](x)
 
         x = x.view(x.size(0), -1)
@@ -237,6 +244,7 @@ class CombinactCNN(nn.Module):
                                      layer_type='linear',
                                      permute_type=self.permute_type,
                                      alpha_primes=alpha_primes,
-                                     alpha_dist=self.alpha_dist)
+                                     alpha_dist=self.alpha_dist,
+                                     reduce_actfuns=self.reduce_actfuns)
 
         return x

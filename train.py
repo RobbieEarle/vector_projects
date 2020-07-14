@@ -47,22 +47,23 @@ def train_model(args,
     model_params = []
     if args.dataset == 'mnist':
         model = models.CombinactNN(actfun=args.actfun, input_dim=784,
-                                   output_dim=10, num_layers=2, k=2, p=1).to(device)
+                                   output_dim=10, num_layers=2, k=2, p=1,
+                                   reduce_actfuns=args.reduce_actfuns).to(device)
     if args.model == 'nn':
         pass
     elif args.model == 'cnn':
         if args.dataset == 'mnist':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=1, input_dim=28,
                                         num_outputs=10, k=2, p=1,
-                                        pfact=pfact).to(device)
+                                        pfact=pfact, reduce_actfuns=args.reduce_actfuns).to(device)
         elif args.dataset == 'cifar10':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
                                         num_outputs=10, k=2, p=1,
-                                        pfact=pfact).to(device)
+                                        pfact=pfact, reduce_actfuns=args.reduce_actfuns).to(device)
         elif args.dataset == 'cifar100':
             model = models.CombinactCNN(actfun=args.actfun, num_input_channels=3, input_dim=32,
                                         num_outputs=100, k=2, p=1,
-                                        pfact=pfact).to(device)
+                                        pfact=pfact, reduce_actfuns=args.reduce_actfuns).to(device)
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
@@ -230,7 +231,7 @@ def setup_experiment(args, outfile_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--seed', type=int, default=0, help='Job seed')
-    parser.add_argument('--actfun', type=str, default='relu',
+    parser.add_argument('--actfun', type=str, default='combinact',
                         help='relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
@@ -243,6 +244,7 @@ if __name__ == '__main__':
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_relu_params', action='store_true', help='Same as var_n_params, but for 1d actfuns')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
+    parser.add_argument('--reduce_actfuns', action='store_true', help='When true, does not use extra actfuns')
     args = parser.parse_args()
 
     out = os.path.join(

@@ -13,7 +13,8 @@ def activate(x, actfun, p=1, k=1, M=None,
              permute_type='shuffle',
              shuffle_maps=None,
              alpha_primes=None,
-             alpha_dist=None
+             alpha_dist=None,
+             reduce_actfuns=False
              ):
     if actfun == 'relu':
         return _ACTFUNS['relu'](x)
@@ -54,7 +55,8 @@ def activate(x, actfun, p=1, k=1, M=None,
                           p=p,
                           layer_type=layer_type,
                           alpha_primes=alpha_primes,
-                          alpha_dist=alpha_dist)
+                          alpha_dist=alpha_dist,
+                          reduce_actfuns=reduce_actfuns)
         elif actfun == 'cf_relu' or actfun == 'cf_abs':
             x = coin_flip(x, actfun, M=num_channels * p, k=k)
         else:
@@ -66,10 +68,14 @@ def activate(x, actfun, p=1, k=1, M=None,
 # -------------------- Activation Functions
 
 _COMBINACT_ACTFUNS = ['max', 'swishk', 'l1', 'l2', 'linf', 'lse', 'lae', 'min', 'nlsen', 'nlaen', 'signed_geomean']
+_COMBINACT_ACTFUNS_REDUCED = ['max', 'swishk', 'l2', 'lae', 'signed_geomean']
 
 
-def get_combinact_actfuns():
-    return _COMBINACT_ACTFUNS
+def get_combinact_actfuns(reduce_actfuns=False):
+    if reduce_actfuns:
+        return _COMBINACT_ACTFUNS_REDUCED
+    else:
+        return _COMBINACT_ACTFUNS
 
 
 _ACTFUNS = {
@@ -121,7 +127,12 @@ _ACTFUNS = {
 _ln2 = 0.6931471805599453
 
 
-def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
+def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, reduce_actfuns=False):
+
+    if reduce_actfuns:
+        all_actfuns = _COMBINACT_ACTFUNS_REDUCED
+    else:
+        all_actfuns = _COMBINACT_ACTFUNS
 
     # Recording current input shape
     batch_size = x.shape[0]
@@ -133,7 +144,7 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
 
     # Computing all activation functions
     outputs = None
-    for i, actfun in enumerate(_COMBINACT_ACTFUNS):
+    for i, actfun in enumerate(all_actfuns):
         if i == 0:
             outputs = _ACTFUNS[actfun](x).to(x.device)
             outputs = outputs.unsqueeze(dim=2)
@@ -147,12 +158,12 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None):
                                                  layer_alphas.shape[0], layer_alphas.shape[1],
                                                  1, 1])
             outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
-                                       len(_COMBINACT_ACTFUNS), img_size, img_size])
+                                       len(all_actfuns), img_size, img_size])
         elif layer_type == 'linear':
             layer_alphas = layer_alphas.reshape([1, 1,
                                                  layer_alphas.shape[0], layer_alphas.shape[1]])
             outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
-                                       len(_COMBINACT_ACTFUNS)])
+                                       len(all_actfuns)])
         outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
         outputs = torch.sum(outputs, dim=3)  # Sum across all actfuns
         if layer_type == 'conv':
