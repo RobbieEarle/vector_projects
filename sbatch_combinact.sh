@@ -30,4 +30,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 'relu, multi_relu, cf_relu, combinact, l1, l2, l2_lae, abs, max'
-python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --var_n_params -reduce_actfuns
+python train.py --seed $SEED --save_path $SAVE_PATH --model cnn --actfun combinact --var_n_params --reduce_actfuns
