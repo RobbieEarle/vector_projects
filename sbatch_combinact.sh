@@ -32,4 +32,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset mnist --sample_size 60000 --actfun 1d --randsearch
+python train.py --seed $SEED --save_path $SAVE_PATH --dataset mnist --sample_size 60000 --randsearch
