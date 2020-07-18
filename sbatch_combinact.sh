@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-200%5        # array value
-#SBATCH --output=logs/cmbnct_rs2_cnn_cifar100/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cmbnct_rs2_cnn_cifar100
+#SBATCH --output=logs/cmbnct_rs3_cnn_cifar101d/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cmbnct_rs3_cnn_cifar101d
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -32,4 +32,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset cifar100 --sample_size 50000 --randsearch
+python train.py --seed $SEED --save_path $SAVE_PATH --dataset cifar10 --sample_size 50000 --randsearch --actfun 1d
