@@ -165,7 +165,6 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, red
                                                  layer_alphas.shape[0], layer_alphas.shape[1]])
             outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
                                        len(all_actfuns)])
-
         outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
         outputs = torch.sum(outputs, dim=3)  # Sum across all actfuns
 
