@@ -117,6 +117,17 @@ def train_model(args,
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_n_params(model), sample_size)
 
+    raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
+    for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+        raw_alpha_primes.append(layer_alpha_primes.tolist())
+        raw_alphas.append(F.softmax(layer_alpha_primes, dim=1).data.tolist())
+
+        curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+        curr_avg_alphas = F.softmax(curr_avg_alpha_primes, dim=0).data.tolist()
+        curr_avg_alpha_primes = curr_avg_alpha_primes.tolist()
+        avg_alpha_primes.append(curr_avg_alpha_primes)
+        avg_alphas.append(curr_avg_alphas)
+
     # ---- Start Training
     while epoch <= args.num_epochs:
 
@@ -170,14 +181,16 @@ def train_model(args,
                 .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
 
-        alpha_primes = []
-        alphas = []
+        raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
         for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
-            curr_alpha_primes = curr_alpha_primes.tolist()
-            alpha_primes.append(curr_alpha_primes)
-            alphas.append(curr_alphas)
+            raw_alpha_primes.append(layer_alpha_primes.tolist())
+            raw_alphas.append(F.softmax(layer_alpha_primes, dim=1).data.tolist())
+
+            curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+            curr_avg_alphas = F.softmax(curr_avg_alpha_primes, dim=0).data.tolist()
+            curr_avg_alpha_primes = curr_avg_alpha_primes.tolist()
+            avg_alpha_primes.append(curr_avg_alpha_primes)
+            avg_alphas.append(curr_avg_alphas)
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
@@ -194,8 +207,10 @@ def train_model(args,
                              'hyper_params': hyper_params,
                              'model': args.model,
                              'batch_size': args.batch_size,
-                             'alpha_primes': alpha_primes,
-                             'alphas': alphas,
+                             'raw_alpha_primes': raw_alpha_primes,
+                             'raw_alphas': raw_alphas,
+                             'avg_alpha_primes': avg_alpha_primes,
+                             'avg_alphas': avg_alphas,
                              'num_params': util.get_n_params(model)
                              })
 
@@ -236,8 +251,8 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
-                  'num_params']
+                  'sample_size', 'hyper_params', 'model', 'batch_size', 'raw_alpha_primes', 'raw_alphas'
+                  'avg_alpha_primes', 'avg_alphas', 'num_params']
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
     checkpoint = None
 

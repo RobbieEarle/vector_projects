@@ -159,13 +159,16 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, red
                                                  1, 1])
             outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
                                        len(all_actfuns), img_size, img_size])
+
         elif layer_type == 'linear':
             layer_alphas = layer_alphas.reshape([1, 1,
                                                  layer_alphas.shape[0], layer_alphas.shape[1]])
             outputs = outputs.reshape([batch_size, int(num_clusters / p), p,
                                        len(all_actfuns)])
+
         outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
         outputs = torch.sum(outputs, dim=3)  # Sum across all actfuns
+
         if layer_type == 'conv':
             outputs = outputs.reshape([batch_size, num_clusters, img_size, img_size])
         elif layer_type == 'linear':
@@ -180,7 +183,7 @@ def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, red
         elif layer_type == 'linear':
             layer_alphas = layer_alphas.reshape([1,
                                                  layer_alphas.shape[0], layer_alphas.shape[1]])
-        # print(outputs.shape, layer_alphas.shape)
+
         outputs = outputs * layer_alphas  # Multiply elements in last 2 dims of outputs by layer_alphas
         outputs = torch.sum(outputs, dim=2)  # Sum across all actfuns
 
