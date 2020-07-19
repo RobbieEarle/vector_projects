@@ -251,7 +251,7 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size', 'raw_alpha_primes', 'raw_alphas'
+                  'sample_size', 'hyper_params', 'model', 'batch_size', 'raw_alpha_primes', 'raw_alphas',
                   'avg_alpha_primes', 'avg_alphas', 'num_params']
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
     checkpoint = None
