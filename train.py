@@ -237,7 +237,7 @@ def setup_experiment(args, outfile_path):
     elif args.actfun == '1d':
         all_actfuns = ['relu', 'abs']
     else:
-        all_actfuns = args.actfun
+        all_actfuns = [args.actfun]
     if args.var_n_params:
         param_factors = [1.01, 0.925, 0.83, 0.72, 0.59, 0.41, 0.29]
         param_factors_1d = [0.36, 0.33, 0.295, 0.255, 0.21, 0.1475, 0.105]
