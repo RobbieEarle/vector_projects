@@ -198,49 +198,49 @@ def cnn_mnist(rng):
                  "adam_beta_2": np.exp(rng.uniform(-5.5, -5.35)),
                  "adam_eps": np.exp(rng.uniform(-19.05, -16.44)),
                  "adam_wd": np.exp(rng.uniform(-13.52, -12.75)),
-                 "max_lr": np.exp(rng.uniform(-7.25, -6.25)),
-                 "cycle_peak": rng.uniform(0.375, 0.45)
+                 "max_lr": np.exp(rng.uniform(-7.75, -7)),
+                 "cycle_peak": rng.uniform(0.41, 0.45)
                  },
         "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-3.31, -2.97)),
                        "adam_beta_2": np.exp(rng.uniform(-4.93, -4)),
                        "adam_eps": np.exp(rng.uniform(-20.38, -19.71)),
                        "adam_wd": np.exp(rng.uniform(-12.65, -12.15)),
-                       "max_lr": np.exp(rng.uniform(-7.25, -6.5)),
-                       "cycle_peak": rng.uniform(0.15, 0.25)
+                       "max_lr": np.exp(rng.uniform(-7.75, -7.11)),
+                       "cycle_peak": rng.uniform(0.16, 0.2)
                        },
         "combinact": {"adam_beta_1": np.exp(rng.uniform(-2.55, -1.75)),
                       "adam_beta_2": np.exp(rng.uniform(-5.48, -4.85)),
                       "adam_eps": np.exp(rng.uniform(-21, -20.43)),
                       "adam_wd": np.exp(rng.uniform(-14.88, -13.71)),
-                      "max_lr": np.exp(rng.uniform(-7, -6)),
-                      "cycle_peak": rng.uniform(0.4, 0.5)
+                      "max_lr": np.exp(rng.uniform(-7, -6.58)),
+                      "cycle_peak": rng.uniform(0.45, 0.48)
                       },
         "l2": {"adam_beta_1": np.exp(rng.uniform(-2.95, -2.72)),
                "adam_beta_2": np.exp(rng.uniform(-4.98, -4.58)),
                "adam_eps": np.exp(rng.uniform(-18.02, -16.66)),
                "adam_wd": np.exp(rng.uniform(-13.5, -13)),
-               "max_lr": np.exp(rng.uniform(-6.85, -6.5)),
-               "cycle_peak": rng.uniform(0.25, 0.4)
+               "max_lr": np.exp(rng.uniform(-6.79, -6.58)),
+               "cycle_peak": rng.uniform(0.26, 0.31)
                },
         "abs": {"adam_beta_1": np.exp(rng.uniform(-2.44, -2.13)),
                 "adam_beta_2": np.exp(rng.uniform(-4.23, -3.5)),
                 "adam_eps": np.exp(rng.uniform(-19.05, -18.25)),
                 "adam_wd": np.exp(rng.uniform(-13.76, -12.8)),
-                "max_lr": np.exp(rng.uniform(-6.7, -5.85)),
-                "cycle_peak": rng.uniform(0.375, 0.45)
+                "max_lr": np.exp(rng.uniform(-6.7, -6.06)),
+                "cycle_peak": rng.uniform(0.41, 0.44)
                 },
         "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-4.05, -3.76)),
                    "adam_beta_2": np.exp(rng.uniform(-4.82, -3.75)),
                    "adam_eps": np.exp(rng.uniform(-15.94, -15)),
                    "adam_wd": np.exp(rng.uniform(-13.88, -13.5)),
-                   "max_lr": np.exp(rng.uniform(-7, -6.15)),
-                   "cycle_peak": rng.uniform(0.3, 0.45)
+                   "max_lr": np.exp(rng.uniform(-6.9, -6.61)),
+                   "cycle_peak": rng.uniform(0.3, 0.33)
                    },
         "max": {"adam_beta_1": np.exp(rng.uniform(-3.21, -3.06)),
                 "adam_beta_2": np.exp(rng.uniform(-4.21, -3.75)),
                 "adam_eps": np.exp(rng.uniform(-17.83, -16.74)),
                 "adam_wd": np.exp(rng.uniform(-13, -12.73)),
-                "max_lr": np.exp(rng.uniform(-5.9, -5.55)),
-                "cycle_peak": rng.uniform(0.15, 0.35)
+                "max_lr": np.exp(rng.uniform(-5.69, -5.61)),
+                "cycle_peak": rng.uniform(0.3, 0.35)
                 }
     }
