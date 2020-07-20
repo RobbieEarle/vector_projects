@@ -337,12 +337,14 @@ if __name__ == '__main__':
 
     out = os.path.join(
         args.save_path,
-        '{}-{}-{}-{}-{}.csv'.format(
+        '{}-{}-{}-{}-{}-{}.csv'.format(
             datetime.date.today(),
             args.actfun,
             args.seed,
             args.dataset,
-            args.model)
+            args.model,
+            args.reduce_actfuns
+        )
     )
 
     setup_experiment(args, out)
