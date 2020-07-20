@@ -117,17 +117,6 @@ def train_model(args,
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_n_params(model), sample_size)
 
-    raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
-    for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-        raw_alpha_primes.append(layer_alpha_primes.tolist())
-        raw_alphas.append(F.softmax(layer_alpha_primes, dim=1).data.tolist())
-
-        curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-        curr_avg_alphas = F.softmax(curr_avg_alpha_primes, dim=0).data.tolist()
-        curr_avg_alpha_primes = curr_avg_alpha_primes.tolist()
-        avg_alpha_primes.append(curr_avg_alpha_primes)
-        avg_alphas.append(curr_avg_alphas)
-
     # ---- Start Training
     while epoch <= args.num_epochs:
 
@@ -183,8 +172,10 @@ def train_model(args,
 
         raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
         for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            raw_alpha_primes.append(layer_alpha_primes.tolist())
-            raw_alphas.append(F.softmax(layer_alpha_primes, dim=1).data.tolist())
+            curr_raw_alpha_primes = (layer_alpha_primes.detach().numpy() * 1000).astype(int) / 1000
+            raw_alpha_primes.append(curr_raw_alpha_primes.tolist())
+            curr_raw_alphas = (F.softmax(layer_alpha_primes, dim=1).data.detach().numpy() * 1000).astype(int) / 1000
+            raw_alphas.append(curr_raw_alphas.tolist())
 
             curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
             curr_avg_alphas = F.softmax(curr_avg_alpha_primes, dim=0).data.tolist()
@@ -192,7 +183,6 @@ def train_model(args,
             avg_alpha_primes.append(curr_avg_alpha_primes)
             avg_alphas.append(curr_avg_alphas)
 
-        # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writerow({'dataset': args.dataset,
@@ -207,8 +197,24 @@ def train_model(args,
                              'hyper_params': hyper_params,
                              'model': args.model,
                              'batch_size': args.batch_size,
-                             'raw_alpha_primes': raw_alpha_primes,
-                             'raw_alphas': raw_alphas,
+                             'raw_alpha_primes1': raw_alpha_primes[0],
+                             'raw_alpha_primes2': raw_alpha_primes[1],
+                             'raw_alpha_primes3': raw_alpha_primes[2],
+                             'raw_alpha_primes4': raw_alpha_primes[3],
+                             'raw_alpha_primes5': raw_alpha_primes[4],
+                             'raw_alpha_primes6': raw_alpha_primes[5],
+                             'raw_alpha_primes7a': raw_alpha_primes[6][:258],
+                             'raw_alpha_primes7b': raw_alpha_primes[6][258:],
+                             'raw_alpha_primes8': raw_alpha_primes[7],
+                             'raw_alphas1': raw_alphas[0],
+                             'raw_alphas2': raw_alphas[1],
+                             'raw_alphas3': raw_alphas[2],
+                             'raw_alphas4': raw_alphas[3],
+                             'raw_alphas5': raw_alphas[4],
+                             'raw_alphas6': raw_alphas[5],
+                             'raw_alphas7a': raw_alphas[6][:258],
+                             'raw_alphas7b': raw_alphas[6][258:],
+                             'raw_alphas8': raw_alphas[7],
                              'avg_alpha_primes': avg_alpha_primes,
                              'avg_alphas': avg_alphas,
                              'num_params': util.get_n_params(model)
@@ -251,8 +257,12 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size', 'raw_alpha_primes', 'raw_alphas',
-                  'avg_alpha_primes', 'avg_alphas', 'num_params']
+                  'sample_size', 'hyper_params', 'model', 'batch_size',
+                  'raw_alpha_primes1', 'raw_alphas1', 'raw_alpha_primes2', 'raw_alphas2',
+                  'raw_alpha_primes3', 'raw_alphas3', 'raw_alpha_primes4', 'raw_alphas4',
+                  'raw_alpha_primes5', 'raw_alphas5', 'raw_alpha_primes6', 'raw_alphas6',
+                  'raw_alpha_primes7a', 'raw_alphas7a', 'raw_alpha_primes7b', 'raw_alphas7b',
+                  'raw_alpha_primes8', 'raw_alphas8', 'avg_alpha_primes', 'avg_alphas', 'num_params']
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
     checkpoint = None
 
