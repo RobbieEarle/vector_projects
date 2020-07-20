@@ -172,9 +172,9 @@ def train_model(args,
 
         raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
         for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            curr_raw_alpha_primes = (layer_alpha_primes.detach().numpy() * 1000).astype(int) / 1000
+            curr_raw_alpha_primes = (layer_alpha_primes.detach().cpu().numpy() * 1000).astype(int) / 1000
             raw_alpha_primes.append(curr_raw_alpha_primes.tolist())
-            curr_raw_alphas = (F.softmax(layer_alpha_primes, dim=1).data.detach().numpy() * 1000).astype(int) / 1000
+            curr_raw_alphas = (F.softmax(layer_alpha_primes, dim=1).data.detach().cpu().numpy() * 1000).astype(int) / 1000
             raw_alphas.append(curr_raw_alphas.tolist())
 
             curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
