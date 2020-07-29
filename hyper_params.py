@@ -86,12 +86,12 @@ def nn_mnist(rng):
 
 def cnn_cifar10(rng):
     return {
-        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.35, -2.19)),
-                 "adam_beta_2": np.exp(rng.uniform(-7.55, -6.45)),
-                 "adam_eps": np.exp(rng.uniform(-18.8, -18)),
-                 "adam_wd": np.exp(rng.uniform(-12.19, -11.9)),
-                 "max_lr": np.exp(rng.uniform(-7.75, -7.27)),
-                 "cycle_peak": rng.uniform(0.48, 0.5)
+        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.24, -2.2)),
+                 "adam_beta_2": np.exp(rng.uniform(-7.4, -7.11)),
+                 "adam_eps": np.exp(rng.uniform(-18.25, -18)),
+                 "adam_wd": np.exp(rng.uniform(-12.19, -12.05)),
+                 "max_lr": np.exp(rng.uniform(-7.5, -7.32)),
+                 "cycle_peak": rng.uniform(0.49, 0.5)
                  },
         "multi_relu": {"adam_beta_1": np.exp(-2.3543718655934547),
                        "adam_beta_2": np.exp(-7.063659565937045),
@@ -114,12 +114,12 @@ def cnn_cifar10(rng):
                "max_lr": np.exp(-7.246379919517856),
                "cycle_peak": 0.4721781379107825
                },
-        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.31, -2.1)),
-                "adam_beta_2": np.exp(rng.uniform(-5.75, -5.2)),
-                "adam_eps": np.exp(rng.uniform(-20.84, -20.1)),
-                "adam_wd": np.exp(rng.uniform(-14.1, -13.63)),
-                "max_lr": np.exp(rng.uniform(-6.75, -6.68)),
-                "cycle_peak": rng.uniform(0.42, 0.44)
+        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.14, -2.1)),
+                "adam_beta_2": np.exp(rng.uniform(-5.45, -5.31)),
+                "adam_eps": np.exp(rng.uniform(-20.7, -20.49)),
+                "adam_wd": np.exp(rng.uniform(-13.97, -13.86)),
+                "max_lr": np.exp(rng.uniform(-6.74, -6.71)),
+                "cycle_peak": rng.uniform(0.42, 0.43)
                 },
         "l2_lae": {"adam_beta_1": np.exp(-1.511652530521991),
                    "adam_beta_2": np.exp(-5.10036591613782),
