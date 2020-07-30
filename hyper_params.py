@@ -86,12 +86,12 @@ def nn_mnist(rng):
 
 def cnn_cifar10(rng):
     return {
-        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.24, -2.2)),
-                 "adam_beta_2": np.exp(rng.uniform(-7.4, -7.11)),
-                 "adam_eps": np.exp(rng.uniform(-18.25, -18)),
-                 "adam_wd": np.exp(rng.uniform(-12.19, -12.05)),
-                 "max_lr": np.exp(rng.uniform(-7.5, -7.32)),
-                 "cycle_peak": rng.uniform(0.49, 0.5)
+        "relu": {"adam_beta_1": np.exp(-2.2190390756250093),
+                 "adam_beta_2": np.exp(-7.366914026786562),
+                 "adam_eps": np.exp(-18.10735819580839),
+                 "adam_wd": np.exp(-12.13318302542048),
+                 "max_lr": np.exp(-7.467215859430617),
+                 "cycle_peak": 0.49156736259596534
                  },
         "multi_relu": {"adam_beta_1": np.exp(-2.3543718655934547),
                        "adam_beta_2": np.exp(-7.063659565937045),
@@ -114,12 +114,12 @@ def cnn_cifar10(rng):
                "max_lr": np.exp(-7.246379919517856),
                "cycle_peak": 0.4721781379107825
                },
-        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.14, -2.1)),
-                "adam_beta_2": np.exp(rng.uniform(-5.45, -5.31)),
-                "adam_eps": np.exp(rng.uniform(-20.7, -20.49)),
-                "adam_wd": np.exp(rng.uniform(-13.97, -13.86)),
-                "max_lr": np.exp(rng.uniform(-6.74, -6.71)),
-                "cycle_peak": rng.uniform(0.42, 0.43)
+        "abs": {"adam_beta_1": np.exp(-2.13818391159692),
+                "adam_beta_2": np.exp(-5.343641237772224),
+                "adam_eps": np.exp(-20.681560434670658),
+                "adam_wd": np.exp(-13.95451768488049),
+                "max_lr": np.exp(-6.719724510164729),
+                "cycle_peak": 0.4296646156803744
                 },
         "l2_lae": {"adam_beta_1": np.exp(-1.511652530521991),
                    "adam_beta_2": np.exp(-5.10036591613782),
@@ -140,107 +140,107 @@ def cnn_cifar10(rng):
 
 def cnn_cifar100(rng):
     return {
-        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.43, -2.4)),
-                 "adam_beta_2": np.exp(rng.uniform(-8.48, -8.26)),
-                 "adam_eps": np.exp(rng.uniform(-20, -19.61)),
-                 "adam_wd": np.exp(rng.uniform(-11.85, -11.64)),
-                 "max_lr": np.exp(rng.uniform(-7.35, -7.15)),
-                 "cycle_peak": rng.uniform(0.44, 0.46)
+        "relu": {"adam_beta_1": np.exp(-2.426797853932341),
+                 "adam_beta_2": np.exp(-8.32944462067869),
+                 "adam_eps": np.exp(-19.791364579217475),
+                 "adam_wd": np.exp(-11.772470713882507),
+                 "max_lr": np.exp(-7.267477071254713),
+                 "cycle_peak": 0.4517569495205036
                  },
-        "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-2.04, -1.97)),
-                       "adam_beta_2": np.exp(rng.uniform(-5.58, -5.35)),
-                       "adam_eps": np.exp(rng.uniform(-21.03, -20.77)),
-                       "adam_wd": np.exp(rng.uniform(-11.95, -11.71)),
-                       "max_lr": np.exp(rng.uniform(-7.22, -7.17)),
-                       "cycle_peak": rng.uniform(0.34, 0.37)
+        "multi_relu": {"adam_beta_1": np.exp(-1.9834923464612166),
+                       "adam_beta_2": np.exp(-5.558187320969269),
+                       "adam_eps": np.exp(-20.847973902813152),
+                       "adam_wd": np.exp(-11.72610495446386),
+                       "max_lr": np.exp(-7.177889555045069),
+                       "cycle_peak": 0.36399876953225746
                        },
-        "combinact": {"adam_beta_1": np.exp(rng.uniform(-2, -1.9)),
-                      "adam_beta_2": np.exp(rng.uniform(-7.34, -7.16)),
-                      "adam_eps": np.exp(rng.uniform(-19.92, -19.62)),
-                      "adam_wd": np.exp(rng.uniform(-10.92, -10.73)),
-                      "max_lr": np.exp(rng.uniform(-6.95, -6.85)),
-                      "cycle_peak": rng.uniform(0.54, 0.57)
+        "combinact": {"adam_beta_1": np.exp(-1.90329956854611),
+                      "adam_beta_2": np.exp(-7.286469824634688),
+                      "adam_eps": np.exp(-19.72445941906418),
+                      "adam_wd": np.exp(-10.818233549453154),
+                      "max_lr": np.exp(-6.861297361914738),
+                      "cycle_peak": 0.5659379474281131
                       },
-        "l2": {"adam_beta_1": np.exp(rng.uniform(-1.92, -1.8)),
-               "adam_beta_2": np.exp(rng.uniform(-4.83, -4.38)),
-               "adam_eps": np.exp(rng.uniform(-16.64, -16.33)),
-               "adam_wd": np.exp(rng.uniform(-10.94, -10.81)),
-               "max_lr": np.exp(rng.uniform(-7.25, -7.09)),
-               "cycle_peak": rng.uniform(0.4, 0.48)
+        "l2": {"adam_beta_1": np.exp(-1.8662979339075287),
+               "adam_beta_2": np.exp(-4.588487764348233),
+               "adam_eps": np.exp(-16.502805171408045),
+               "adam_wd": np.exp(-10.825735290142346),
+               "max_lr": np.exp(-7.23765587612481),
+               "cycle_peak": 0.4491990506275296
                },
-        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.53, -2.45)),
-                "adam_beta_2": np.exp(rng.uniform(-7.71, -7.57)),
-                "adam_eps": np.exp(rng.uniform(-19.05, -18.61)),
-                "adam_wd": np.exp(rng.uniform(-11.97, -11.76)),
-                "max_lr": np.exp(rng.uniform(-7.21, -7.16)),
-                "cycle_peak": rng.uniform(0.42, 0.45)
+        "abs": {"adam_beta_1": np.exp(-2.4807814370731145),
+                "adam_beta_2": np.exp(-7.619981735822295),
+                "adam_eps": np.exp(-18.931867256862652),
+                "adam_wd": np.exp(-11.812467208793322),
+                "max_lr": np.exp(-7.195658475528992),
+                "cycle_peak": 0.44128128173478703
                 },
-        "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-1.9, -1.82)),
-                   "adam_beta_2": np.exp(rng.uniform(-5.63, -5.26)),
-                   "adam_eps": np.exp(rng.uniform(-17.7, -16.92)),
-                   "adam_wd": np.exp(rng.uniform(-11.92, -11.66)),
-                   "max_lr": np.exp(rng.uniform(-7.16, -7.02)),
-                   "cycle_peak": rng.uniform(0.43, 0.45)
+        "l2_lae": {"adam_beta_1": np.exp(-1.8490078448379565),
+                   "adam_beta_2": np.exp(-5.281849941263149),
+                   "adam_eps": np.exp(-17.490838571636928),
+                   "adam_wd": np.exp(-11.897886419488167),
+                   "max_lr": np.exp(-7.020510360640074),
+                   "cycle_peak": 0.43013832410896696
                    },
-        "max": {"adam_beta_1": np.exp(rng.uniform(-2.83, -2.73)),
-                "adam_beta_2": np.exp(rng.uniform(-5.6, -5.3)),
-                "adam_eps": np.exp(rng.uniform(-17.3, -17.12)),
-                "adam_wd": np.exp(rng.uniform(-8.65, -8.55)),
-                "max_lr": np.exp(rng.uniform(-6.3, -6.11)),
-                "cycle_peak": rng.uniform(0.4, 0.42)
+        "max": {"adam_beta_1": np.exp(-2.7994828802749576),
+                "adam_beta_2": np.exp(-5.369720801695676),
+                "adam_eps": np.exp(-17.285952081693686),
+                "adam_wd": np.exp(-8.600017225696668),
+                "max_lr": np.exp(-6.220972625072611),
+                "cycle_peak": 0.41433149467346075
                 }
     }
 
 
 def cnn_mnist(rng):
     return {
-        "relu": {"adam_beta_1": np.exp(rng.uniform(-2.48, -2.3)),
-                 "adam_beta_2": np.exp(rng.uniform(-5.46, -5.35)),
-                 "adam_eps": np.exp(rng.uniform(-17.53, -16.46)),
-                 "adam_wd": np.exp(rng.uniform(-13.48, -13.25)),
-                 "max_lr": np.exp(rng.uniform(-7.7, -7.38)),
-                 "cycle_peak": rng.uniform(0.43, 0.45)
+        "relu": {"adam_beta_1": np.exp(-2.388609721693893),
+                 "adam_beta_2": np.exp(-5.390639433192069),
+                 "adam_eps": np.exp(-16.796444850789),
+                 "adam_wd": np.exp(-13.253336539963065),
+                 "max_lr": np.exp(-7.422704622466667),
+                 "cycle_peak": 0.44656736904941696
                  },
-        "multi_relu": {"adam_beta_1": np.exp(rng.uniform(-3.18, -3.02)),
-                       "adam_beta_2": np.exp(rng.uniform(-4.46, -4.05)),
-                       "adam_eps": np.exp(rng.uniform(-19.95, -19.86)),
-                       "adam_wd": np.exp(rng.uniform(-12.64, -12.38)),
-                       "max_lr": np.exp(rng.uniform(-7.19, -7.11)),
-                       "cycle_peak": rng.uniform(0.17, 0.19)
+        "multi_relu": {"adam_beta_1": np.exp(-3.0574547429631496),
+                       "adam_beta_2": np.exp(-4.247448624972093),
+                       "adam_eps": np.exp(-19.92328795485814),
+                       "adam_wd": np.exp(-12.591192480548075),
+                       "max_lr": np.exp(-7.183540698498811),
+                       "cycle_peak": 0.1847688059239794
                        },
-        "combinact": {"adam_beta_1": np.exp(rng.uniform(-2.16, -1.88)),
-                      "adam_beta_2": np.exp(rng.uniform(-5.48, -5.25)),
-                      "adam_eps": np.exp(rng.uniform(-20.68, -20.43)),
-                      "adam_wd": np.exp(rng.uniform(-14.05, -13.71)),
-                      "max_lr": np.exp(rng.uniform(-6.9, -6.61)),
-                      "cycle_peak": rng.uniform(0.45, 0.47)
+        "combinact": {"adam_beta_1": np.exp(-2.114439459425412),
+                      "adam_beta_2": np.exp(-5.354100834352032),
+                      "adam_eps": np.exp(-20.485014830268515),
+                      "adam_wd": np.exp(-13.947985139710585),
+                      "max_lr": np.exp(-6.710677476450968),
+                      "cycle_peak": 0.45592998059813267
                       },
-        "l2": {"adam_beta_1": np.exp(rng.uniform(-2.81, -2.74)),
-               "adam_beta_2": np.exp(rng.uniform(-4.93, -4.82)),
-               "adam_eps": np.exp(rng.uniform(-18.02, -17.5)),
-               "adam_wd": np.exp(rng.uniform(-13.48, -13.26)),
-               "max_lr": np.exp(rng.uniform(-6.71, -6.61)),
-               "cycle_peak": rng.uniform(0.28, 0.3)
+        "l2": {"adam_beta_1": np.exp(-2.798405250416228),
+               "adam_beta_2": np.exp(-4.852502321085275),
+               "adam_eps": np.exp(-17.69422318951969),
+               "adam_wd": np.exp(-13.28251690242802),
+               "max_lr": np.exp(-6.61986865125839),
+               "cycle_peak": 0.2908993031473296
                },
-        "abs": {"adam_beta_1": np.exp(rng.uniform(-2.35, -2.22)),
-                "adam_beta_2": np.exp(rng.uniform(-4.15, -3.95)),
-                "adam_eps": np.exp(rng.uniform(-19.05, -18.79)),
-                "adam_wd": np.exp(rng.uniform(-13.22, -12.86)),
-                "max_lr": np.exp(rng.uniform(-6.32, -6.06)),
-                "cycle_peak": rng.uniform(0.43, 0.44)
+        "abs": {"adam_beta_1": np.exp(-2.3046899444891737),
+                "adam_beta_2": np.exp(-4.081976310255959),
+                "adam_eps": np.exp(-18.81496719551105),
+                "adam_wd": np.exp(-12.889583720257814),
+                "max_lr": np.exp(-6.294826015471599),
+                "cycle_peak": 0.43927944846465605
                 },
-        "l2_lae": {"adam_beta_1": np.exp(rng.uniform(-3.9, -3.76)),
-                   "adam_beta_2": np.exp(rng.uniform(-4.33, -4.11)),
-                   "adam_eps": np.exp(rng.uniform(-15.94, -15.65)),
-                   "adam_wd": np.exp(rng.uniform(-13.84, -13.61)),
-                   "max_lr": np.exp(rng.uniform(-6.9, -6.78)),
-                   "cycle_peak": rng.uniform(0.3, 0.31)
+        "l2_lae": {"adam_beta_1": np.exp(-3.819899346335893),
+                   "adam_beta_2": np.exp(-4.187621156111093),
+                   "adam_eps": np.exp(-15.889624513084568),
+                   "adam_wd": np.exp(-13.735330355123828),
+                   "max_lr": np.exp(-6.796509116066224),
+                   "cycle_peak": 0.30452694109961825
                    },
-        "max": {"adam_beta_1": np.exp(rng.uniform(-3.16, -3.04)),
-                "adam_beta_2": np.exp(rng.uniform(-4.21, -4.05)),
-                "adam_eps": np.exp(rng.uniform(-17.17, -16.74)),
-                "adam_wd": np.exp(rng.uniform(-12.87, -12.73)),
-                "max_lr": np.exp(rng.uniform(-5.69, -5.67)),
-                "cycle_peak": rng.uniform(0.3, 0.32)
+        "max": {"adam_beta_1": np.exp(-3.0681674156782175),
+                "adam_beta_2": np.exp(-4.08491441310968),
+                "adam_eps": np.exp(-16.879716225530277),
+                "adam_wd": np.exp(-12.851561693962033),
+                "max_lr": np.exp(-5.689213936356616),
+                "cycle_peak": 0.3131204615398092
                 }
     }

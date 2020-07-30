@@ -170,20 +170,16 @@ def train_model(args,
                 .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
 
-        raw_alpha_primes, raw_alphas, avg_alpha_primes, avg_alphas = [], [], [], []
-        if actfun == 'combinact':
-            for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-                curr_raw_alpha_primes = (layer_alpha_primes.detach().cpu().numpy() * 1000).astype(int) / 1000
-                raw_alpha_primes.append(curr_raw_alpha_primes.tolist())
-                curr_raw_alphas = (F.softmax(layer_alpha_primes, dim=1).data.detach().cpu().numpy() * 1000).astype(int) / 1000
-                raw_alphas.append(curr_raw_alphas.tolist())
+        alpha_primes = []
+        alphas = []
+        for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+            curr_alpha_primes = curr_alpha_primes.tolist()
+            alpha_primes.append(curr_alpha_primes)
+            alphas.append(curr_alphas)
 
-                curr_avg_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-                curr_avg_alphas = F.softmax(curr_avg_alpha_primes, dim=0).data.tolist()
-                curr_avg_alpha_primes = curr_avg_alpha_primes.tolist()
-                avg_alpha_primes.append(curr_avg_alpha_primes)
-                avg_alphas.append(curr_avg_alphas)
-
+        # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writerow({'dataset': args.dataset,
@@ -198,26 +194,8 @@ def train_model(args,
                              'hyper_params': hyper_params,
                              'model': args.model,
                              'batch_size': args.batch_size,
-                             'raw_alpha_primes1': raw_alpha_primes[0] if actfun == 'combinact' else [],
-                             'raw_alpha_primes2': raw_alpha_primes[1] if actfun == 'combinact' else [],
-                             'raw_alpha_primes3': raw_alpha_primes[2] if actfun == 'combinact' else [],
-                             'raw_alpha_primes4': raw_alpha_primes[3] if actfun == 'combinact' else [],
-                             'raw_alpha_primes5': raw_alpha_primes[4] if actfun == 'combinact' else [],
-                             'raw_alpha_primes6': raw_alpha_primes[5] if actfun == 'combinact' else [],
-                             'raw_alpha_primes7a': raw_alpha_primes[6][:258] if actfun == 'combinact' else [],
-                             'raw_alpha_primes7b': raw_alpha_primes[6][258:] if actfun == 'combinact' else [],
-                             'raw_alpha_primes8': raw_alpha_primes[7] if actfun == 'combinact' else [],
-                             'raw_alphas1': raw_alphas[0] if actfun == 'combinact' else [],
-                             'raw_alphas2': raw_alphas[1] if actfun == 'combinact' else [],
-                             'raw_alphas3': raw_alphas[2] if actfun == 'combinact' else [],
-                             'raw_alphas4': raw_alphas[3] if actfun == 'combinact' else [],
-                             'raw_alphas5': raw_alphas[4] if actfun == 'combinact' else [],
-                             'raw_alphas6': raw_alphas[5] if actfun == 'combinact' else [],
-                             'raw_alphas7a': raw_alphas[6][:258] if actfun == 'combinact' else [],
-                             'raw_alphas7b': raw_alphas[6][258:] if actfun == 'combinact' else [],
-                             'raw_alphas8': raw_alphas[7] if actfun == 'combinact' else [],
-                             'avg_alpha_primes': avg_alpha_primes if actfun == 'combinact' else [],
-                             'avg_alphas': avg_alphas if actfun == 'combinact' else [],
+                             'alpha_primes': alpha_primes,
+                             'alphas': alphas,
                              'num_params': util.get_n_params(model)
                              })
 
@@ -258,12 +236,8 @@ def setup_experiment(args, outfile_path):
 
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size',
-                  'raw_alpha_primes1', 'raw_alphas1', 'raw_alpha_primes2', 'raw_alphas2',
-                  'raw_alpha_primes3', 'raw_alphas3', 'raw_alpha_primes4', 'raw_alphas4',
-                  'raw_alpha_primes5', 'raw_alphas5', 'raw_alpha_primes6', 'raw_alphas6',
-                  'raw_alpha_primes7a', 'raw_alphas7a', 'raw_alpha_primes7b', 'raw_alphas7b',
-                  'raw_alpha_primes8', 'raw_alphas8', 'avg_alpha_primes', 'avg_alphas', 'num_params']
+                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
+                  'num_params']
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
     checkpoint = None
 
@@ -330,7 +304,6 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
-    parser.add_argument('--randsearch', action='store_true', help='Creates random hyper-parameter search')
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
     parser.add_argument('--reduce_actfuns', action='store_true', help='When true, does not use extra actfuns')
