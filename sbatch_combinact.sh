@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-50%5         # array value
-#SBATCH --output=logs/cnn_exp_reg_nparams/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cnn_exp_reg_nparams
+#SBATCH --output=logs/cnn_exp_reg_nsamples/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=cnn_exp_reg_nsamples
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -33,5 +33,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset fashion_mnist --sample_size 60000 --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --sample_size 60000 --var_n_params
+python train.py --seed $SEED --save_path $SAVE_PATH --dataset fashion_mnist --sample_size 60000 --var_n_samples
+python train.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --sample_size 60000 --var_n_samples
