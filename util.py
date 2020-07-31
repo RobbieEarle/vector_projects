@@ -276,6 +276,19 @@ def load_dataset(dataset,
         train_set_indices = np.random.choice(60000, sample_size, replace=False)
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
+    elif dataset == 'fashion_mnist':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        train_set_full = datasets.FashionMNIST(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.FashionMNIST(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 60000
+        if batch_size is None:
+            batch_size = 100
+
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
     elif dataset == 'cifar10':
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
@@ -284,7 +297,7 @@ def load_dataset(dataset,
         if sample_size is None:
             sample_size = 50000
         if batch_size is None:
-            batch_size = 4
+            batch_size = 64
 
         train_set_indices = np.random.choice(50000, sample_size, replace=False)
         test_set_indices = np.random.choice(10000, 10000, replace=False)
@@ -297,9 +310,23 @@ def load_dataset(dataset,
         if sample_size is None:
             sample_size = 50000
         if batch_size is None:
-            batch_size = 4
+            batch_size = 64
 
         train_set_indices = np.random.choice(50000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'svhn':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_full = datasets.SVHN(root='./data', download=True, transform=trans)
+        train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(73257))
+        test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 73257)
+
+        if sample_size is None:
+            sample_size = 50000
+        if batch_size is None:
+            batch_size = 64
+
+        train_set_indices = np.random.choice(73257, sample_size, replace=False)
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     print("------------ Sample Size " + str(sample_size) + "...", flush=True)

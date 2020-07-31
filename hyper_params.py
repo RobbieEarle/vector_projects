@@ -6,11 +6,11 @@ def get_hyper_params(model, dataset, actfun, rng=None):
     if model == 'nn' and dataset == 'mnist':
         return nn_mnist(rng)[actfun]
     elif model == 'cnn':
-        if dataset == 'cifar10':
+        if dataset == 'cifar10' or dataset == 'svhn':
             return cnn_cifar10(rng)[actfun]
         if dataset == 'cifar100':
             return cnn_cifar100(rng)[actfun]
-        if dataset == 'mnist':
+        if dataset == 'mnist' or dataset == 'fashion_mnist':
             return cnn_mnist(rng)[actfun]
     else:
         raise ValueError("Error: No hyper-parameters found for {}, {}".format(model, dataset))

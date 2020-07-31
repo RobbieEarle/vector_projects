@@ -50,13 +50,17 @@ def train_model(args,
 
     model_params = []
     if args.model == 'nn':
-        if args.dataset == 'mnist':
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             model = models.CombinactNN(actfun=actfun, input_dim=784,
                                        output_dim=10, num_layers=2, k=2, p=1,
                                        reduce_actfuns=args.reduce_actfuns).to(device)
     elif args.model == 'cnn':
-        if args.dataset == 'mnist':
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             model = models.CombinactCNN(actfun=actfun, num_input_channels=1, input_dim=28,
+                                        num_outputs=10, k=2, p=1,
+                                        pfact=pfact, reduce_actfuns=args.reduce_actfuns).to(device)
+        elif args.dataset == 'svhn':
+            model = models.CombinactCNN(actfun=actfun, num_input_channels=3, input_dim=32,
                                         num_outputs=10, k=2, p=1,
                                         pfact=pfact, reduce_actfuns=args.reduce_actfuns).to(device)
         elif args.dataset == 'cifar10':
@@ -217,6 +221,12 @@ def setup_experiment(args, outfile_path):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
+    if args.batch_size == None:
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
+            args.batch_size = 100
+        else:
+            args.batch_size = 64
+
     if args.actfun == 'all':
         all_actfuns = ['combinact', 'l2', 'l2_lae', 'max', 'multi_relu', 'relu', 'abs']
     elif args.actfun == '1d':
@@ -229,6 +239,11 @@ def setup_experiment(args, outfile_path):
     else:
         param_factors = [1.01]
         param_factors_1d = [0.36]
+    if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
+        for i in range(len(param_factors)):
+            param_factors[i] *= 1.21
+        for i in range(len(param_factors_1d)):
+            param_factors_1d[i] *= 1.21
     if args.var_n_samples:
         train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
     else:
@@ -299,7 +314,7 @@ if __name__ == '__main__':
                         )
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
-    parser.add_argument('--dataset', type=str, default='cifar10', help='Dataset being used. mnist or cifar10')
+    parser.add_argument('--dataset', type=str, default='fashion_mnist', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')
     parser.add_argument('--sample_size', type=int, default=50000, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size during training')
