@@ -15,8 +15,8 @@ source activate ~/venvs/combinact
 SAVE_PATH="$1"
 SEED="$SLURM_ARRAY_TASK_ID"
 
-touch /checkpoint/robearle/${SLURM_JOB_ID}
-CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
+#touch /checkpoint/robearle/${SLURM_JOB_ID}
+#CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
 
 # Debugging outputs
 pwd

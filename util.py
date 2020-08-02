@@ -318,15 +318,15 @@ def load_dataset(dataset,
     elif dataset == 'svhn':
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset_full = datasets.SVHN(root='./data', download=True, transform=trans)
-        train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(73257))
-        test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 73257)
+        train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(60000))
+        test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 60000)
 
         if sample_size is None:
             sample_size = 50000
         if batch_size is None:
             batch_size = 64
 
-        train_set_indices = np.random.choice(73257, sample_size, replace=False)
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     print("------------ Sample Size " + str(sample_size) + "...", flush=True)
