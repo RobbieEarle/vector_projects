@@ -200,7 +200,9 @@ def train_model(args,
                              'batch_size': args.batch_size,
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
-                             'num_params': util.get_n_params(model)
+                             'num_params': util.get_n_params(model),
+                             'var_nparams': args.var_n_params,
+                             'var_nsamples': args.var_n_samples
                              })
 
         epoch += 1
@@ -252,7 +254,7 @@ def setup_experiment(args, outfile_path):
     # ---- Create new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
-                  'num_params']
+                  'num_params', 'var_nparams', 'var_nsamples']
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
     checkpoint = None
 
