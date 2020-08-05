@@ -59,6 +59,8 @@ def activate(x, actfun, p=1, k=1, M=None,
                           reduce_actfuns=reduce_actfuns)
         elif actfun == 'cf_relu' or actfun == 'cf_abs':
             x = coin_flip(x, actfun, M=num_channels * p, k=k)
+        elif actfun == 'binary_ops_partition' or actfun == 'binary_ops_all':
+            x = binary_ops(x, actfun, layer_type)
         else:
             x = _ACTFUNS[actfun](x)
 
@@ -85,6 +87,8 @@ _ACTFUNS = {
         lambda z: F.relu_(z),
     'abs':
         lambda z: torch.abs_(z),
+    'prod':
+        lambda z: torch.prod(z, dim=2).values,
     'max':
         lambda z: torch.max(z, dim=2).values,
     'min':
@@ -251,6 +255,27 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
     if not keepdim:
         lae = lae.squeeze(dim)
     return lae.to(input_dtype)
+
+
+def binary_ops(z, actfun, layer_type):
+    if actfun == 'binary_ops_partition':
+        partition = math.floor(z.shape[1] / 3)
+        bin_and = torch.max(z[:, :partition, ...], dim=2).values
+        bin_xor = sgm(z[:, partition: 2*partition, ...])
+        bin_pass = z[:, 2*partition:, ...]
+    elif actfun == 'binary_ops_all':
+        bin_and = torch.max(z, dim=2).values
+        bin_xor = sgm(z)
+        bin_pass = z
+
+    if layer_type == 'conv':
+        bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2],
+                                    bin_pass.shape[3], bin_pass.shape[4])
+    elif layer_type == 'linear':
+        bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2])
+
+    z = torch.cat((bin_and, bin_xor, bin_pass), dim=1)
+    return z
 
 
 sgm = SignedGeomean.apply

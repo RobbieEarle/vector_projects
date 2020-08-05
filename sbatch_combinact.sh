@@ -5,9 +5,9 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-50%10        # array value
-#SBATCH --output=logs/cnn_exp_reg_redo_svhn/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=cnn_exp_reg_redo_svhn
+#SBATCH --array=0-100%10        # array value
+#SBATCH --output=logs/e1_randsearch0/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e1_randsearch0
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -33,5 +33,13 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --sample_size 60000 --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --sample_size 60000 --var_n_samples
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun new_only
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar10
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar100
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset fashion_mnist
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset svhn
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun new_only
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun new_only
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun new_only
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset fashion_mnist
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset svhn

@@ -322,7 +322,7 @@ def load_dataset(dataset,
         test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 60000)
 
         if sample_size is None:
-            sample_size = 50000
+            sample_size = 60000
         if batch_size is None:
             batch_size = 64
 
@@ -338,4 +338,4 @@ def load_dataset(dataset,
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
     validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
 
-    return train_loader, validation_loader, sample_size
+    return train_loader, validation_loader, sample_size, batch_size
