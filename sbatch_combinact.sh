@@ -33,5 +33,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --var_n_params
-python train.py --seed $SEED --save_path $SAVE_PATH --dataset mnist --var_n_samples
+python engine.py --seed $SEED --save_path $SAVE_PATH --dataset svhn --var_n_params
+python engine.py --seed $SEED --save_path $SAVE_PATH --dataset mnist --var_n_samples
