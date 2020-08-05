@@ -163,14 +163,23 @@ if __name__ == '__main__':
     parser.add_argument('--reduce_actfuns', action='store_true', help='When true, does not use extra actfuns')
     args = parser.parse_args()
 
+    extras = ""
+    if args.var_n_params:
+        extras += '-var_n_params'
+    if args.var_n_samples:
+        extras += '-var_n_samples'
+    if args.reduce_actfuns:
+        extras += '-reduce_actfuns'
+
     out = os.path.join(
         args.save_path,
-        '{}-{}-{}-{}-{}.csv'.format(
+        '{}-{}-{}-{}-{}{}.csv'.format(
             datetime.date.today(),
             args.seed,
             args.dataset,
             args.model,
-            args.actfun
+            args.actfun,
+            extras
         )
     )
 
