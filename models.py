@@ -203,13 +203,13 @@ class CombinactCNN(nn.Module):
             self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(reduce_actfuns))  # Number of actfuns used by combinact
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[0]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[1]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[2]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[2]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[3]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[3]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[5]), self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(pre_acts[4]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[1]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[2]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[2]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[3]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[3]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[5]), self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(int(post_acts[4]), self.num_combinact_actfuns)))
             if alpha_dist == "per_perm":
                 for layer in range(8):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))

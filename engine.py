@@ -39,7 +39,7 @@ def setup_experiment(args, outfile_path):
                 param_factors = [3.5, 3.23, 2.95, 2.65, 2.34, 2.01, 1.665]
                 param_factors_1d = [1.45, 1.345, 1.24, 1.125, 1, 0.875, 0.735]
             else:
-                param_factors = [1.665]
+                param_factors = [3.5]
                 param_factors_1d = [1.45]
             if args.actfun == 'binary_ops_partition':
                 for i in range(len(param_factors)):
@@ -116,6 +116,8 @@ def setup_experiment(args, outfile_path):
         else:
             curr_param_factors = param_factors
 
+        print(curr_param_factors)
+
         curr_seed = (args.seed * len(param_factors) * len(train_samples))
 
         if checkpoint is not None:
@@ -152,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
     parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='nn', help='What type of model to use')
-    parser.add_argument('--actfun', type=str, default='all')
+    parser.add_argument('--actfun', type=str, default='combinact')
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
