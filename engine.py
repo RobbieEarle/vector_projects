@@ -116,8 +116,6 @@ def setup_experiment(args, outfile_path):
         else:
             curr_param_factors = param_factors
 
-        print(curr_param_factors)
-
         curr_seed = (args.seed * len(param_factors) * len(train_samples))
 
         if checkpoint is not None:
@@ -154,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
     parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='nn', help='What type of model to use')
-    parser.add_argument('--actfun', type=str, default='combinact')
+    parser.add_argument('--actfun', type=str, default='all')
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')

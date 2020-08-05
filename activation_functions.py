@@ -88,7 +88,7 @@ _ACTFUNS = {
     'abs':
         lambda z: torch.abs_(z),
     'prod':
-        lambda z: torch.prod(z, dim=2).values,
+        lambda z: torch.prod(z, dim=2),
     'max':
         lambda z: torch.max(z, dim=2).values,
     'min':
