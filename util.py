@@ -1,6 +1,9 @@
 import torch
 import torch.utils.data
 import torch.nn as nn
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+
 import numpy as np
 import random
 import activation_functions as actfuns
@@ -135,22 +138,60 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
                 torch.cuda.manual_seed((seed + 1 + device) % 4294967296)
 
 
-def print_exp_settings(seed, outfile_path, net_struct, curr_model):
+def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
+                       hyper_params, num_params, sample_size):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
+        "Data Set: {} \n"
         "Outfile Path: {} \n"
-        "Number of Layers: {} \n"
-        "Network Structure: \n"
-        "{} \n"
-        "Model Type: {} \n\n"
-            .format(seed, outfile_path, net_struct['num_layers'], net_struct, curr_model), flush=True
+        "Model Type: {} \n"
+        "Activation Function: {} \n"
+        "Hyper-params: {} \n"
+        "Num Params: {}\n"
+        "Sample Size: {}\n\n"
+            .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
+                    num_params, sample_size), flush=True
     )
+
+
+def hook_f(module, input, output):
+    print("FORWARD")
+    print(module)
+    print(input[0].shape)
+    if len(input[0].shape) == 4:
+        print(input[0][0, 0, :4, :4])
+    elif len(input[0].shape) == 2:
+        print(input[0][0, :16])
+    # print("IN: {} {}".format(type(input), len(input)))
+    # for curr_in in input:
+    #     print("     {}".format(curr_in.shape))
+    # print("OUT: {} {}".format(type(output), len(output)))
+    # for curr_out in output:
+    #     print("     {}".format(curr_out.shape))
+    print()
+
+
+def hook_b(module, input, output):
+    print("BACKWARD")
+    print(module)
+    print(input[0].shape)
+    if len(input[0].shape) == 4:
+        print(input[0][0, 0, :4, :4])
+    elif len(input[0].shape) == 2:
+        print(input[0][0, :10])
+    # print("IN: {} {}".format(type(input), len(input)))
+    # for curr_in in input:
+    #     print("     {}".format(curr_in.shape))
+    # print("OUT: {} {}".format(type(output), len(output)))
+    # for curr_out in output:
+    #     print("     {}".format(curr_out.shape))
+    print()
 
 
 # -------------------- Model Utils
 
-def test_net_inputs(actfun, net_struct, in_size):
+def test_nn_inputs(actfun, net_struct, in_size):
     """
     Tests network structure and activation hyperparameters to make sure they are valid
     :param actfun: activation function used by network
@@ -184,9 +225,17 @@ def test_net_inputs(actfun, net_struct, in_size):
     return None
 
 
-def permute(self, x, method, offset, num_groups=1, layer=None, shuffle_map=None):
+def add_shuffle_map(shuffle_maps, num_nodes, p):
+    new_maps = []
+    for perm in range(p):
+        new_maps.append(torch.randperm(num_nodes))
+    shuffle_maps.append(new_maps)
+    return shuffle_maps
+
+
+def permute(x, method, offset, num_groups=2, shuffle_map=None):
     if method == "roll":
-        return torch.cat((x[:, offset:, 0], x[:, :offset, 0]), dim=1)
+        return torch.cat((x[:, offset:, ...], x[:, :offset, ...]), dim=1)
     elif method == "roll_grouped":
         group_size = int(x.shape[1] / num_groups)
         output = None
@@ -195,7 +244,7 @@ def permute(self, x, method, offset, num_groups=1, layer=None, shuffle_map=None)
             if i == num_groups - 1:
                 group_size += x.shape[1] % num_groups
             end = start + group_size - offset
-            curr_roll = torch.cat((x[:, start:end, 0], x[:, start - offset:start, 0]),
+            curr_roll = torch.cat((x[:, start:end, ...], x[:, start - offset:start, ...]),
                                   dim=1)
             if group == 0:
                 output = curr_roll
@@ -203,4 +252,90 @@ def permute(self, x, method, offset, num_groups=1, layer=None, shuffle_map=None)
                 output = torch.cat((output, curr_roll), dim=1)
         return output
     elif method == "shuffle":
-        return x[:, shuffle_map, [0]]
+        return x[:, shuffle_map, ...]
+
+
+def load_dataset(dataset,
+                 seed=0,
+                 batch_size=None,
+                 sample_size=60000,
+                 kwargs=None):
+
+    seed_all(seed)
+
+    if dataset == 'mnist':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 60000
+        if batch_size is None:
+            batch_size = 100
+
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'fashion_mnist':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        train_set_full = datasets.FashionMNIST(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.FashionMNIST(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 60000
+        if batch_size is None:
+            batch_size = 100
+
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'cifar10':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 50000
+        if batch_size is None:
+            batch_size = 64
+
+        train_set_indices = np.random.choice(50000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'cifar100':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans)
+        test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans)
+
+        if sample_size is None:
+            sample_size = 50000
+        if batch_size is None:
+            batch_size = 64
+
+        train_set_indices = np.random.choice(50000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    elif dataset == 'svhn':
+        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_full = datasets.SVHN(root='./data', download=True, transform=trans)
+        train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(60000))
+        test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 60000)
+
+        if sample_size is None:
+            sample_size = 60000
+        if batch_size is None:
+            batch_size = 64
+
+        train_set_indices = np.random.choice(60000, sample_size, replace=False)
+        test_set_indices = np.random.choice(10000, 10000, replace=False)
+
+    print("------------ Sample Size " + str(sample_size) + "...", flush=True)
+    print()
+
+    train_set = torch.utils.data.Subset(train_set_full, train_set_indices)
+    test_set = torch.utils.data.Subset(test_set_full, test_set_indices)
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
+    validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
+
+    return train_loader, validation_loader, sample_size, batch_size
