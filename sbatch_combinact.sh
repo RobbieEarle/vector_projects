@@ -5,7 +5,7 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-95%16        # array value
+#SBATCH --array=0%1        # array value
 #SBATCH --output=logs/e1_overfit0/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=e1_overfit0
 
