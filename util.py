@@ -11,6 +11,127 @@ import activation_functions as actfuns
 
 # -------------------- Training Utils
 
+def get_extras(args):
+    extras = ""
+    if args.var_n_params:
+        extras += '-var_n_params'
+    if args.var_n_samples:
+        extras += '-var_n_samples'
+    if args.reduce_actfuns:
+        extras += '-reduce_actfuns'
+    if args.var_k:
+        extras += '-var_k'
+    if args.var_p:
+        extras += '-var_p'
+    if args.var_perm_method:
+        extras += '-var_perm'
+    return extras
+
+
+def get_actfuns(actfun):
+    if actfun == 'all':
+        all_actfuns = ['combinact', 'relu', 'abs', 'max', 'min', 'lse', 'lae', 'l2', 'linf', 'prod', 'signed_geomean',
+                       'swishk', 'binary_ops_partition', 'binary_ops_all']
+    elif actfun == '1d':
+        all_actfuns = ['relu', 'abs']
+    elif actfun == 'old_only':
+        all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max']
+    elif actfun == 'new_only':
+        all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'binary_ops_partition',
+                       'binary_ops_all']
+    elif actfun == 'pk_test':
+        all_actfuns = ['l2', 'max']
+    elif actfun == 'pk_non_opt':
+        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
+    else:
+        all_actfuns = [actfun]
+
+    return all_actfuns
+
+
+def get_param_factors(args):
+    if args.model == 'nn':
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
+            if args.var_n_params:
+                param_factors = [3.5, 3.23, 2.95, 2.65, 2.34, 2.01, 1.665]
+                param_factors_1d = [1.45, 1.345, 1.24, 1.125, 1, 0.875, 0.735]
+            else:
+                param_factors = [3.5]
+                param_factors_1d = [1.45]
+            if args.actfun == 'binary_ops_partition':
+                for i in range(len(param_factors)):
+                    param_factors[i] *= 0.94
+            elif args.actfun == 'binary_ops_all':
+                for i in range(len(param_factors)):
+                    if i >= 4:
+                        param_factors[i] *= 0.71
+                    else:
+                        param_factors[i] *= 0.68
+
+        else:
+            if args.var_n_params:
+                param_factors = [1.25, 1.13, 1.01, 0.885, 0.76, 0.635, 0.515]
+                param_factors_1d = [0.6, 0.545, 0.49, 0.43, 0.375, 0.31, 0.255]
+            else:
+                param_factors = [1.25]
+                param_factors_1d = [0.6]
+            if args.actfun == 'binary_ops_partition':
+                for i in range(len(param_factors)):
+                    param_factors[i] *= 0.99
+            elif args.actfun == 'binary_ops_all':
+                for i in range(len(param_factors)):
+                    param_factors[i] *= 0.92
+
+    if args.model == 'cnn':
+        if args.var_n_params:
+            param_factors = [1.01, 0.925, 0.83, 0.72, 0.59, 0.41, 0.29]
+            param_factors_1d = [0.36, 0.33, 0.295, 0.255, 0.21, 0.1475, 0.105]
+        else:
+            param_factors = [1.01]
+            param_factors_1d = [0.36]
+
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
+            for i in range(len(param_factors)):
+                param_factors[i] *= 1.21
+            for i in range(len(param_factors_1d)):
+                param_factors_1d[i] *= 1.21
+
+        if args.actfun == 'binary_ops_partition':
+            for i in range(len(param_factors)):
+                param_factors[i] *= 0.865
+        elif args.actfun == 'binary_ops_all':
+            for i in range(len(param_factors)):
+                param_factors[i] *= 0.5
+
+    return param_factors, param_factors_1d
+
+
+def get_train_samples(args):
+    if args.var_n_samples:
+        train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
+    elif args.overfit:
+        train_samples = [15000]
+    else:
+        train_samples = [args.sample_size]
+
+    return train_samples
+
+
+def get_pk_vals(args):
+    if args.var_k:
+        k_vals = [2, 3, 4, 5, 6]
+    else:
+        k_vals = [2]
+    if args.var_p:
+        p_vals = [1, 2, 3, 4, 5]
+    elif args.var_perm_method:
+        p_vals = [2]
+    else:
+        p_vals = [1]
+
+    return p_vals, k_vals
+
+
 def weights_init(m):
     """
     Randomly initialize weights for model. Always uses seed 0 so weights initialize to same value across experiments
@@ -139,7 +260,8 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
-                       hyper_params, num_params, sample_size, curr_k, curr_p):
+                       hyper_params, num_params, sample_size, curr_k, curr_p,
+                       perm_method):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
@@ -149,10 +271,11 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Activation Function: {} \n"
         "Hyper-params: {} \n"
         "k: {}, p: {}\n"
+        "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Sample Size: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
-                    curr_k, curr_p, num_params, sample_size), flush=True
+                    curr_k, curr_p, perm_method, num_params, sample_size), flush=True
     )
 
 

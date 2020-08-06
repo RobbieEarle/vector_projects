@@ -18,7 +18,7 @@ import time
 # -------------------- Setting Up & Running Training Function
 
 def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_loader, validation_loader,
-          sample_size, batch_size, device, pfact=1.0, curr_k=2, curr_p=1):
+          sample_size, batch_size, device, pfact=1.0, curr_k=2, curr_p=1, perm_method='shuffle'):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
@@ -47,7 +47,8 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
         elif args.dataset == 'cifar100':
             input_dim, output_dim = 3072, 100
         model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim, num_layers=2,
-                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, pfact=pfact).to(device)
+                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, pfact=pfact,
+                                   permute_type=perm_method).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -57,7 +58,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             input_channels, input_dim, output_dim = 3, 32, 100
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
                                     num_outputs=output_dim, k=curr_k, p=curr_p, pfact=pfact,
-                                    reduce_actfuns=args.reduce_actfuns).to(device)
+                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
@@ -73,6 +74,10 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
 
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng)
 
+    if args.overfit:
+        hyper_params['adam_wd'] = 0
+
+    print(hyper_params['adam_wd'])
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
@@ -106,7 +111,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
               "\n  Seed: {}".format(epoch, actfun, pfact, sample_size, curr_seed))
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_n_params(model), sample_size, model.k, model.p)
+                            util.get_n_params(model), sample_size, model.k, model.p, perm_method)
 
     # ---- Start Training
     while epoch <= args.num_epochs:
@@ -191,7 +196,8 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
                              'var_nparams': args.var_n_params,
                              'var_nsamples': args.var_n_samples,
                              'k': curr_k,
-                             'p': curr_p
+                             'p': curr_p,
+                             'perm_method': perm_method
                              })
 
         epoch += 1
