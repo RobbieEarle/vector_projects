@@ -139,7 +139,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
-                       hyper_params, num_params, sample_size):
+                       hyper_params, num_params, sample_size, curr_k, curr_p):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
@@ -148,10 +148,11 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Model Type: {} \n"
         "Activation Function: {} \n"
         "Hyper-params: {} \n"
+        "k: {}, p: {}\n"
         "Num Params: {}\n"
         "Sample Size: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
-                    num_params, sample_size), flush=True
+                    curr_k, curr_p, num_params, sample_size), flush=True
     )
 
 

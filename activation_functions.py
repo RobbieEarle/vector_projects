@@ -16,55 +16,46 @@ def activate(x, actfun, p=1, k=1, M=None,
              alpha_dist=None,
              reduce_actfuns=False
              ):
-    if actfun == 'relu':
-        return _ACTFUNS['relu'](x)
-    elif actfun == 'abs':
-        return _ACTFUNS['abs'](x)
+
+    # Unsqueeze a dimension and populate it with permutations of our inputs
+    x = x.unsqueeze(2)
+    for i in range(1, p):
+        permutation = util.permute(x[:, :, 0, ...], permute_type,
+                                   offset=i, shuffle_map=shuffle_maps[i]).unsqueeze(2)
+        x = torch.cat((x[:, :, :i, ...], permutation), dim=2)
+
+    # This transpose makes it so that during the next reshape (when we combine our p permutations
+    # into a single dimension), the order goes one full permutation after another (instead of
+    # interleaving the permutations)
+    x = torch.transpose(x, dim0=1, dim1=2)
+
+    # Combine p permutations into a single dimension, then cluster into groups of size k
+    batch_size = x.shape[0]
+    if layer_type == 'conv':
+        num_channels = x.shape[2]
+        height = x.shape[3]
+        width = x.shape[4]
+        x = x.reshape(batch_size, int(num_channels * p / k), k, height, width)
+    elif layer_type == 'linear':
+        num_channels = M
+        x = x.reshape(batch_size, int(num_channels * p / k), k)
+
+    if actfun == 'combinact':
+        x = combinact(x,
+                      p=p,
+                      layer_type=layer_type,
+                      alpha_primes=alpha_primes,
+                      alpha_dist=alpha_dist,
+                      reduce_actfuns=reduce_actfuns)
+    elif actfun == 'cf_relu' or actfun == 'cf_abs':
+        x = coin_flip(x, actfun, M=num_channels * p, k=k)
+    elif actfun == 'binary_ops_partition' or actfun == 'binary_ops_all':
+        x = binary_ops(x, actfun, layer_type)
     else:
+        x = x.squeeze()
+        x = _ACTFUNS[actfun](x)
 
-        # Unsqueeze a dimension and populate it with permutations of our inputs
-        x = x.unsqueeze(2)
-        for i in range(1, p):
-            permutation = util.permute(x, permute_type, offset=i, shuffle_map=shuffle_maps[i])
-            x = torch.cat((x[:, :, :i, ...], permutation), dim=2)
-
-        # This transpose makes it so that during the next reshape (when we combine our p permutations
-        # into a single dimension), the order goes one full permutation after another (instead of
-        # interleaving the permutations)
-        x = torch.transpose(x, dim0=1, dim1=2)
-
-        # Combine p permutations into a single dimension, then cluster into groups of size k
-        batch_size = x.shape[0]
-        if layer_type == 'conv':
-            num_channels = x.shape[2]
-            height = x.shape[3]
-            width = x.shape[4]
-            x = x.reshape(batch_size,
-                          int(num_channels * p / k),
-                          k,
-                          height,
-                          width)
-        elif layer_type == 'linear':
-            num_channels = M
-            x = x.reshape(batch_size,
-                          int(num_channels * p / k),
-                          k)
-
-        if actfun == 'combinact':
-            x = combinact(x,
-                          p=p,
-                          layer_type=layer_type,
-                          alpha_primes=alpha_primes,
-                          alpha_dist=alpha_dist,
-                          reduce_actfuns=reduce_actfuns)
-        elif actfun == 'cf_relu' or actfun == 'cf_abs':
-            x = coin_flip(x, actfun, M=num_channels * p, k=k)
-        elif actfun == 'binary_ops_partition' or actfun == 'binary_ops_all':
-            x = binary_ops(x, actfun, layer_type)
-        else:
-            x = _ACTFUNS[actfun](x)
-
-        return x
+    return x
 
 
 # -------------------- Activation Functions

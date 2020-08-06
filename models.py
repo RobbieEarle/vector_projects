@@ -29,7 +29,6 @@ class CombinactNN(nn.Module):
         self.k, self.p = k, p
         if actfun == 'relu' or actfun == 'abs':
             self.k = 1
-            self.p = 1
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
@@ -40,7 +39,7 @@ class CombinactNN(nn.Module):
                     int(100 * pfact)]
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
-            pre_acts[i] = k * int(pre_act / self.k)
+            pre_acts[i] = self.k * int(pre_act / self.k)
             post_acts.append(0)
             if actfun == 'binary_ops_partition':
                 post_acts[i] = int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
@@ -81,11 +80,10 @@ class CombinactNN(nn.Module):
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[2], self.p)
 
-        self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
-        self.alpha_dist = alpha_dist  # Reference to chosen alpha distribution
+        self.all_alpha_primes = nn.ParameterList()
+        self.alpha_dist = alpha_dist
         if self.actfun == "combinact":
-            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(reduce_actfuns))  # Number of actfuns used by combinact
-            # self.shuffle_maps = []  # List of shuffle maps used for shuffle permutations
+            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(reduce_actfuns))
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_acts[0], self.num_combinact_actfuns)))
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_acts[1], self.num_combinact_actfuns)))
@@ -150,7 +148,7 @@ class CombinactCNN(nn.Module):
                  int(1024 * pfact)]
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
-            pre_acts[i] = k * int(pre_act / self.k)
+            pre_acts[i] = self.k * int(pre_act / self.k)
             post_acts.append(0)
             if actfun == 'binary_ops_partition':
                 post_acts[i] = int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
@@ -267,6 +265,7 @@ class CombinactCNN(nn.Module):
                                      k=self.k, p=self.p, M=x.shape[1],
                                      layer_type='linear',
                                      permute_type=self.permute_type,
+                                     shuffle_maps=self.shuffle_maps[6+i],
                                      alpha_primes=alpha_primes,
                                      alpha_dist=self.alpha_dist,
                                      reduce_actfuns=self.reduce_actfuns)

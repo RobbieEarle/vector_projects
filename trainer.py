@@ -18,7 +18,7 @@ import time
 # -------------------- Setting Up & Running Training Function
 
 def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_loader, validation_loader,
-          sample_size, batch_size, device, pfact=1.0):
+          sample_size, batch_size, device, pfact=1.0, curr_k=2, curr_p=1):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
@@ -47,7 +47,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
         elif args.dataset == 'cifar100':
             input_dim, output_dim = 3072, 100
         model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim, num_layers=2,
-                                   k=2, p=1, reduce_actfuns=args.reduce_actfuns, pfact=pfact).to(device)
+                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, pfact=pfact).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -56,7 +56,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
         elif args.dataset == 'cifar100':
             input_channels, input_dim, output_dim = 3, 32, 100
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
-                                    num_outputs=output_dim, k=2, p=1, pfact=pfact,
+                                    num_outputs=output_dim, k=curr_k, p=curr_p, pfact=pfact,
                                     reduce_actfuns=args.reduce_actfuns).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
@@ -106,10 +106,11 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
               "\n  Seed: {}".format(epoch, actfun, pfact, sample_size, curr_seed))
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_n_params(model), sample_size)
+                            util.get_n_params(model), sample_size, model.k, model.p)
 
     # ---- Start Training
-    while epoch <= args.num_epochs:
+    # while epoch <= args.num_epochs:
+    while epoch <= -1:
 
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),
@@ -189,7 +190,9 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
                              'alphas': alphas,
                              'num_params': util.get_n_params(model),
                              'var_nparams': args.var_n_params,
-                             'var_nsamples': args.var_n_samples
+                             'var_nsamples': args.var_n_samples,
+                             'k': curr_k,
+                             'p': curr_p
                              })
 
         epoch += 1
