@@ -109,8 +109,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
                             util.get_n_params(model), sample_size, model.k, model.p)
 
     # ---- Start Training
-    # while epoch <= args.num_epochs:
-    while epoch <= -1:
+    while epoch <= args.num_epochs:
 
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),
