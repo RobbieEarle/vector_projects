@@ -26,15 +26,17 @@ def setup_experiment(args, outfile_path):
     if args.actfun == 'all':
         all_actfuns = ['relu', 'abs', 'combinact', 'max', 'min', 'lse', 'lae', 'l2', 'linf', 'prod', 'signed_geomean',
                        'swishk', 'binary_ops_partition', 'binary_ops_all']
+    elif args.actfun == '1d':
+        all_actfuns = ['relu', 'abs']
     elif args.actfun == 'old_only':
         all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max']
     elif args.actfun == 'new_only':
         all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'binary_ops_partition',
                        'binary_ops_all']
     elif args.actfun == 'pk_test':
-        all_actfuns = ['l2', 'combinact', 'max']
-    elif args.actfun == '1d':
-        all_actfuns = ['relu', 'abs']
+        all_actfuns = ['l2', 'max']
+    elif args.actfun == 'pk_non_opt':
+        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
     else:
         all_actfuns = [args.actfun]
 
