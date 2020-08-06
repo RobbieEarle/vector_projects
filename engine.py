@@ -124,7 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
     parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')
     parser.add_argument('--model', type=str, default='nn', help='What type of model to use')
-    parser.add_argument('--actfun', type=str, default='relu')
+    parser.add_argument('--actfun', type=str, default='all')
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('--var_k', action='store_true', help='When true, varies k hyper-param')
     parser.add_argument('--var_p', action='store_true', help='When true, varies k hyper-param')
     parser.add_argument('--var_perm_method', action='store_true', help='When true, varies permutation method')
-    parser.add_argument('--overfit', action='store_false', help='When true, causes model to overfit')
+    parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     args = parser.parse_args()
 
     extras = util.get_extras(args)
