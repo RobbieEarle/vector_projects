@@ -48,7 +48,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             input_dim, output_dim = 3072, 100
         model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim, num_layers=2,
                                    k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, pfact=pfact,
-                                   permute_type=perm_method).to(device)
+                                   permute_type=perm_method, overfit=args.overfit).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -56,14 +56,17 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             input_channels, input_dim, output_dim = 3, 32, 10
         elif args.dataset == 'cifar100':
             input_channels, input_dim, output_dim = 3, 32, 100
+
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
                                     num_outputs=output_dim, k=curr_k, p=curr_p, pfact=pfact,
-                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method).to(device)
+                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method,
+                                    overfit=args.overfit).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
-    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+    if not args.overfit:
+        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
     model_params.append({'params': model.linear_layers.parameters()})
     if actfun == 'combinact':
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
@@ -74,25 +77,27 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
 
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng)
 
-    if args.overfit:
-        hyper_params['adam_wd'] = 0
-
-    print(hyper_params['adam_wd'])
-    optimizer = optim.Adam(model_params,
-                           lr=10 ** -8,
-                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                           eps=hyper_params['adam_eps'],
-                           weight_decay=hyper_params['adam_wd']
-                           )
     criterion = nn.CrossEntropyLoss()
-    num_batches = sample_size / batch_size * args.num_epochs
-    scheduler = CyclicLR(optimizer,
-                         base_lr=10 ** -8,
-                         max_lr=hyper_params['max_lr'],
-                         step_size_up=int(hyper_params['cycle_peak'] * num_batches),
-                         step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
-                         cycle_momentum=False
-                         )
+
+    if args.overfit:
+        optimizer = optim.SGD(model_params, lr=0.1, momentum=0.5)
+        num_epochs = 100
+    else:
+        optimizer = optim.Adam(model_params,
+                               lr=10 ** -8,
+                               betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                               eps=hyper_params['adam_eps'],
+                               weight_decay=hyper_params['adam_wd']
+                               )
+        num_batches = sample_size / batch_size * args.num_epochs
+        scheduler = CyclicLR(optimizer,
+                             base_lr=10 ** -8,
+                             max_lr=hyper_params['max_lr'],
+                             step_size_up=int(hyper_params['cycle_peak'] * num_batches),
+                             step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
+                             cycle_momentum=False
+                             )
+        num_epochs = args.num_epochs
 
     epoch = 1
     checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
@@ -114,7 +119,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
                             util.get_n_params(model), sample_size, model.k, model.p, perm_method)
 
     # ---- Start Training
-    while epoch <= args.num_epochs:
+    while epoch <= num_epochs:
 
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),
@@ -141,7 +146,8 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             train_loss = criterion(output, targetx)
             train_loss.backward()
             optimizer.step()
-            scheduler.step()
+            if not args.overfit:
+                scheduler.step()
             final_train_loss = train_loss
 
         # ---- Testing

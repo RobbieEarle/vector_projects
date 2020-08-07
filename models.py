@@ -16,7 +16,8 @@ class CombinactNN(nn.Module):
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
                  reduce_actfuns=False,
-                 pfact=1):
+                 pfact=1,
+                 overfit=False):
         super(CombinactNN, self).__init__()
 
         # Validate input
@@ -33,6 +34,7 @@ class CombinactNN(nn.Module):
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
         self.reduce_actfuns = reduce_actfuns
+        self.overfit = overfit
 
         pre_acts = [int(250 * pfact),
                     int(200 * pfact),
@@ -55,10 +57,12 @@ class CombinactNN(nn.Module):
                 nn.Linear(post_acts[0], pre_acts[1]),
                 nn.Linear(post_acts[1], output_dim)
             ])
-            self.batch_norms = nn.ModuleList([
-                nn.BatchNorm1d(pre_acts[0]),
-                nn.BatchNorm1d(pre_acts[1])
-            ])
+
+            if not overfit:
+                self.batch_norms = nn.ModuleList([
+                    nn.BatchNorm1d(pre_acts[0]),
+                    nn.BatchNorm1d(pre_acts[1])
+                ])
 
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
@@ -70,11 +74,13 @@ class CombinactNN(nn.Module):
                 nn.Linear(post_acts[1], pre_acts[2]),
                 nn.Linear(post_acts[2], output_dim)
             ])
-            self.batch_norms = nn.ModuleList([
-                nn.BatchNorm1d(pre_acts[0]),
-                nn.BatchNorm1d(pre_acts[1]),
-                nn.BatchNorm1d(pre_acts[1]),
-            ])
+
+            if not overfit:
+                self.batch_norms = nn.ModuleList([
+                    nn.BatchNorm1d(pre_acts[0]),
+                    nn.BatchNorm1d(pre_acts[1]),
+                    nn.BatchNorm1d(pre_acts[1]),
+                ])
 
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
             self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
@@ -105,7 +111,8 @@ class CombinactNN(nn.Module):
                     alpha_primes = self.all_alpha_primes[i]
                 else:
                     alpha_primes = None
-                x = self.batch_norms[i](x)
+                if not self.overfit:
+                    x = self.batch_norms[i](x)
                 x = actfuns.activate(x, actfun=self.actfun,
                                      k=self.k, p=self.p, M=x.shape[1],
                                      layer_type='linear',
@@ -128,7 +135,8 @@ class CombinactCNN(nn.Module):
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
                  reduce_actfuns=False,
-                 pfact=1):
+                 pfact=1,
+                 overfit=False):
         super(CombinactCNN, self).__init__()
 
         self.actfun = actfun
@@ -139,6 +147,7 @@ class CombinactCNN(nn.Module):
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
         self.reduce_actfuns = reduce_actfuns
+        self.overfit = overfit
 
         pre_acts = [int(32 * pfact),
                  int(64 * pfact),
@@ -174,11 +183,12 @@ class CombinactCNN(nn.Module):
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[3], self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[3], self.p)
 
-        self.batch_norms = nn.ModuleList([
-            nn.BatchNorm2d(pre_acts[0]),
-            nn.BatchNorm2d(pre_acts[2]),
-            nn.BatchNorm2d(pre_acts[3]),
-        ])
+        if not overfit:
+            self.batch_norms = nn.ModuleList([
+                nn.BatchNorm2d(pre_acts[0]),
+                nn.BatchNorm2d(pre_acts[2]),
+                nn.BatchNorm2d(pre_acts[3]),
+            ])
 
         self.pooling = nn.ModuleList([
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -221,7 +231,8 @@ class CombinactCNN(nn.Module):
 
         for block in range(3):
             x = self.conv_layers[block][0](x)
-            x = self.batch_norms[block](x)
+            if not self.overfit:
+                x = self.batch_norms[block](x)
             if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[block * 2]
             else:
