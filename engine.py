@@ -26,11 +26,7 @@ def setup_experiment(args, outfile_path):
     param_factors, param_factors_1d = util.get_param_factors(args)
     train_samples = util.get_train_samples(args)
     p_vals, k_vals = util.get_pk_vals(args)
-
-    if args.var_perm_method:
-        perm_methods = ['shuffle', 'roll', 'roll_grouped']
-    else:
-        perm_methods = ['shuffle']
+    perm_methods = util.get_perm_methods(args.var_perm_method)
 
     # =========================== Creating new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',

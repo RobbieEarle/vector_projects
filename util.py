@@ -34,9 +34,11 @@ def get_actfuns(actfun):
                        'swishk', 'binary_ops_partition', 'binary_ops_all']
     elif actfun == '1d':
         all_actfuns = ['relu', 'abs']
-    elif actfun == 'old_only':
+    elif actfun == 'old_all':
         all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max']
-    elif actfun == 'new_only':
+    elif actfun == 'old_high_ord':
+        all_actfuns = ['l2', 'combinact', 'max']
+    elif actfun == 'new_all':
         all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'binary_ops_partition',
                        'binary_ops_all']
     elif actfun == 'pk_test':
@@ -115,6 +117,14 @@ def get_train_samples(args):
         train_samples = [args.sample_size]
 
     return train_samples
+
+
+def get_perm_methods(perm_method):
+    if perm_method:
+        perm_methods = ['shuffle', 'roll', 'roll_grouped']
+    else:
+        perm_methods = ['shuffle']
+    return perm_methods
 
 
 def get_pk_vals(args):

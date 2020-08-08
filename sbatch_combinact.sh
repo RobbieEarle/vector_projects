@@ -5,9 +5,9 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-95%16        # array value
-#SBATCH --output=logs/e1_rands2_pk/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e1_rands2_pk
+#SBATCH --array=0-49%10        # array value
+#SBATCH --output=logs/e1_perm_method/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e1_perm_method
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -33,13 +33,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar10 --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar100 --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset fashion_mnist --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset svhn --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset fashion_mnist --actfun pk_non_opt
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset svhn --actfun pk_non_opt
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun old_high_ord --var_perm_method
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun old_high_ord --var_perm_method
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun old_high_ord --var_perm_method
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun old_high_ord --var_perm_method
