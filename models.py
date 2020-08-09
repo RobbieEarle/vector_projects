@@ -4,6 +4,7 @@ import torch.nn as nn
 import activation_functions as actfuns
 import util
 import math
+import numpy as np
 
 
 class CombinactNN(nn.Module):
@@ -11,19 +12,13 @@ class CombinactNN(nn.Module):
     def __init__(self, actfun,
                  input_dim=784,
                  output_dim=10,
-                 num_layers=2,
                  k=2, p=1,
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
                  reduce_actfuns=False,
-                 pfact=1,
+                 num_params=600000,
                  overfit=False):
         super(CombinactNN, self).__init__()
-
-        # Validate input
-        # error = util.test_net_inputs(actfun, net_struct)
-        # if error is not None:
-        #     raise ValueError(error)
 
         self.input_dim = input_dim
         self.actfun = actfun
@@ -36,9 +31,18 @@ class CombinactNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
         self.overfit = overfit
 
-        pre_acts = [int(250 * pfact),
-                    int(200 * pfact),
-                    int(100 * pfact)]
+        pk_ratio = self.p / self.k
+        a = 1.25 * pk_ratio
+        b = (1.25 * input_dim) + (pk_ratio * output_dim) + 2.25
+        c = output_dim - num_params
+
+        n2a = (-b + np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
+        n2b = (-b - np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
+        n2 = np.max([n2a, n2b])
+        n1 = (num_params - (n2 * ((pk_ratio * output_dim) + 1)) + output_dim) / (input_dim + 1 + (n2 * pk_ratio))
+
+        pre_acts = [int(n1), int(n2)]
+
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
             pre_acts[i] = self.k * int(pre_act / self.k)
@@ -49,42 +53,22 @@ class CombinactNN(nn.Module):
             elif actfun == 'binary_ops_all':
                 post_acts[i] = int(pre_acts[i] * self.p * ((2 / self.k) + 1))
             else:
-                post_acts[i] = int(pre_acts[i] * self.p / self.k)
+                post_acts[i] = int(pre_acts[i] * pk_ratio)
 
-        if num_layers == 2:
-            self.linear_layers = nn.ModuleList([
-                nn.Linear(input_dim, pre_acts[0]),
-                nn.Linear(post_acts[0], pre_acts[1]),
-                nn.Linear(post_acts[1], output_dim)
+        self.linear_layers = nn.ModuleList([
+            nn.Linear(input_dim, pre_acts[0]),
+            nn.Linear(post_acts[0], pre_acts[1]),
+            nn.Linear(post_acts[1], output_dim)
+        ])
+
+        if not overfit:
+            self.batch_norms = nn.ModuleList([
+                nn.BatchNorm1d(pre_acts[0]),
+                nn.BatchNorm1d(pre_acts[1])
             ])
 
-            if not overfit:
-                self.batch_norms = nn.ModuleList([
-                    nn.BatchNorm1d(pre_acts[0]),
-                    nn.BatchNorm1d(pre_acts[1])
-                ])
-
-            self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
-            self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
-
-        elif num_layers == 3:
-            self.linear_layers = nn.ModuleList([
-                nn.Linear(input_dim, pre_acts[0]),
-                nn.Linear(post_acts[0], pre_acts[1]),
-                nn.Linear(post_acts[1], pre_acts[2]),
-                nn.Linear(post_acts[2], output_dim)
-            ])
-
-            if not overfit:
-                self.batch_norms = nn.ModuleList([
-                    nn.BatchNorm1d(pre_acts[0]),
-                    nn.BatchNorm1d(pre_acts[1]),
-                    nn.BatchNorm1d(pre_acts[1]),
-                ])
-
-            self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
-            self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
-            self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[2], self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
 
         self.all_alpha_primes = nn.ParameterList()
         self.alpha_dist = alpha_dist
@@ -93,11 +77,8 @@ class CombinactNN(nn.Module):
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_acts[0], self.num_combinact_actfuns)))
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_acts[1], self.num_combinact_actfuns)))
-                if num_layers == 3:
-                    self.all_alpha_primes.append(
-                        nn.Parameter(torch.zeros(post_acts[2], self.num_combinact_actfuns)))
             if alpha_dist == "per_perm":
-                for layer in range(num_layers):
+                for layer in range(2):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
     def forward(self, x):
@@ -135,7 +116,7 @@ class CombinactCNN(nn.Module):
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
                  reduce_actfuns=False,
-                 pfact=1,
+                 num_params=3000000,
                  overfit=False):
         super(CombinactCNN, self).__init__()
 
@@ -149,12 +130,8 @@ class CombinactCNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
         self.overfit = overfit
 
-        pre_acts = [int(32 * pfact),
-                 int(64 * pfact),
-                 int(128 * pfact),
-                 int(256 * pfact),
-                 int(512 * pfact),
-                 int(1024 * pfact)]
+        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, self.p, self.k)
+
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
             pre_acts[i] = self.k * int(pre_act / self.k)

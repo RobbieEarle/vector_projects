@@ -25,6 +25,8 @@ def get_extras(args):
         extras += '-var_p'
     if args.var_perm_method:
         extras += '-var_perm'
+    if args.p_param_eff:
+        extras += '-p_param_eff'
     return extras
 
 
@@ -34,8 +36,8 @@ def get_actfuns(actfun):
                        'swishk', 'binary_ops_partition', 'binary_ops_all']
     elif actfun == '1d':
         all_actfuns = ['relu', 'abs']
-    elif actfun == 'old_all':
-        all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max']
+    elif actfun == 'old':
+        all_actfuns = ['relu', 'l2', 'combinact', 'max']
     elif actfun == 'old_high_ord':
         all_actfuns = ['l2', 'combinact', 'max']
     elif actfun == 'new_all':
@@ -45,67 +47,26 @@ def get_actfuns(actfun):
         all_actfuns = ['l2', 'max']
     elif actfun == 'pk_non_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
+    elif actfun == 'pk_non_opt_all':
+        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     else:
         all_actfuns = [actfun]
 
     return all_actfuns
 
 
-def get_param_factors(args):
+def get_num_params(args):
     if args.model == 'nn':
-        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
-            if args.var_n_params:
-                param_factors = [3.5, 3.23, 2.95, 2.65, 2.34, 2.01, 1.665]
-                param_factors_1d = [1.45, 1.345, 1.24, 1.125, 1, 0.875, 0.735]
-            else:
-                param_factors = [3.5]
-                param_factors_1d = [1.45]
-            if args.actfun == 'binary_ops_partition':
-                for i in range(len(param_factors)):
-                    param_factors[i] *= 0.94
-            elif args.actfun == 'binary_ops_all':
-                for i in range(len(param_factors)):
-                    if i >= 4:
-                        param_factors[i] *= 0.71
-                    else:
-                        param_factors[i] *= 0.68
-
-        else:
-            if args.var_n_params:
-                param_factors = [1.25, 1.13, 1.01, 0.885, 0.76, 0.635, 0.515]
-                param_factors_1d = [0.6, 0.545, 0.49, 0.43, 0.375, 0.31, 0.255]
-            else:
-                param_factors = [1.25]
-                param_factors_1d = [0.6]
-            if args.actfun == 'binary_ops_partition':
-                for i in range(len(param_factors)):
-                    param_factors[i] *= 0.99
-            elif args.actfun == 'binary_ops_all':
-                for i in range(len(param_factors)):
-                    param_factors[i] *= 0.92
-
-    if args.model == 'cnn':
         if args.var_n_params:
-            param_factors = [1.01, 0.925, 0.83, 0.72, 0.59, 0.41, 0.29]
-            param_factors_1d = [0.36, 0.33, 0.295, 0.255, 0.21, 0.1475, 0.105]
+            num_params = [1000000, 800000, 600000, 400000, 200000]
         else:
-            param_factors = [1.01]
-            param_factors_1d = [0.36]
-
-        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
-            for i in range(len(param_factors)):
-                param_factors[i] *= 1.21
-            for i in range(len(param_factors_1d)):
-                param_factors_1d[i] *= 1.21
-
-        if args.actfun == 'binary_ops_partition':
-            for i in range(len(param_factors)):
-                param_factors[i] *= 0.865
-        elif args.actfun == 'binary_ops_all':
-            for i in range(len(param_factors)):
-                param_factors[i] *= 0.5
-
-    return param_factors, param_factors_1d
+            num_params = [1000000]
+    elif args.model == 'cnn':
+        if args.var_n_params:
+            num_params = [3000000, 2500000, 2000000, 1500000, 1000000, 500000]
+        else:
+            num_params = [3000000]
+    return num_params
 
 
 def get_train_samples(args):
@@ -134,6 +95,8 @@ def get_pk_vals(args):
         k_vals = [2]
     if args.var_p:
         p_vals = [1, 2, 3, 4, 5]
+    elif args.p_param_eff:
+        p_vals = [2, 3]
     elif args.var_perm_method:
         p_vals = [2]
     else:
@@ -154,7 +117,7 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 
-def get_n_params(model):
+def get_model_params(model):
     """
     :param model: Pytorch network model
     :return: Number of parameters in the model
@@ -324,6 +287,42 @@ def hook_b(module, input, output):
 
 
 # -------------------- Model Utils
+
+
+def get_cnn_num_params(n, in_dim, out_dim, p, k):
+    pk_ratio = p / k
+    constraint_func1 = (9 * (in_dim * n[0])) + (
+                9 * pk_ratio * ((n[0] * n[1]) + (n[1] * n[2]) + (n[2] * n[2]) + (n[2] * n[3]) + (n[3] * n[3])))
+    constraint_func2 = (pk_ratio * (int(in_dim / 8) ** 2) * n[3] * n[5]) + (pk_ratio * n[4] * n[5]) + (
+                pk_ratio * n[4] * out_dim)
+    constraint_func3 = in_dim + np.sum(n) + n[2] + n[3] + out_dim
+    return constraint_func1 + constraint_func2 + constraint_func3
+
+
+def calc_cnn_preacts(required_num_params, in_dim, out_dim, p, k):
+    n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
+    curr_num_params = 0
+    while curr_num_params < required_num_params:
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, p, k)
+        if curr_num_params < required_num_params:
+            n *= 2
+
+    fac = 2
+    dist = curr_num_params - required_num_params
+    me = required_num_params * 0.001
+    while np.abs(dist) > me:
+        prev_dist = dist
+        if curr_num_params > required_num_params:
+            n *= 1/fac
+        elif curr_num_params < required_num_params:
+            n *= fac
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, p, k)
+        dist = curr_num_params - required_num_params
+        if prev_dist * dist < 0:
+            fac = fac ** 0.75
+
+    return n.astype(int)
+
 
 def test_nn_inputs(actfun, net_struct, in_size):
     """

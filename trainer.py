@@ -9,7 +9,6 @@ import models
 import util
 import hyper_params as hp
 
-import os
 import numpy as np
 import csv
 import time
@@ -17,22 +16,20 @@ import time
 
 # -------------------- Setting Up & Running Training Function
 
-def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_loader, validation_loader,
-          sample_size, batch_size, device, pfact=1.0, curr_k=2, curr_p=1, perm_method='shuffle'):
+def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, validation_loader,
+          sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, perm_method='shuffle'):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
     :param actfun: activation function currently being used
     :param curr_seed: seed being used by current job
     :param outfile_path: path to save outputs from training session
-    :param checkpoint: loaded checkpoint
     :param fieldnames: column names for output file
     :param train_loader: training data loader
     :param validation_loader: validation data loader
     :param sample_size: number of training samples used in this experiment
     :param batch_size: number of samples per batch
     :param device: reference to CUDA device for GPU support
-    :param pfact: factor by which we reduce the size of our network layers
     :return:
     """
 
@@ -46,8 +43,8 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             input_dim, output_dim = 3072, 10
         elif args.dataset == 'cifar100':
             input_dim, output_dim = 3072, 100
-        model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim, num_layers=2,
-                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, pfact=pfact,
+        model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
+                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, num_params=num_params,
                                    permute_type=perm_method, overfit=args.overfit).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
@@ -58,7 +55,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
             input_channels, input_dim, output_dim = 3, 32, 100
 
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
-                                    num_outputs=output_dim, k=curr_k, p=curr_p, pfact=pfact,
+                                    num_outputs=output_dim, k=curr_k, p=curr_p, num_params=num_params,
                                     reduce_actfuns=args.reduce_actfuns, permute_type=perm_method,
                                     overfit=args.overfit).to(device)
 
@@ -100,37 +97,11 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
         num_epochs = args.num_epochs
 
     epoch = 1
-    checkpoint_location = os.path.join(args.check_path, "cp_{}.pth".format(args.seed))
-    if checkpoint is not None:
-        checkpoint = torch.load(checkpoint_location)
-        model.load_state_dict(checkpoint['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scheduler.load_state_dict(checkpoint['scheduler'])
-        epoch = checkpoint['epoch']
-        model.to(device)
-        print("*** LOADED CHECKPOINT ***"
-              "\n  Epoch: {}"
-              "\n  Actfun: {}"
-              "\n  Parameter Factor: {}"
-              "\n  Num Training Samples: {}"
-              "\n  Seed: {}".format(epoch, actfun, pfact, sample_size, curr_seed))
-
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_n_params(model), sample_size, model.k, model.p, perm_method)
+                            util.get_model_params(model), sample_size, model.k, model.p, perm_method)
 
     # ---- Start Training
     while epoch <= num_epochs:
-
-        if args.check_path != '':
-            torch.save({'state_dict': model.state_dict(),
-                        'optimizer': optimizer.state_dict(),
-                        'scheduler': scheduler.state_dict(),
-                        'epoch': epoch,
-                        'actfun': actfun,
-                        'param_factor': pfact,
-                        'train_sample': sample_size,
-                        'curr_seed': curr_seed}, checkpoint_location)
-            print("*** SAVED CHECKPOINT ***")
 
         print("------> Epoch {}".format(epoch))
         util.seed_all((curr_seed * args.num_epochs) + epoch)
@@ -198,7 +169,7 @@ def train(args, actfun, curr_seed, outfile_path, checkpoint, fieldnames, train_l
                              'batch_size': batch_size,
                              'alpha_primes': alpha_primes,
                              'alphas': alphas,
-                             'num_params': util.get_n_params(model),
+                             'num_params': util.get_model_params(model),
                              'var_nparams': args.var_n_params,
                              'var_nsamples': args.var_n_samples,
                              'k': curr_k,
