@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-49%10        # array value
-#SBATCH --output=logs/e1_perm_method2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e1_perm_method2
+#SBATCH --output=logs/e2_perm_method/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e2_perm_method
 
 source ~/.bashrc
 source activate ~/venvs/combinact
