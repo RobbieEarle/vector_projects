@@ -33,6 +33,10 @@ def setup_experiment(args, outfile_path):
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'perm_method']
 
+    with open(outfile_path, mode='w') as out_file:
+        writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+        writer.writeheader()
+
     # =========================== Training
     for actfun in all_actfuns:
 
