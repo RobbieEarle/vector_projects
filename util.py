@@ -43,12 +43,14 @@ def get_actfuns(actfun):
     elif actfun == 'new_all':
         all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'binary_ops_partition',
                        'binary_ops_all']
+    elif actfun == 'all_pk':
+        all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
+    elif actfun == 'all_pk_new':
+        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'pk_test':
         all_actfuns = ['l2', 'max']
     elif actfun == 'pk_non_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
-    elif actfun == 'pk_non_opt_all':
-        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     else:
         all_actfuns = [actfun]
 
