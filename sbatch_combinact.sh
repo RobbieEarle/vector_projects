@@ -6,8 +6,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-49%10        # array value
-#SBATCH --output=logs/e1_param_eff/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e1_param_eff
+#SBATCH --output=logs/e1_pk_exp2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e1_pk_exp2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -33,7 +33,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun pk_test --p_param_eff --var_n_params
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun pk_test --p_param_eff --var_n_params
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun pk_test --p_param_eff --var_n_params
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun pk_test --p_param_eff --var_n_params
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun pk_test --dataset cifar10 --model cnn --var_k
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun pk_test --dataset cifar10 --model cnn --var_p
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun pk_test --dataset cifar100 --model cnn --var_k
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun pk_test --dataset cifar100 --model cnn --var_p
