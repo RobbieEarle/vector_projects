@@ -145,26 +145,26 @@ class CombinactCNN(nn.Module):
                 post_acts[i] = int(pre_acts[i] * self.p / self.k)
 
         self.conv_layers = nn.ModuleList([
-            nn.ModuleList([nn.Conv2d(in_channels=num_input_channels, out_channels=pre_acts[0], kernel_size=3, padding=1),
-                           nn.Conv2d(in_channels=int(post_acts[0]), out_channels=pre_acts[1], kernel_size=3, padding=1)]),
-            nn.ModuleList([nn.Conv2d(in_channels=int(post_acts[1]), out_channels=pre_acts[2], kernel_size=3, padding=1),
-                           nn.Conv2d(in_channels=int(post_acts[2]), out_channels=pre_acts[2], kernel_size=3, padding=1)]),
-            nn.ModuleList([nn.Conv2d(in_channels=int(post_acts[2]), out_channels=pre_acts[3], kernel_size=3, padding=1),
-                           nn.Conv2d(in_channels=int(post_acts[3]), out_channels=pre_acts[3], kernel_size=3, padding=1)])
+            nn.ModuleList([nn.Conv2d(in_channels=num_input_channels, out_channels=int(pre_acts[0]), kernel_size=3, padding=1),
+                           nn.Conv2d(in_channels=int(post_acts[0]), out_channels=int(pre_acts[1]), kernel_size=3, padding=1)]),
+            nn.ModuleList([nn.Conv2d(in_channels=int(post_acts[1]), out_channels=int(pre_acts[2]), kernel_size=3, padding=1),
+                           nn.Conv2d(in_channels=int(post_acts[2]), out_channels=int(pre_acts[2]), kernel_size=3, padding=1)]),
+            nn.ModuleList([nn.Conv2d(in_channels=int(post_acts[2]), out_channels=int(pre_acts[3]), kernel_size=3, padding=1),
+                           nn.Conv2d(in_channels=int(post_acts[3]), out_channels=int(pre_acts[3]), kernel_size=3, padding=1)])
         ])
 
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[2], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[2], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[3], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[3], self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[0]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[1]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[2]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[2]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[3]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[3]), self.p)
 
         if not overfit:
             self.batch_norms = nn.ModuleList([
-                nn.BatchNorm2d(pre_acts[0]),
-                nn.BatchNorm2d(pre_acts[2]),
-                nn.BatchNorm2d(pre_acts[3]),
+                nn.BatchNorm2d(int(pre_acts[0])),
+                nn.BatchNorm2d(int(pre_acts[2])),
+                nn.BatchNorm2d(int(pre_acts[3])),
             ])
 
         self.pooling = nn.ModuleList([
@@ -174,13 +174,13 @@ class CombinactCNN(nn.Module):
         ])
 
         self.linear_layers = nn.ModuleList([
-            nn.Linear(int(post_acts[3]) * (int(input_dim / 8) ** 2), pre_acts[5]),
-            nn.Linear(int(post_acts[5]), pre_acts[4]),
-            nn.Linear(int(post_acts[4]), num_outputs)
+            nn.Linear(int(post_acts[3]) * (int(input_dim / 8) ** 2), int(pre_acts[5])),
+            nn.Linear(int(post_acts[5]), int(pre_acts[4])),
+            nn.Linear(int(post_acts[4]), int(num_outputs))
         ])
 
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[5], self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[4], self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[5]), self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[4]), self.p)
 
         self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
         self.alpha_dist = alpha_dist  # Reference to chosen alpha distribution
