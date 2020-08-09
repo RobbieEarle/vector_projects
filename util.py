@@ -37,7 +37,7 @@ def get_actfuns(actfun):
     elif actfun == '1d':
         all_actfuns = ['relu', 'abs']
     elif actfun == 'old_all':
-        all_actfuns = ['relu', 'abs' 'l2', 'combinact', 'max', 'multi_relu', 'l2_lae']
+        all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max', 'multi_relu', 'l2_lae']
     elif actfun == 'old_high_ord':
         all_actfuns = ['l2', 'combinact', 'max']
     elif actfun == 'new_all':
