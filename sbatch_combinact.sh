@@ -33,6 +33,10 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset mnist --model nn --var_k
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset mnist --model nn --var_p
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset mnist --model cnn --var_k
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset mnist --model cnn --var_p
 python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset cifar10 --model cnn --var_k
 python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset cifar10 --model cnn --var_p
 python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk_new --dataset cifar100 --model cnn --var_k
