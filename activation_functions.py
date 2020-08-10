@@ -40,6 +40,8 @@ def activate(x, actfun, p=1, k=1, M=None,
         num_channels = M
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
+    bin_partition_actfuns = ['bin_partition_full', 'bin_partition_nopass']
+    bin_all_actfuns = ['bin_all_full', 'bin_all_nopass_sgm', 'bin_all_nopass']
     if actfun == 'combinact':
         x = combinact(x,
                       p=p,
@@ -49,8 +51,8 @@ def activate(x, actfun, p=1, k=1, M=None,
                       reduce_actfuns=reduce_actfuns)
     elif actfun == 'cf_relu' or actfun == 'cf_abs':
         x = coin_flip(x, actfun, M=num_channels * p, k=k)
-    elif actfun == 'binary_ops_partition' or actfun == 'binary_ops_all':
-        x = binary_ops(x, actfun, layer_type)
+    elif actfun in bin_partition_actfuns or actfun in bin_all_actfuns:
+        x = binary_ops(x, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns)
     elif actfun == 'groupsort':
         x = groupsort(x, layer_type)
     else:
@@ -264,25 +266,43 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
     return lae.to(input_dtype)
 
 
-def binary_ops(z, actfun, layer_type):
-    if actfun == 'binary_ops_partition':
-        partition = math.floor(z.shape[1] / 3)
-        bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
-        bin_xor = sgm(z[:, partition: 2*partition, ...])
-        bin_pass = z[:, 2*partition:, ...]
-    elif actfun == 'binary_ops_all':
+def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
+
+    bin_pass = None
+    bin_xor = None
+    if actfun in bin_partition_actfuns:
+        if actfun == 'bin_partition_full':
+            partition = math.floor(z.shape[1] / 3)
+            bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
+            bin_xor = sgm(z[:, partition: 2 * partition, ...])
+            bin_pass = z[:, 2 * partition:, ...]
+        elif actfun == 'bin_partition_nopass':
+            partition = math.floor(z.shape[1] / 2)
+            bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
+            bin_xor = sgm(z[:, partition:, ...])
+    elif actfun in bin_all_actfuns:
         bin_and = torch.max(z, dim=2).values
         bin_or = torch.min(z, dim=2).values
-        bin_xor = sgm(z)
-        bin_pass = z
+        bin_and_or = torch.cat((bin_and, bin_or), dim=1)
+        if actfun != 'bin_all_nopass_sgm':
+            bin_xor = sgm(z)
+            if actfun != 'bin_all_nopass':
+                bin_pass = z
 
-    if layer_type == 'conv':
-        bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2],
-                                    bin_pass.shape[3], bin_pass.shape[4])
-    elif layer_type == 'linear':
-        bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2])
+    if bin_xor is not None:
+        if bin_pass is not None:
+            if layer_type == 'conv':
+                bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2],
+                                            bin_pass.shape[3], bin_pass.shape[4])
+            elif layer_type == 'linear':
+                bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2])
 
-    z = torch.cat((bin_and_or, bin_xor, bin_pass), dim=1)
+            z = torch.cat((bin_and_or, bin_xor, bin_pass), dim=1)
+        else:
+            z = torch.cat((bin_and_or, bin_xor), dim=1)
+    else:
+        z = bin_and_or
+
     return z
 
 

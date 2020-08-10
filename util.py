@@ -51,8 +51,8 @@ def get_actfuns(actfun):
         all_actfuns = ['l2', 'max', 'relu']
     elif actfun == 'pk_non_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
-    elif actfun == 'e3_rs':
-        all_actfuns = []
+    elif actfun == 'rs_bin':
+        all_actfuns = ['bin_partition_full', 'bin_partition_nopass', 'bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
     else:
         all_actfuns = [actfun]
 
@@ -293,8 +293,7 @@ def hook_b(module, input, output):
 # -------------------- Model Utils
 
 
-def get_cnn_num_params(n, in_dim, out_dim, p, k):
-    pk_ratio = p / k
+def get_cnn_num_params(n, in_dim, out_dim, pk_ratio):
     constraint_func1 = (9 * (in_dim * n[0])) + (
                 9 * pk_ratio * ((n[0] * n[1]) + (n[1] * n[2]) + (n[2] * n[2]) + (n[2] * n[3]) + (n[3] * n[3])))
     constraint_func2 = (pk_ratio * (int(in_dim / 8) ** 2) * n[3] * n[5]) + (pk_ratio * n[4] * n[5]) + (
@@ -303,11 +302,11 @@ def get_cnn_num_params(n, in_dim, out_dim, p, k):
     return constraint_func1 + constraint_func2 + constraint_func3
 
 
-def calc_cnn_preacts(required_num_params, in_dim, out_dim, p, k):
+def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio):
     n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
     curr_num_params = 0
     while curr_num_params < required_num_params:
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, p, k)
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio)
         if curr_num_params < required_num_params:
             n *= 2
 
@@ -320,12 +319,29 @@ def calc_cnn_preacts(required_num_params, in_dim, out_dim, p, k):
             n *= 1/fac
         elif curr_num_params < required_num_params:
             n *= fac
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, p, k)
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio)
         dist = curr_num_params - required_num_params
         if prev_dist * dist < 0:
             fac = fac ** 0.75
 
     return n.astype(int)
+
+
+def get_pk_ratio(actfun, p, k):
+    if actfun == 'groupsort':
+        pk_ratio = p
+    elif actfun == 'bin_partition_full':
+        pk_ratio = (p * (2 + k)) / (3 * k)
+    elif actfun == 'bin_all_full':
+        pk_ratio = p * ((3 / k) + 1)
+    elif actfun == 'bin_all_nopass':
+        pk_ratio = p * ((3 / k))
+    elif actfun == 'bin_all_nopass_sgm':
+        pk_ratio = p * ((2 / k))
+    else:
+        pk_ratio = p / k
+
+    return pk_ratio
 
 
 def test_nn_inputs(actfun, net_struct, in_size):

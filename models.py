@@ -32,10 +32,8 @@ class CombinactNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
         self.overfit = overfit
 
-        if self.actfun == 'groupsort':
-            pk_ratio = self.p
-        else:
-            pk_ratio = self.p / self.k
+        pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k)
+
         a = 1.25 * pk_ratio
         b = (1.25 * input_dim) + (pk_ratio * output_dim) + 2.25
         c = output_dim - num_params
@@ -50,14 +48,11 @@ class CombinactNN(nn.Module):
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
             pre_acts[i] = self.k * int(pre_act / self.k)
-            post_acts.append(0)
-            if actfun == 'binary_ops_partition':
-                post_acts[i] = int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
-                    1 - self.k)))
-            elif actfun == 'binary_ops_all':
-                post_acts[i] = int(pre_acts[i] * self.p * ((2 / self.k) + 1))
+            if actfun == 'bin_partition_full':
+                post_acts.append(int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
+                        1 - self.k))))
             else:
-                post_acts[i] = int(pre_acts[i] * pk_ratio)
+                post_acts.append(int(pre_acts[i] * pk_ratio))
 
         self.linear_layers = nn.ModuleList([
             nn.Linear(input_dim, pre_acts[0]),
@@ -135,24 +130,17 @@ class CombinactCNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
         self.overfit = overfit
 
-        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, self.p, self.k)
-
-        if self.actfun == 'groupsort':
-            pk_ratio = self.p
-        else:
-            pk_ratio = self.p / self.k
+        pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k)
+        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, pk_ratio)
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
             pre_acts[i] = self.k * int(pre_act / self.k)
-            post_acts.append(0)
-            if actfun == 'binary_ops_partition':
-                post_acts[i] = int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
-                        1 - self.k)))
-            elif actfun == 'binary_ops_all':
-                post_acts[i] = int(pre_acts[i] * self.p * ((2 / self.k) + 1))
+            if actfun == 'bin_partition_full':
+                post_acts.append(int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
+                        1 - self.k))))
             else:
-                post_acts[i] = int(pre_acts[i] * pk_ratio)
+                post_acts.append(int(pre_acts[i] * pk_ratio))
 
         self.conv_layers = nn.ModuleList([
             nn.ModuleList([nn.Conv2d(in_channels=num_input_channels, out_channels=int(pre_acts[0]), kernel_size=3, padding=1),

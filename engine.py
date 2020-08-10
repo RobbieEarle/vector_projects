@@ -63,15 +63,14 @@ def setup_experiment(args, outfile_path):
                             print()
 
                             curr_seed += 1
-                            checkpoint = None
 
 
 # --------------------  Entry Point
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Higher order activation function testing')
     parser.add_argument('--seed', type=int, default=1, help='Job seed')
-    parser.add_argument('--dataset', type=str, default='mnist', help='Dataset being used. mnist or cifar10')  # mnist
-    parser.add_argument('--model', type=str, default='cnn', help='What type of model to use')  # cnn
+    parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
+    parser.add_argument('--model', type=str, default='cnn', help='cnn, nn')  # cnn
     parser.add_argument('--actfun', type=str, default='all')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
