@@ -23,7 +23,8 @@ class CombinactNN(nn.Module):
         self.input_dim = input_dim
         self.actfun = actfun
         self.k, self.p = k, p
-        if actfun == 'relu' or actfun == 'abs':
+        actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
+        if actfun in actfuns_1d:
             self.k = 1
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
@@ -31,7 +32,10 @@ class CombinactNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
         self.overfit = overfit
 
-        pk_ratio = self.p / self.k
+        if self.actfun == 'groupsort':
+            pk_ratio = self.p
+        else:
+            pk_ratio = self.p / self.k
         a = 1.25 * pk_ratio
         b = (1.25 * input_dim) + (pk_ratio * output_dim) + 2.25
         c = output_dim - num_params
@@ -122,7 +126,8 @@ class CombinactCNN(nn.Module):
 
         self.actfun = actfun
         self.k, self.p = k, p
-        if actfun == 'relu' or actfun == 'abs':
+        actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
+        if actfun in actfuns_1d:
             self.k = 1
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
@@ -131,6 +136,11 @@ class CombinactCNN(nn.Module):
         self.overfit = overfit
 
         pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, self.p, self.k)
+
+        if self.actfun == 'groupsort':
+            pk_ratio = self.p
+        else:
+            pk_ratio = self.p / self.k
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
@@ -142,7 +152,7 @@ class CombinactCNN(nn.Module):
             elif actfun == 'binary_ops_all':
                 post_acts[i] = int(pre_acts[i] * self.p * ((2 / self.k) + 1))
             else:
-                post_acts[i] = int(pre_acts[i] * self.p / self.k)
+                post_acts[i] = int(pre_acts[i] * pk_ratio)
 
         self.conv_layers = nn.ModuleList([
             nn.ModuleList([nn.Conv2d(in_channels=num_input_channels, out_channels=int(pre_acts[0]), kernel_size=3, padding=1),

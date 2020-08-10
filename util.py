@@ -48,9 +48,11 @@ def get_actfuns(actfun):
     elif actfun == 'all_pk_new':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'pk_test':
-        all_actfuns = ['l2', 'max']
+        all_actfuns = ['l2', 'max', 'relu']
     elif actfun == 'pk_non_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
+    elif actfun == 'e3_rs':
+        all_actfuns = []
     else:
         all_actfuns = [actfun]
 
