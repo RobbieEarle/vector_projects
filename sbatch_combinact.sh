@@ -5,9 +5,9 @@
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
-#SBATCH --array=0-95%12        # array value
-#SBATCH --output=logs/e3_rands_bin1/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e3_rands_bin1
+#SBATCH --array=0-47%8        # array value
+#SBATCH --output=logs/e2_param_eff2_log/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e2_param_eff2_log
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -33,9 +33,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun rs_bin
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar10 --actfun rs_bin
-python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset cifar100 --actfun rs_bin
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun rs_bin
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun rs_bin
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun rs_bin
+python engine.py --seed $SEED --save_path $SAVE_PATH --model nn --dataset mnist --actfun old_high_ord --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun old_high_ord --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun old_high_ord --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun old_high_ord --p_param_eff --var_n_params_log

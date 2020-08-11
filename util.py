@@ -33,7 +33,7 @@ def get_extras(args):
 def get_actfuns(actfun):
     if actfun == 'all':
         all_actfuns = ['combinact', 'relu', 'abs', 'max', 'min', 'lse', 'lae', 'l2', 'linf', 'prod', 'signed_geomean',
-                       'swishk', 'binary_ops_partition', 'binary_ops_all']
+                       'swishk', 'bin_partition_full', 'bin_all_full']
     elif actfun == '1d':
         all_actfuns = ['relu', 'abs']
     elif actfun == 'old_all':
@@ -41,8 +41,8 @@ def get_actfuns(actfun):
     elif actfun == 'old_high_ord':
         all_actfuns = ['l2', 'combinact', 'max']
     elif actfun == 'new_all':
-        all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'binary_ops_partition',
-                       'binary_ops_all']
+        all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'bin_partition_full',
+                       'bin_all_full']
     elif actfun == 'all_pk':
         all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'all_pk_new':
@@ -63,13 +63,22 @@ def get_num_params(args):
     if args.model == 'nn':
         if args.var_n_params:
             num_params = [1000000, 800000, 600000, 400000, 200000]
+        elif args.var_n_params_log:
+            num_params = [15, 16, 17, 18, 19, 20,]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
         else:
             num_params = [1000000]
     elif args.model == 'cnn':
         if args.var_n_params:
             num_params = [3000000, 2500000, 2000000, 1500000, 1000000, 500000]
+        elif args.var_n_params_log:
+            num_params = [16, 17, 18, 19, 20, 21]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
         else:
             num_params = [3000000]
+            
     return num_params
 
 
