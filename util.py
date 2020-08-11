@@ -78,7 +78,7 @@ def get_num_params(args):
                 num_params[i] = 2 ** param
         else:
             num_params = [3000000]
-            
+
     return num_params
 
 

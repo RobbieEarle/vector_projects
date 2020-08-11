@@ -232,14 +232,6 @@ def nn_mnist(rng):
 
 def nn_cifar10(rng):
     return {
-        "relu": {
-            "adam_beta_1": np.exp(rng.uniform(-4.92, -1.83)),
-            "adam_beta_2": np.exp(rng.uniform(-7.94, -4)),
-            "adam_eps": np.exp(rng.uniform(-22.98, -15.67)),
-            "adam_wd": np.exp(rng.uniform(-13.15, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -5.51)),
-            "cycle_peak": rng.uniform(0.19, 0.56),
-        },
         "abs": {
             "adam_beta_1": np.exp(rng.uniform(-4.62, -3.19)),
             "adam_beta_2": np.exp(rng.uniform(-10.18, -4)),
@@ -256,14 +248,6 @@ def nn_cifar10(rng):
             "max_lr": np.exp(rng.uniform(-8, -4.65)),
             "cycle_peak": rng.uniform(0.27, 0.52),
         },
-        "max": {
-            "adam_beta_1": np.exp(rng.uniform(-5.44, -2.14)),
-            "adam_beta_2": np.exp(rng.uniform(-11.12, -4)),
-            "adam_eps": np.exp(rng.uniform(-21.67, -13.38)),
-            "adam_wd": np.exp(rng.uniform(-14.59, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -4.58)),
-            "cycle_peak": rng.uniform(0.06, 0.52),
-        },
         "min": {
             "adam_beta_1": np.exp(rng.uniform(-5.28, -2.64)),
             "adam_beta_2": np.exp(rng.uniform(-12.66, -4)),
@@ -279,14 +263,6 @@ def nn_cifar10(rng):
             "adam_wd": np.exp(rng.uniform(-14.89, -8)),
             "max_lr": np.exp(rng.uniform(-8, -4.98)),
             "cycle_peak": rng.uniform(0.13, 0.55),
-        },
-        "l2": {
-            "adam_beta_1": np.exp(rng.uniform(-3.72, -1.04)),
-            "adam_beta_2": np.exp(rng.uniform(-8.8, -4)),
-            "adam_eps": np.exp(rng.uniform(-20.61, -14.26)),
-            "adam_wd": np.exp(rng.uniform(-14.55, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -4.33)),
-            "cycle_peak": rng.uniform(0.17, 0.49),
         },
         "bin_partition_full": {
             "adam_beta_1": np.exp(rng.uniform(-4.75, -3.87)),
@@ -403,19 +379,35 @@ def nn_cifar10(rng):
             "max_lr": np.exp(-6.374),
             "cycle_peak": 0.41,
         },
+        "l2": {
+            "adam_beta_1": np.exp(rng.uniform(-2.64, -0.85)),
+            "adam_beta_2": np.exp(rng.uniform(-5.97, -3.98)),
+            "adam_eps": np.exp(rng.uniform(-21.54, -15.11)),
+            "adam_wd": np.exp(rng.uniform(-15.03, -9.64)),
+            "max_lr": np.exp(rng.uniform(-6.64, -4.34)),
+            "cycle_peak": rng.uniform(0.32, 0.42),
+        },
+        "max": {
+            "adam_beta_1": np.exp(rng.uniform(-5.57, -2.53)),
+            "adam_beta_2": np.exp(rng.uniform(-10.36, -9.04)),
+            "adam_eps": np.exp(rng.uniform(-19.34, -13.21)),
+            "adam_wd": np.exp(rng.uniform(-13.54, -8.66)),
+            "max_lr": np.exp(rng.uniform(-8.5, -5.84)),
+            "cycle_peak": rng.uniform(0.16, 0.55),
+        },
+        "relu": {
+            "adam_beta_1": np.exp(rng.uniform(-3.61, -1.95)),
+            "adam_beta_2": np.exp(rng.uniform(-7.04, -5.08)),
+            "adam_eps": np.exp(rng.uniform(-23.12, -16.62)),
+            "adam_wd": np.exp(rng.uniform(-12.49, -9.99)),
+            "max_lr": np.exp(rng.uniform(-7.61, -6.6)),
+            "cycle_peak": rng.uniform(0.31, 0.38),
+        }
     }
 
 
 def nn_cifar100(rng):
     return {
-        "relu": {
-            "adam_beta_1": np.exp(rng.uniform(-5.38, -2.72)),
-            "adam_beta_2": np.exp(rng.uniform(-9.78, -4)),
-            "adam_eps": np.exp(rng.uniform(-22.49, -16.79)),
-            "adam_wd": np.exp(rng.uniform(-13.89, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -5.24)),
-            "cycle_peak": rng.uniform(0.36, 0.51),
-        },
         "abs": {
             "adam_beta_1": np.exp(rng.uniform(-3.51, -1.16)),
             "adam_beta_2": np.exp(rng.uniform(-8.6, -4)),
@@ -432,14 +424,6 @@ def nn_cifar100(rng):
             "max_lr": np.exp(rng.uniform(-8, -4.74)),
             "cycle_peak": rng.uniform(0.09, 0.39),
         },
-        "max": {
-            "adam_beta_1": np.exp(rng.uniform(-2.29, -0.94)),
-            "adam_beta_2": np.exp(rng.uniform(-9.32, -4)),
-            "adam_eps": np.exp(rng.uniform(-22.49, -15.17)),
-            "adam_wd": np.exp(rng.uniform(-14.62, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -4.63)),
-            "cycle_peak": rng.uniform(0.2, 0.3),
-        },
         "min": {
             "adam_beta_1": np.exp(rng.uniform(-2.53, -1.97)),
             "adam_beta_2": np.exp(rng.uniform(-11.01, -4)),
@@ -455,14 +439,6 @@ def nn_cifar100(rng):
             "adam_wd": np.exp(rng.uniform(-13.72, -8)),
             "max_lr": np.exp(rng.uniform(-8, -4.0)),
             "cycle_peak": rng.uniform(0.11, 0.48),
-        },
-        "l2": {
-            "adam_beta_1": np.exp(rng.uniform(-2.13, -0.73)),
-            "adam_beta_2": np.exp(rng.uniform(-8.96, -4)),
-            "adam_eps": np.exp(rng.uniform(-22.93, -15.42)),
-            "adam_wd": np.exp(rng.uniform(-13.46, -8)),
-            "max_lr": np.exp(rng.uniform(-8, -4.93)),
-            "cycle_peak": rng.uniform(0.07, 0.44),
         },
         "bin_partition_full": {
             "adam_beta_1": np.exp(rng.uniform(-4.75, -3.87)),
@@ -578,6 +554,30 @@ def nn_cifar100(rng):
             "adam_wd": np.exp(-10.212),
             "max_lr": np.exp(-7.162),
             "cycle_peak": 0.32,
+        },
+        "l2": {
+            "adam_beta_1": np.exp(rng.uniform(-1.91, -1.03)),
+            "adam_beta_2": np.exp(rng.uniform(-6.6, -5.45)),
+            "adam_eps": np.exp(rng.uniform(-23.17, -18.38)),
+            "adam_wd": np.exp(rng.uniform(-13.91, -10.81)),
+            "max_lr": np.exp(rng.uniform(-6.17, -4.94)),
+            "cycle_peak": rng.uniform(0.25, 0.51),
+        },
+        "max": {
+            "adam_beta_1": np.exp(rng.uniform(-1.38, -1.06)),
+            "adam_beta_2": np.exp(rng.uniform(-6.92, -4.87)),
+            "adam_eps": np.exp(rng.uniform(-21.71, -15.65)),
+            "adam_wd": np.exp(rng.uniform(-14.46, -7.44)),
+            "max_lr": np.exp(rng.uniform(-7.6, -6.45)),
+            "cycle_peak": rng.uniform(0.2, 0.29),
+        },
+        "relu": {
+            "adam_beta_1": np.exp(rng.uniform(-4.49, -2.82)),
+            "adam_beta_2": np.exp(rng.uniform(-9.53, -4.6)),
+            "adam_eps": np.exp(rng.uniform(-23.19, -17.77)),
+            "adam_wd": np.exp(rng.uniform(-11.7, -7.97)),
+            "max_lr": np.exp(rng.uniform(-7.2, -6.69)),
+            "cycle_peak": rng.uniform(0.42, 0.52),
         },
     }
 
