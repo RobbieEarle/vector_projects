@@ -49,7 +49,7 @@ def get_actfuns(actfun):
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'pk_test':
         all_actfuns = ['l2', 'max', 'relu']
-    elif actfun == 'pk_non_opt':
+    elif actfun == 'pk_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
     elif actfun == 'rs_bin':
         all_actfuns = ['bin_partition_full', 'bin_partition_nopass', 'bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
@@ -86,7 +86,7 @@ def get_train_samples(args):
     if args.var_n_samples:
         train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
     elif args.overfit:
-        train_samples = [15000]
+        train_samples = [2500]
     else:
         train_samples = [args.sample_size]
 

@@ -45,7 +45,7 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
             input_dim, output_dim = 3072, 100
         model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
                                    k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, num_params=num_params,
-                                   permute_type=perm_method, overfit=args.overfit).to(device)
+                                   permute_type=perm_method).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -56,14 +56,12 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
                                     num_outputs=output_dim, k=curr_k, p=curr_p, num_params=num_params,
-                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method,
-                                    overfit=args.overfit).to(device)
+                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
 
-    if not args.overfit:
-        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
     model_params.append({'params': model.linear_layers.parameters()})
     if actfun == 'combinact':
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
@@ -76,25 +74,28 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
     criterion = nn.CrossEntropyLoss()
 
+    num_epochs = args.num_epochs
     if args.overfit:
-        optimizer = optim.SGD(model_params, lr=0.1, momentum=0.5)
-        num_epochs = 100
-    else:
-        optimizer = optim.Adam(model_params,
-                               lr=10 ** -8,
-                               betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                               eps=hyper_params['adam_eps'],
-                               weight_decay=hyper_params['adam_wd']
-                               )
-        num_batches = sample_size / batch_size * args.num_epochs
-        scheduler = CyclicLR(optimizer,
-                             base_lr=10 ** -8,
-                             max_lr=hyper_params['max_lr'],
-                             step_size_up=int(hyper_params['cycle_peak'] * num_batches),
-                             step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
-                             cycle_momentum=False
-                             )
-        num_epochs = args.num_epochs
+        num_epochs = 50
+        hyper_params['cycle_peak'] = 0.35
+
+    if args.no_weight_decay:
+        hyper_params['adam_wd'] = 0
+
+    optimizer = optim.Adam(model_params,
+                           lr=10 ** -8,
+                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                           eps=hyper_params['adam_eps'],
+                           weight_decay=hyper_params['adam_wd']
+                           )
+    num_batches = sample_size / batch_size * num_epochs
+    scheduler = CyclicLR(optimizer,
+                         base_lr=10 ** -8,
+                         max_lr=hyper_params['max_lr'],
+                         step_size_up=int(hyper_params['cycle_peak'] * num_batches),
+                         step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
+                         cycle_momentum=False
+                         )
 
     epoch = 1
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
@@ -102,8 +103,6 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
     # ---- Start Training
     while epoch <= num_epochs:
-
-        print("------> Epoch {}".format(epoch))
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
         final_train_loss = 0
@@ -117,8 +116,7 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
             train_loss = criterion(output, targetx)
             train_loss.backward()
             optimizer.step()
-            if not args.overfit:
-                scheduler.step()
+            scheduler.step()
             final_train_loss = train_loss
 
         # ---- Testing
@@ -139,8 +137,8 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
         # Logging test results
         print(
-            "    Epoch {} Completed: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
-                .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
+            "    Epoch {} Completed: gen_gap = {:1.6f}  |  train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
+                .format(epoch, final_val_loss - final_train_loss, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
 
         alpha_primes = []
@@ -174,8 +172,8 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
                              'var_nsamples': args.var_n_samples,
                              'k': curr_k,
                              'p': curr_p,
-                             'perm_method': perm_method
+                             'perm_method': perm_method,
+                             'gen_gap': float(final_val_loss - final_train_loss)
                              })
 
         epoch += 1
-        print()
