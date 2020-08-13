@@ -60,7 +60,7 @@ def get_actfuns(actfun):
 
 
 def get_num_params(args):
-    if args.model == 'nn':
+    if args.model == 'nn' or args.model == 'mlp':
         if args.var_n_params:
             num_params = [1000000, 800000, 600000, 400000, 200000]
         elif args.var_n_params_log:
@@ -101,11 +101,12 @@ def get_perm_methods(perm_method):
     return perm_methods
 
 
-def get_pk_vals(args):
+def get_pkg_vals(args):
     if args.var_k:
         k_vals = [2, 3, 4, 5, 6]
     else:
-        k_vals = [2]
+        k_vals = [args.k]
+
     if args.var_p:
         p_vals = [1, 2, 3, 4, 5]
     elif args.p_param_eff:
@@ -113,9 +114,14 @@ def get_pk_vals(args):
     elif args.var_perm_method:
         p_vals = [2]
     else:
-        p_vals = [1]
+        p_vals = [args.p]
 
-    return p_vals, k_vals
+    if args.var_g:
+        g_vals = [1, 2, 3, 4, 5]
+    else:
+        g_vals = [args.g]
+
+    return p_vals, k_vals, g_vals
 
 
 def weights_init(m):
@@ -247,7 +253,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       perm_method):
+                       curr_g, perm_method):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
@@ -256,12 +262,12 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Model Type: {} \n"
         "Activation Function: {} \n"
         "Hyper-params: {} \n"
-        "k: {}, p: {}\n"
+        "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Sample Size: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
-                    curr_k, curr_p, perm_method, num_params, sample_size), flush=True
+                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size), flush=True
     )
 
 
@@ -302,23 +308,22 @@ def hook_b(module, input, output):
 # -------------------- Model Utils
 
 
-def get_cnn_num_params(n, in_dim, out_dim, pk_ratio):
+def get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g):
     constraint_func1 = (9 * (in_dim * n[0])) + (
-                9 * pk_ratio * ((n[0] * n[1]) + (n[1] * n[2]) + (n[2] * n[2]) + (n[2] * n[3]) + (n[3] * n[3])))
-    constraint_func2 = (pk_ratio * (int(in_dim / 8) ** 2) * n[3] * n[5]) + (pk_ratio * n[4] * n[5]) + (
-                pk_ratio * n[4] * out_dim)
+                9 * (pk_ratio / g) * ((n[0] * n[1]) + (n[1] * n[2]) + (n[2] * n[2]) + (n[2] * n[3]) + (n[3] * n[3])))
+    constraint_func2 = ((pk_ratio / g) * (int(in_dim / 8) ** 2) * n[3] * n[5]) + ((pk_ratio / g) * n[4] * n[5]) + (
+            (pk_ratio / g) * n[4] * out_dim)
     constraint_func3 = in_dim + np.sum(n) + n[2] + n[3] + out_dim
     return constraint_func1 + constraint_func2 + constraint_func3
 
 
-def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio):
+def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, g):
     n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
     curr_num_params = 0
     while curr_num_params < required_num_params:
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio)
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
         if curr_num_params < required_num_params:
             n *= 2
-
     fac = 2
     dist = curr_num_params - required_num_params
     me = required_num_params * 0.001
@@ -328,7 +333,7 @@ def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio):
             n *= 1/fac
         elif curr_num_params < required_num_params:
             n *= fac
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio)
+        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
         dist = curr_num_params - required_num_params
         if prev_dist * dist < 0:
             fac = fac ** 0.75
@@ -336,7 +341,7 @@ def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio):
     return n.astype(int)
 
 
-def get_pk_ratio(actfun, p, k):
+def get_pk_ratio(actfun, p, k, g):
     if actfun == 'groupsort':
         pk_ratio = p
     elif actfun == 'bin_partition_full':
@@ -348,8 +353,7 @@ def get_pk_ratio(actfun, p, k):
     elif actfun == 'bin_all_nopass_sgm':
         pk_ratio = p * ((2 / k))
     else:
-        pk_ratio = p / k
-
+        pk_ratio = (p / k)
     return pk_ratio
 
 

@@ -17,7 +17,8 @@ import time
 # -------------------- Setting Up & Running Training Function
 
 def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, validation_loader,
-          sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, perm_method='shuffle'):
+          sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1,
+          perm_method='shuffle'):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
@@ -36,16 +37,16 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
     # ---- Initialization
 
     model_params = []
-    if args.model == 'nn':
+    if args.model == 'nn' or args.model == 'mlp':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_dim, output_dim = 784, 10
         elif args.dataset == 'cifar10' or args.dataset == 'svhn':
             input_dim, output_dim = 3072, 10
         elif args.dataset == 'cifar100':
             input_dim, output_dim = 3072, 100
-        model = models.CombinactNN(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
-                                   k=curr_k, p=curr_p, reduce_actfuns=args.reduce_actfuns, num_params=num_params,
-                                   permute_type=perm_method).to(device)
+        model = models.CombinactMLP(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
+                                    k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
+                                    num_params=num_params, permute_type=perm_method).to(device)
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -55,7 +56,7 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
             input_channels, input_dim, output_dim = 3, 32, 100
 
         model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
-                                    num_outputs=output_dim, k=curr_k, p=curr_p, num_params=num_params,
+                                    num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, num_params=num_params,
                                     reduce_actfuns=args.reduce_actfuns, permute_type=perm_method).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
@@ -99,7 +100,8 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
     epoch = 1
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_model_params(model), sample_size, model.k, model.p, perm_method)
+                            util.get_model_params(model), sample_size, model.k, model.p, model.g,
+                            perm_method)
 
     # ---- Start Training
     while epoch <= num_epochs:
@@ -172,6 +174,7 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
                              'var_nsamples': args.var_n_samples,
                              'k': curr_k,
                              'p': curr_p,
+                             'g': curr_g,
                              'perm_method': perm_method,
                              'gen_gap': float(final_val_loss - final_train_loss)
                              })
