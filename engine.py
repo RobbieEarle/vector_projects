@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('--var_p', action='store_true', help='When true, varies p hyper-param')
     parser.add_argument('--var_k', action='store_true', help='When true, varies k hyper-param')
     parser.add_argument('--var_g', action='store_true', help='When true, varies g hyper-param')
-    parser.add_argument('--var_pg', action='store_false', help='When true, varies p and g hyper-params')
+    parser.add_argument('--var_pg', action='store_true', help='When true, varies p and g hyper-params')
     parser.add_argument('--var_perm_method', action='store_true', help='When true, varies permutation method')
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
