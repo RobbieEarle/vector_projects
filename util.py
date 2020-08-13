@@ -44,7 +44,7 @@ def get_actfuns(actfun):
         all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'bin_partition_full',
                        'bin_all_full']
     elif actfun == 'all_pk':
-        all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
+        all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod']
     elif actfun == 'all_pk_new':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'pk_test':
@@ -107,7 +107,7 @@ def get_pkg_vals(args):
     else:
         k_vals = [args.k]
 
-    if args.var_p:
+    if args.var_p or args.var_pg:
         p_vals = [1, 2, 3, 4, 5]
     elif args.p_param_eff:
         p_vals = [2, 3]

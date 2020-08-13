@@ -48,6 +48,10 @@ def setup_experiment(args, outfile_path):
                 for p in p_vals:
                     for k in k_vals:
                         for g in g_vals:
+
+                            if args.var_pg:
+                                g = p
+
                             for perm_method in perm_methods:
 
                                 # ---- Loading Dataset
@@ -76,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=int, default=2, help='Default k value for model')
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
     parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp')  # cnn
+    parser.add_argument('--model', type=str, default='cnn', help='cnn, mlp')  # cnn
     parser.add_argument('--actfun', type=str, default='all')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
@@ -90,6 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('--var_p', action='store_true', help='When true, varies p hyper-param')
     parser.add_argument('--var_k', action='store_true', help='When true, varies k hyper-param')
     parser.add_argument('--var_g', action='store_true', help='When true, varies g hyper-param')
+    parser.add_argument('--var_pg', action='store_false', help='When true, varies p and g hyper-params')
     parser.add_argument('--var_perm_method', action='store_true', help='When true, varies permutation method')
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
