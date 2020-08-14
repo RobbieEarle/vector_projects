@@ -34,19 +34,14 @@ def get_actfuns(actfun):
     if actfun == 'all':
         all_actfuns = ['combinact', 'relu', 'abs', 'max', 'min', 'lse', 'lae', 'l2', 'linf', 'prod', 'signed_geomean',
                        'swishk', 'bin_partition_full', 'bin_all_full']
-    elif actfun == '1d':
-        all_actfuns = ['relu', 'abs']
-    elif actfun == 'old_all':
-        all_actfuns = ['relu', 'abs', 'l2', 'combinact', 'max', 'multi_relu', 'l2_lae']
     elif actfun == 'old_high_ord':
         all_actfuns = ['l2', 'combinact', 'max']
-    elif actfun == 'new_all':
-        all_actfuns = ['min', 'lse', 'lae', 'linf', 'prod', 'signed_geomean', 'swishk', 'bin_partition_full',
-                       'bin_all_full']
     elif actfun == 'all_pk':
         all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod']
-    elif actfun == 'all_pk_new':
-        all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
+    elif actfun == 'all_pk_relu':
+        all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
+    elif actfun == 'all_pk_comb_relu':
+        all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'combinact', 'relu']
     elif actfun == 'pk_test':
         all_actfuns = ['l2', 'max', 'relu']
     elif actfun == 'pk_opt':
