@@ -61,7 +61,7 @@ def get_num_params(args):
         if args.var_n_params:
             num_params = [1000000, 800000, 600000, 400000, 200000]
         elif args.var_n_params_log:
-            num_params = [15, 16, 17, 18, 19, 20,]
+            num_params = [15, 16, 17, 18, 19, 20]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
@@ -70,7 +70,7 @@ def get_num_params(args):
         if args.var_n_params:
             num_params = [3000000, 2500000, 2000000, 1500000, 1000000, 500000]
         elif args.var_n_params_log:
-            num_params = [16, 17, 18, 19, 20, 21]
+            num_params = [15, 16, 17, 18, 19, 20]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
@@ -314,7 +314,7 @@ def get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g):
     return constraint_func1 + constraint_func2 + constraint_func3
 
 
-def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, g):
+def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, p, k, g):
     n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
     curr_num_params = 0
     while curr_num_params < required_num_params:
@@ -324,6 +324,7 @@ def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, g):
     fac = 2
     dist = curr_num_params - required_num_params
     me = required_num_params * 0.001
+    adjustments = 0
     while np.abs(dist) > me:
         prev_dist = dist
         if curr_num_params > required_num_params:
@@ -334,6 +335,13 @@ def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, g):
         dist = curr_num_params - required_num_params
         if prev_dist * dist < 0:
             fac = fac ** 0.75
+        if np.abs(dist) <= me and (n[0] * p / k) < 3:
+            adjustments += 1
+            for elem_idx, elem in enumerate(n):
+                if elem_idx != 0:
+                    n[elem_idx] = n[elem_idx - 1] * 2 * (0.75 ** adjustments)
+            curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
+            dist = curr_num_params - required_num_params
 
     return n.astype(int)
 

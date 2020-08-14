@@ -145,7 +145,8 @@ class CombinactCNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
-        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, pk_ratio, self.g)
+        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, pk_ratio,
+                                         self.p, self.k, self.g)
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
@@ -190,14 +191,7 @@ class CombinactCNN(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2)
         ])
 
-        # self.linear_layers = nn.ModuleList([
-        #     nn.Linear(int(post_acts[3]) * (int(input_dim / 8) ** 2), int(pre_acts[5])),
-        #     nn.Linear(int(post_acts[5]), int(pre_acts[4])),
-        #     nn.Linear(int(post_acts[4]), int(num_outputs))
-        # ])
-
         self.linear_layers = nn.ModuleDict()
-        # self.linear_layers['l1'] = nn.Linear(int(post_acts[3]) * (int(input_dim / 8) ** 2), int(pre_acts[5]))
         self.linear_layers['l1'] = nn.ModuleList()
         self.linear_layers['l2'] = nn.ModuleList()
         for group in range(g):
