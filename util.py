@@ -46,7 +46,7 @@ def get_actfuns(actfun):
         all_actfuns = ['l2', 'max', 'relu']
     elif actfun == 'pk_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
-    elif actfun == 'rs_bin':
+    elif actfun == 'bin':
         all_actfuns = ['bin_partition_full', 'bin_partition_nopass', 'bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
     else:
         all_actfuns = [actfun]
