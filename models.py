@@ -47,8 +47,7 @@ class CombinactMLP(nn.Module):
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
-            adj_pre_act = self.k * int(pre_act / self.k)
-            pre_acts[i] = self.g * int(adj_pre_act / self.g)
+            pre_acts[i] = self.k * self.g * int(pre_act / (self.k * self.g))
             if actfun == 'bin_partition_full':
                 post_acts.append(int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
                         1 - self.k))))
@@ -150,8 +149,7 @@ class CombinactCNN(nn.Module):
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):
-            adj_pre_act = self.k * int(pre_act / self.k)
-            pre_acts[i] = self.g * int(adj_pre_act / self.g)
+            pre_acts[i] = self.k * self.g * int(pre_act / (self.k * self.g))
             if actfun == 'bin_partition_full':
                 post_acts.append(int((pre_acts[i] * self.p) + (2 * math.floor((pre_acts[i] * self.p) / (3 * self.k)) * (
                         1 - self.k))))
