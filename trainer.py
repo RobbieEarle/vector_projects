@@ -47,6 +47,7 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
         model = models.CombinactMLP(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
                                     k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
                                     num_params=num_params, permute_type=perm_method).to(device)
+
     elif args.model == 'cnn':
         if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
             input_channels, input_dim, output_dim = 1, 28, 10
@@ -61,6 +62,20 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
+
+    elif args.model == 'resnet':
+        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
+            input_channels, input_dim, output_dim = 1, 28, 10
+        elif args.dataset == 'cifar10' or args.dataset == 'svhn':
+            input_channels, input_dim, output_dim = 3, 32, 10
+        elif args.dataset == 'cifar100':
+            input_channels, input_dim, output_dim = 3, 32, 100
+
+        model = models.ResNet(resnet_ver=args.resnet_ver, actfun=actfun, num_input_channels=input_channels,
+                              num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
+                              permute_type=perm_method).to(device)
+
+        model_params.append({'params': model.conv_layers.parameters()})
 
     model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
     model_params.append({'params': model.linear_layers.parameters()})
@@ -99,9 +114,13 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
                          )
 
     epoch = 1
+    if args.model == 'resnet':
+        resnet_ver = args.resnet_ver
+    else:
+        resnet_ver = None
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method)
+                            perm_method, resnet_ver)
 
     # ---- Start Training
     while epoch <= num_epochs:
@@ -176,7 +195,8 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
                              'p': curr_p,
                              'g': curr_g,
                              'perm_method': perm_method,
-                             'gen_gap': float(final_val_loss - final_train_loss)
+                             'gen_gap': float(final_val_loss - final_train_loss),
+                             'resnet_ver': resnet_ver
                              })
 
         epoch += 1

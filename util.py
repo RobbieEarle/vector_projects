@@ -59,18 +59,18 @@ def get_actfuns(actfun):
 def get_num_params(args):
     if args.model == 'nn' or args.model == 'mlp':
         if args.var_n_params:
-            num_params = [1000000, 800000, 600000, 400000, 200000]
+            num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
         elif args.var_n_params_log:
-            num_params = [15, 16, 17, 18, 19, 20]
+            num_params = [15, 16, 17, 18, 19, 20, 21, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
             num_params = [1000000]
-    elif args.model == 'cnn':
+    elif args.model == 'cnn' or args.model == 'resnet':
         if args.var_n_params:
-            num_params = [3000000, 2500000, 2000000, 1500000, 1000000, 500000]
+            num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
         elif args.var_n_params_log:
-            num_params = [15, 16, 17, 18, 19, 20]
+            num_params = [15, 16, 17, 18, 19, 20, 21, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
@@ -250,20 +250,21 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method):
+                       curr_g, perm_method, resnet_ver):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
         "Data Set: {} \n"
         "Outfile Path: {} \n"
         "Model Type: {} \n"
+        "ResNet Version: {}\n"
         "Activation Function: {} \n"
         "Hyper-params: {} \n"
         "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Sample Size: {}\n\n"
-            .format(seed, dataset, outfile_path, curr_model, curr_actfun, hyper_params,
+            .format(seed, dataset, outfile_path, curr_model, resnet_ver, curr_actfun, hyper_params,
                     curr_k, curr_p, curr_g, perm_method, num_params, sample_size), flush=True
     )
 

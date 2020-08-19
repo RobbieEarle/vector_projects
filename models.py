@@ -3,6 +3,7 @@ import torch.utils.data
 import torch.nn as nn
 import activation_functions as actfuns
 import util
+import resnet
 import math
 import numpy as np
 import time
@@ -194,6 +195,7 @@ class CombinactCNN(nn.Module):
         self.linear_layers = nn.ModuleDict()
         self.linear_layers['l1'] = nn.ModuleList()
         self.linear_layers['l2'] = nn.ModuleList()
+
         for group in range(g):
             self.linear_layers['l1'].append(nn.Linear(int(post_acts[3] * (int(input_dim / 8) ** 2) / self.g),
                                                       int(pre_acts[5] / self.g)))
@@ -308,3 +310,20 @@ class CombinactCNN(nn.Module):
             else:
                 all_outputs = torch.cat((all_outputs, curr_outputs), dim=1)
         return all_outputs
+
+
+def ResNet(resnet_ver, actfun,
+           num_input_channels=3,
+           num_outputs=10,
+           k=2, p=1, g=1,
+           alpha_dist="per_cluster",
+           permute_type="shuffle",
+           reduce_actfuns=False):
+
+    return resnet.ResNet(resnet_ver, actfun,
+                         num_input_channels,
+                         num_outputs,
+                         k, p, g,
+                         alpha_dist,
+                         permute_type,
+                         reduce_actfuns)
