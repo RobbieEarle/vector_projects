@@ -37,7 +37,7 @@ class CombinactMLP(nn.Module):
         a = 1.25 * (pk_ratio / self.g)
         b = (1.25 * input_dim) + ((pk_ratio / self.g) * output_dim) + 2.25
         c = output_dim - num_params
-
+        
         n2a = (-b + np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
         n2b = (-b - np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
         n2 = np.max([n2a, n2b])
@@ -146,8 +146,8 @@ class CombinactCNN(nn.Module):
         self.reduce_actfuns = reduce_actfuns
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
-        pre_acts = util.calc_cnn_preacts(num_params, input_dim, num_outputs, pk_ratio,
-                                         self.p, self.k, self.g)
+        pre_acts = util.calc_cnn_preacts(num_params, num_input_channels, num_outputs, input_dim,
+                                         pk_ratio, self.p, self.k, self.g)
 
         post_acts = []
         for i, pre_act in enumerate(pre_acts):

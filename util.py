@@ -61,7 +61,7 @@ def get_num_params(args):
         if args.var_n_params:
             num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
         elif args.var_n_params_log:
-            num_params = [15, 16, 17, 18, 19, 20, 21, 22]
+            num_params = [14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
@@ -70,7 +70,7 @@ def get_num_params(args):
         if args.var_n_params:
             num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
         elif args.var_n_params_log:
-            num_params = [15, 16, 17, 18, 19, 20, 21, 22]
+            num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         else:
@@ -305,44 +305,48 @@ def hook_b(module, input, output):
 
 # -------------------- Model Utils
 
-
-def get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g):
-    constraint_func1 = (9 * (in_dim * n[0])) + (
-                9 * (pk_ratio / g) * ((n[0] * n[1]) + (n[1] * n[2]) + (n[2] * n[2]) + (n[2] * n[3]) + (n[3] * n[3])))
-    constraint_func2 = ((pk_ratio / g) * (int(in_dim / 8) ** 2) * n[3] * n[5]) + ((pk_ratio / g) * n[4] * n[5]) + (
-            (pk_ratio / g) * n[4] * out_dim)
-    constraint_func3 = in_dim + np.sum(n) + n[2] + n[3] + out_dim
-    return constraint_func1 + constraint_func2 + constraint_func3
+def conv_layer_params(kernel, in_dim, out_dim):
+    return (kernel * in_dim + 1) * out_dim
 
 
-def calc_cnn_preacts(required_num_params, in_dim, out_dim, pk_ratio, p, k, g):
-    n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
-    curr_num_params = 0
-    while curr_num_params < required_num_params:
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
-        if curr_num_params < required_num_params:
-            n *= 2
+def linear_layer_params(in_dim, out_dim):
+    return (in_dim + 1) * out_dim
+
+
+def get_cnn_num_params(n, in_channels, out_channels, in_dim, pk_ratio, g):
+    total_params = conv_layer_params(9, in_channels, n[0])
+    total_params += conv_layer_params(9, (pk_ratio / g) * n[0], n[1])
+    total_params += conv_layer_params(9, (pk_ratio / g) * n[1], n[2])
+    total_params += conv_layer_params(9, (pk_ratio / g) * n[2], n[2])
+    total_params += conv_layer_params(9, (pk_ratio / g) * n[2], n[3])
+    total_params += conv_layer_params(9, (pk_ratio / g) * n[3], n[3])
+
+    for group in range(g):
+        total_params += linear_layer_params(int((n[3] * pk_ratio) * (int(in_dim / 8) ** 2) / g), int(n[5] / g))
+        total_params += linear_layer_params(int(n[5] * (pk_ratio / g)), int(n[4] / g))
+    total_params += linear_layer_params(int(n[4] * (pk_ratio / g)), int(out_channels))
+    return total_params
+
+
+def calc_cnn_preacts(required_num_params, in_channels, out_channels, in_dim, pk_ratio, p, k, g):
+    if required_num_params > 100000:
+        n = np.array([2.0, 4.0, 8.0, 16.0, 32.0, 64.0])
+    else:
+        n = np.array([4.0, 4.0, 4.0, 6.0, 6.0, 8.0])
     fac = 2
+    curr_num_params = get_cnn_num_params(n, in_channels, out_channels, in_dim, pk_ratio, g)
     dist = curr_num_params - required_num_params
     me = required_num_params * 0.001
-    adjustments = 0
-    while np.abs(dist) > me:
+    while np.abs(dist) > (200 + me):
         prev_dist = dist
         if curr_num_params > required_num_params:
             n *= 1/fac
         elif curr_num_params < required_num_params:
             n *= fac
-        curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
+        curr_num_params = get_cnn_num_params(n, in_channels, out_channels, in_dim, pk_ratio, g)
         dist = curr_num_params - required_num_params
         if prev_dist * dist < 0:
             fac = fac ** 0.75
-        if np.abs(dist) <= me and (n[0] * p / k) < 3:
-            adjustments += 1
-            for elem_idx, elem in enumerate(n):
-                if elem_idx != 0:
-                    n[elem_idx] = n[elem_idx - 1] * 2 * (0.75 ** adjustments)
-            curr_num_params = get_cnn_num_params(n, in_dim, out_dim, pk_ratio, g)
-            dist = curr_num_params - required_num_params
 
     return n.astype(int)
 
