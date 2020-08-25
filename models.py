@@ -37,7 +37,7 @@ class CombinactMLP(nn.Module):
         a = 1.25 * (pk_ratio / self.g)
         b = (1.25 * input_dim) + ((pk_ratio / self.g) * output_dim) + 2.25
         c = output_dim - num_params
-        
+
         n2a = (-b + np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
         n2b = (-b - np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)
         n2 = np.max([n2a, n2b])

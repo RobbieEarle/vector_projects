@@ -2,6 +2,7 @@
 #SBATCH -p p100                # partition - should be gpu on MaRS (q), and either p100 or t4 on Vaughan (vremote1)
 #SBATCH --exclude=gpu053
 #SBATCH --gres=gpu:1           # request GPU(s)
+#SBATCH --qos=nopreemption
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=20:00:00        # max walltime, hh:mm:ss
@@ -14,9 +15,6 @@ source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
 SEED="$SLURM_ARRAY_TASK_ID"
-
-#touch /checkpoint/robearle/${SLURM_JOB_ID}
-#CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
 
 # Debugging outputs
 pwd
