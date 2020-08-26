@@ -43,7 +43,7 @@ def get_actfuns(actfun):
     elif actfun == 'all_pk_comb_relu':
         all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'combinact', 'relu']
     elif actfun == 'pk_test':
-        all_actfuns = ['l2', 'max', 'relu']
+        all_actfuns = ['l2', 'max', 'relu', 'combinact']
     elif actfun == 'pk_opt':
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod']
     elif actfun == 'e3_peff3_log':
