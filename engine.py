@@ -100,7 +100,8 @@ if __name__ == '__main__':
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
     parser.add_argument('--no_weight_decay', action='store_true', help='When true, optimizer doesnt use weight decay')
-    parser.add_argument('--bin_redo', action='store_true', help='Tells network we are running second bin experiment')
+    parser.add_argument('--bin_redo', action='store_true', help='Running second bin experiment')
+    parser.add_argument('--bin_peff_redo', action='store_true', help='Running second bin peff experiment')
     args = parser.parse_args()
 
     extras = util.get_extras(args)

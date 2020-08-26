@@ -62,7 +62,15 @@ def get_num_params(args, actfun):
             num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
 
         elif args.bin_redo:
-            num_params = [10, 12, 14, 22, 24, 26]
+            num_params = [14, 22, 24, 26]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
+
+        elif args.bin_peff_redo:
+            if args.seed <= 15:
+                num_params = [14, 22, 24, 26]
+            else:
+                num_params = [14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
