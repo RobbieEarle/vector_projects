@@ -23,7 +23,6 @@ def setup_experiment(args, outfile_path):
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     all_actfuns = util.get_actfuns(args.actfun)
-    num_params = util.get_num_params(args)
     train_samples = util.get_train_samples(args)
     p_vals, k_vals, g_vals = util.get_pkg_vals(args)
     perm_methods = util.get_perm_methods(args.var_perm_method)
@@ -41,6 +40,7 @@ def setup_experiment(args, outfile_path):
     # =========================== Training
     for actfun in all_actfuns:
 
+        num_params = util.get_num_params(args, actfun)
         curr_seed = (args.seed * len(num_params) * len(train_samples))
 
         for curr_num_params in num_params:
@@ -100,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
     parser.add_argument('--no_weight_decay', action='store_true', help='When true, optimizer doesnt use weight decay')
+    parser.add_argument('--bin_redo', action='store_true', help='Tells network we are running second bin experiment')
     args = parser.parse_args()
 
     extras = util.get_extras(args)
