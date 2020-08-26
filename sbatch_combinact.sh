@@ -31,9 +31,9 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset mnist --actfun all_pk_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar10 --actfun all_pk_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar100 --actfun all_pk_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun all_pk_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun all_pk_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun all_pk_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset mnist --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar10 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar100 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
