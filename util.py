@@ -100,7 +100,7 @@ def get_num_params(args, actfun):
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
-        elif args.var_n_params_log:
+        elif args.var_n_params_log or args.bin_peff_redo:
             if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
                 num_params = [12, 14, 16, 18, 20, 22, 24, 26]
             else:
