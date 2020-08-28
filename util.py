@@ -42,6 +42,8 @@ def get_actfuns(actfun):
         all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'all_pk_comb_relu':
         all_actfuns = ['l2', 'max', 'lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'combinact', 'relu']
+    elif actfun == 'e4_peff_intermediate_res':
+        all_actfuns = ['prod', 'combinact', 'relu']
     elif actfun == 'pk_test':
         all_actfuns = ['l2', 'max', 'relu', 'combinact']
     elif actfun == 'pk_opt':
