@@ -105,6 +105,8 @@ def get_num_params(args, actfun):
         elif args.var_n_params_log or args.bin_peff_redo:
             if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
                 num_params = [12, 14, 16, 18, 20, 22, 24, 26]
+            elif actfun == 'combinact':
+                num_params = [10, 12, 14, 16, 18, 20, 22, 24]
             else:
                 num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
@@ -141,12 +143,14 @@ def get_pkg_vals(args):
     else:
         k_vals = [args.k]
 
-    if args.var_p or args.var_pg:
+    if args.var_p:
         p_vals = [1, 2, 3, 4, 5]
     elif args.p_param_eff:
         p_vals = [2, 3]
     elif args.var_perm_method:
         p_vals = [2]
+    elif args.var_pg:
+        p_vals = [6, 7, 8, 9, 10]
     else:
         p_vals = [args.p]
 

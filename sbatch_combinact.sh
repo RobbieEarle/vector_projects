@@ -5,10 +5,10 @@
 #SBATCH --qos=nopreemption
 #SBATCH -c 4                   # number of CPU cores
 #SBATCH --mem=8G               # memory per node
-#SBATCH --time=20:00:00        # max walltime, hh:mm:ss
+#SBATCH --time=30:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-39%8        # array value
-#SBATCH --output=logs/e4_peff_log2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e4_peff_log2
+#SBATCH --output=logs/e5_pg/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e5_pg
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -31,6 +31,9 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset mnist --actfun e4_peff_intermediate_res --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun all_pk_comb_relu --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset mnist --model mlp --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar10 --model mlp --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar100 --model mlp --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset mnist --model cnn --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar10 --model cnn --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar100 --model cnn --var_pg
