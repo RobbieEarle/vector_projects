@@ -64,7 +64,7 @@ def get_num_params(args, actfun):
             num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
 
         elif args.bin_redo:
-            num_params = [14, 22, 24, 26]
+            num_params = [22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
@@ -89,16 +89,10 @@ def get_num_params(args, actfun):
             num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
 
         elif args.bin_redo:
-            if 24 <= args.seed <= 31:
-                if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
-                    num_params = [12, 14, 22, 24, 26]
-                else:
-                    num_params = [10, 12, 14, 22, 24, 26]
+            if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
+                num_params = [12, 14, 16, 18, 20, 22, 24, 26]
             else:
-                if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
-                    num_params = [12, 14, 16, 18, 20, 22, 24, 26]
-                else:
-                    num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
+                num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 

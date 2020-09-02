@@ -7,8 +7,8 @@
 #SBATCH --mem=8G               # memory per node
 #SBATCH --time=30:00:00        # max walltime, hh:mm:ss
 #SBATCH --array=0-39%8        # array value
-#SBATCH --output=logs/e5_pg/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e5_pg
+#SBATCH --output=logs/bin3_nparam/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=bin3_nparam
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -31,9 +31,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset mnist --model mlp --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar10 --model mlp --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar100 --model mlp --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset mnist --model cnn --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar10 --model cnn --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --actfun all_pk --dataset cifar100 --model cnn --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar10 --actfun bin --bin_redo
+python engine.py --seed $SEED --save_path $SAVE_PATH --model mlp --dataset cifar100 --actfun bin --bin_redo
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar10 --actfun bin --bin_redo
+python engine.py --seed $SEED --save_path $SAVE_PATH --model cnn --dataset cifar100 --actfun bin --bin_redo
