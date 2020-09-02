@@ -100,9 +100,9 @@ def get_num_params(args, actfun):
             if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
                 num_params = [12, 14, 16, 18, 20, 22, 24, 26]
             elif actfun == 'combinact':
-                num_params = [10, 12, 14, 16, 18, 20, 22, 24]
+                num_params = [12, 14, 16, 18, 20, 22, 24]
             else:
-                num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
+                num_params = [12, 14, 16, 18, 20, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
