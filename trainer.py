@@ -161,7 +161,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                         'p': curr_p, 'k': curr_k, 'g': curr_g,
                         'perm_method': perm_method
                         }, checkpoint_location)
-            print("*** SAVED CHECKPOINT ***")
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
