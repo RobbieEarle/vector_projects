@@ -44,8 +44,6 @@ def setup_experiment(args, outfile_path):
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writeheader()
 
-    print(args.model, args.dataset, args.nparam_redo)
-
     # =========================== Training
     for actfun in all_actfuns:
 
