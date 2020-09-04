@@ -35,5 +35,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk_comb_relu --var_pg_mlp
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk_comb_relu --var_pg_cnn
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk --var_pg_mlp
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk --var_pg_cnn
