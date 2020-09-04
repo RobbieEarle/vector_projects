@@ -148,8 +148,10 @@ def get_pkg_vals(args):
         p_vals = [2, 3]
     elif args.var_perm_method:
         p_vals = [2]
-    elif args.var_pg:
-        p_vals = [6, 7, 8, 9, 10]
+    elif args.var_pg_mlp:
+        p_vals = [12, 14, 16]
+    elif args.var_pg_cnn:
+        p_vals = [6, 8, 10, 12, 14, 16]
     else:
         p_vals = [args.p]
 
@@ -365,6 +367,7 @@ def get_cnn_num_params(n, in_channels, out_channels, in_dim, pk_ratio, g):
         total_params += linear_layer_params(int((n[3] * pk_ratio) * (int(in_dim / 8) ** 2) / g), int(n[5] / g))
         total_params += linear_layer_params(int(n[5] * (pk_ratio / g)), int(n[4] / g))
     total_params += linear_layer_params(int(n[4] * (pk_ratio / g)), int(out_channels))
+
     return total_params
 
 
@@ -376,7 +379,7 @@ def calc_cnn_preacts(required_num_params, in_channels, out_channels, in_dim, pk_
     fac = 2
     curr_num_params = get_cnn_num_params(n, in_channels, out_channels, in_dim, pk_ratio, g)
     dist = curr_num_params - required_num_params
-    me = required_num_params * 0.001
+    me = required_num_params * 0.01
     while np.abs(dist) > (200 + me):
         prev_dist = dist
         if curr_num_params > required_num_params:

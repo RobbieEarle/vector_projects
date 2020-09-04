@@ -68,7 +68,7 @@ def setup_experiment(args, outfile_path):
                     for k in k_vals:
                         for g in g_vals:
 
-                            if args.var_pg:
+                            if args.var_pg or args.var_pg_mlp or args.var_pg_cnn:
                                 g = p
 
                             for perm_method in perm_methods:
@@ -126,6 +126,8 @@ if __name__ == '__main__':
     parser.add_argument('--bin_redo', action='store_true', help='')
     parser.add_argument('--bin_peff_redo', action='store_true', help='')
     parser.add_argument('--nparam_redo', action='store_true', help='')
+    parser.add_argument('--var_pg_mlp', action='store_true', help='')
+    parser.add_argument('--var_pg_cnn', action='store_true', help='')
     args = parser.parse_args()
 
     extras = util.get_extras(args)
