@@ -128,10 +128,10 @@ class PreActBottleneck(nn.Module):
         self.bn1 = nn.BatchNorm2d(in_planes)
         self.conv1 = nn.Conv2d(post_act_in_planes, planes, kernel_size=1, bias=False, groups=self.g)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(post_act_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False,
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False,
                                groups=self.g)
         self.bn3 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(post_act_planes, self.expansion * planes, kernel_size=1, bias=False, groups=self.g)
+        self.conv3 = nn.Conv2d(planes, self.expansion * planes, kernel_size=1, bias=False, groups=self.g)
 
         self.conv_layers = nn.ModuleList([self.conv1, self.conv2, self.conv3])
         self.batch_norms = nn.ModuleList([self.bn1, self.bn2, self.bn3])
@@ -279,7 +279,10 @@ def ResNet(resnet_ver,
            k=2, p=1, g=1,
            alpha_dist="per_cluster",
            permute_type="shuffle",
-           reduce_actfuns=False):
+           reduce_actfuns=False,
+           wide=False):
+    #
+    # if wide == True:
 
     if resnet_ver == 18:
         block = PreActBlock

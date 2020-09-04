@@ -16,12 +16,13 @@ import time
 
 # -------------------- Setting Up & Running Training Function
 
-def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, validation_loader,
-          sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1,
+def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path, fieldnames, train_loader,
+          validation_loader, sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1,
           perm_method='shuffle'):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
+    :param checkpoint: current checkpoint
     :param actfun: activation function currently being used
     :param curr_seed: seed being used by current job
     :param outfile_path: path to save outputs from training session
@@ -118,12 +119,50 @@ def train(args, actfun, curr_seed, outfile_path, fieldnames, train_loader, valid
         resnet_ver = args.resnet_ver
     else:
         resnet_ver = None
+
+    if checkpoint is not None:
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
+        epoch = checkpoint['epoch']
+        model.to(device)
+        print("*** LOADED CHECKPOINT ***"
+              "\n{}"
+              "\nSeed: {}"
+              "\nEpoch: {}"
+              "\nActfun: {}"
+              "\nNum Params: {}"
+              "\nSample Size: {}"
+              "\np: {}"
+              "\nk: {}"
+              "\ng: {}"
+              "\nperm_method: {}".format(checkpoint_location, checkpoint['curr_seed'],
+                                         checkpoint['epoch'], checkpoint['actfun'],
+                                         checkpoint['num_params'], checkpoint['sample_size'],
+                                         checkpoint['p'], checkpoint['k'], checkpoint['g'],
+                                         checkpoint['perm_method']))
+
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
                             perm_method, resnet_ver)
 
     # ---- Start Training
     while epoch <= num_epochs:
+
+        if args.check_path != '':
+            torch.save({'state_dict': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
+                        'curr_seed': curr_seed,
+                        'epoch': epoch,
+                        'actfun': actfun,
+                        'num_params': num_params,
+                        'sample_size': sample_size,
+                        'p': curr_p, 'k': curr_k, 'g': curr_g,
+                        'perm_method': perm_method
+                        }, checkpoint_location)
+            print("*** SAVED CHECKPOINT ***")
+
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
         final_train_loss = 0

@@ -8,6 +8,10 @@ import csv
 import trainer
 
 
+def retrieve_checkpoint(curr_entry, full_arr):
+    return full_arr[full_arr.index(curr_entry):]
+
+
 def setup_experiment(args, outfile_path):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
@@ -22,26 +26,41 @@ def setup_experiment(args, outfile_path):
     device = torch.device("cuda" if use_cuda else "cpu")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    all_actfuns = util.get_actfuns(args.actfun)
-    train_samples = util.get_train_samples(args)
-    p_vals, k_vals, g_vals = util.get_pkg_vals(args)
-    perm_methods = util.get_perm_methods(args.var_perm_method)
-
     # =========================== Creating new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'resnet_ver']
 
-    with open(outfile_path, mode='w') as out_file:
-        writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-        writer.writeheader()
+    checkpoint_location = os.path.join(args.check_path, "cp_{}_{}_{}.pth".format(args.seed, args.model, args.dataset))
+    checkpoint = None
+
+    all_actfuns = util.get_actfuns(args.actfun)
+    if os.path.exists(checkpoint_location):
+        checkpoint = torch.load(checkpoint_location)
+        all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
+    else:
+        with open(outfile_path, mode='w') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+            writer.writeheader()
 
     # =========================== Training
     for actfun in all_actfuns:
 
         num_params = util.get_num_params(args, actfun)
-        curr_seed = (args.seed * len(num_params) * len(train_samples))
+        train_samples = util.get_train_samples(args)
+        p_vals, k_vals, g_vals = util.get_pkg_vals(args)
+        perm_methods = util.get_perm_methods(args.var_perm_method)
+        curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
+            g_vals) * len(perm_methods))
+        if checkpoint is not None:
+            num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
+            train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
+            p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
+            k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
+            g_vals = retrieve_checkpoint(checkpoint['g'], g_vals)
+            perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
+            curr_seed = checkpoint['curr_seed']
 
         for curr_num_params in num_params:
             for curr_sample_size in train_samples:
@@ -54,6 +73,8 @@ def setup_experiment(args, outfile_path):
 
                             for perm_method in perm_methods:
 
+                                util.seed_all(curr_seed)
+
                                 # ---- Loading Dataset
                                 print()
                                 train_loader, validation_loader, sample_size, batch_size = util.load_dataset(args.dataset,
@@ -62,13 +83,13 @@ def setup_experiment(args, outfile_path):
                                                                                                              sample_size=curr_sample_size,
                                                                                                              kwargs=kwargs)
                                 # ---- Begin training model
-                                util.seed_all(curr_seed)
-                                trainer.train(args, actfun, curr_seed, outfile_path, fieldnames,
-                                              train_loader, validation_loader, sample_size, batch_size, device,
-                                              num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
+                                trainer.train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path,
+                                              fieldnames, train_loader, validation_loader, sample_size, batch_size,
+                                              device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
                                               perm_method=perm_method)
                                 print()
 
+                                checkpoint = None
                                 curr_seed += 1
 
 
@@ -88,6 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
@@ -100,8 +122,10 @@ if __name__ == '__main__':
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
     parser.add_argument('--no_weight_decay', action='store_true', help='When true, optimizer doesnt use weight decay')
-    parser.add_argument('--bin_redo', action='store_true', help='Running second bin experiment')
-    parser.add_argument('--bin_peff_redo', action='store_true', help='Running second bin peff experiment')
+
+    parser.add_argument('--bin_redo', action='store_true', help='')
+    parser.add_argument('--bin_peff_redo', action='store_true', help='')
+    parser.add_argument('--nparam_redo', action='store_true', help='')
     args = parser.parse_args()
 
     extras = util.get_extras(args)
