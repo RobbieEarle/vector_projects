@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -p t4v2
+#SBATCH --exclude=gpu102
 #SBATCH --gres=gpu:1                        # request GPU(s)
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
@@ -7,6 +8,7 @@
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-39%8                      # array value
 #SBATCH --output=logs/e5_nparam/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e5_nparam
 
 source ~/.bashrc
 source activate ~/venvs/combinact
