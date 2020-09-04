@@ -36,4 +36,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --dataset $DATASET --actfun all_pk_relu --nparam_redo
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --dataset $DATASET --actfun all_pk_comb_relu --var_n_params_log
