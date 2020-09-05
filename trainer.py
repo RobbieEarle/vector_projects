@@ -209,6 +209,38 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             alpha_primes.append(curr_alpha_primes)
             alphas.append(curr_alphas)
 
+        eval_train_loss = 0
+        eval_val_loss = 0
+        eval_train_acc = 0
+        eval_val_acc = 0
+        if epoch == num_epochs:
+            with torch.no_grad():
+                total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+                for batch_idx, (x, targetx) in enumerate(train_loader):
+                    x, targetx = x.to(device), targetx.to(device)
+                    output = model(x)
+                    train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
+                    _, prediction = torch.max(output.data, 1)
+                    num_correct += torch.sum(prediction == targetx.data)
+                    num_total += len(prediction)
+                eval_train_loss = total_train_loss / n
+                eval_train_acc = num_correct * 1.0 / num_total
+
+                total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
+                for batch_idx2, (y, targety) in enumerate(validation_loader):
+                    y, targety = y.to(device), targety.to(device)
+                    output = model(y)
+                    val_loss = criterion(output, targety)
+                    total_val_loss += val_loss
+                    n += 1
+                    _, prediction = torch.max(output.data, 1)
+                    num_correct += torch.sum(prediction == targety.data)
+                    num_total += len(prediction)
+                eval_val_loss = total_val_loss / n
+                eval_val_acc = num_correct * 1.0 / num_total
+
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
@@ -234,7 +266,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'g': curr_g,
                              'perm_method': perm_method,
                              'gen_gap': float(final_val_loss - final_train_loss),
-                             'resnet_ver': resnet_ver
+                             'resnet_ver': resnet_ver,
+                             'eval_train_loss': float(eval_train_loss),
+                             'eval_val_loss': float(eval_val_loss),
+                             'eval_train_acc': float(eval_train_acc),
+                             'eval_val_acc': float(eval_val_acc)
                              })
 
         epoch += 1

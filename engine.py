@@ -30,7 +30,8 @@ def setup_experiment(args, outfile_path):
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                  'gen_gap', 'resnet_ver']
+                  'gen_gap', 'resnet_ver', 'eval_train_loss', 'eval_val_loss', 'eval_train_acc',
+                  'eval_val_acc']
 
     checkpoint_location = os.path.join(args.check_path, "cp_{}_{}_{}.pth".format(args.seed, args.model, args.dataset))
     checkpoint = None
