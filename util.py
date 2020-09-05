@@ -52,6 +52,8 @@ def get_actfuns(actfun):
         all_actfuns = ['lae', 'signed_geomean', 'linf', 'swishk', 'prod', 'relu']
     elif actfun == 'bin':
         all_actfuns = ['bin_partition_full', 'bin_partition_nopass', 'bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
+    elif actfun == 'bin_duplicate':
+        all_actfuns = ['bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
     else:
         all_actfuns = [actfun]
 
@@ -62,19 +64,6 @@ def get_num_params(args, actfun):
     if args.model == 'nn' or args.model == 'mlp':
         if args.var_n_params:
             num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
-
-        elif args.bin_redo:
-            num_params = [22, 24, 26]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-
-        elif args.bin_peff_redo:
-            if args.seed <= 15:
-                num_params = [14, 22, 24, 26]
-            else:
-                num_params = [14, 16, 18, 20, 22, 24, 26]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
 
         elif args.nparam_redo:
             num_params = [14, 22, 24, 26]
@@ -94,14 +83,11 @@ def get_num_params(args, actfun):
             num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
 
         elif args.bin_redo:
-            if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
-                num_params = [12, 14, 16, 18, 20, 22, 24, 26]
-            else:
-                num_params = [10, 12, 14, 16, 18, 20, 22, 24, 26]
+            num_params = [12, 14, 22, 24, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
-        elif args.var_n_params_log or args.bin_peff_redo:
+        elif args.var_n_params_log:
             if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
                 num_params = [12, 14, 16, 18, 20, 22, 24, 26]
             elif actfun == 'combinact':
