@@ -88,9 +88,7 @@ def get_num_params(args, actfun):
                 num_params[i] = 2 ** param
 
         elif args.var_n_params_log:
-            if actfun == 'bin_partition_full' or actfun == 'bin_partition_nopass':
-                num_params = [12, 14, 16, 18, 20, 22, 24, 26]
-            elif actfun == 'combinact':
+            if actfun == 'combinact':
                 num_params = [12, 14, 16, 18, 20, 22, 24]
             else:
                 num_params = [12, 14, 16, 18, 20, 22, 24, 26]
