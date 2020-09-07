@@ -54,6 +54,8 @@ def get_actfuns(actfun):
         all_actfuns = ['bin_partition_full', 'bin_partition_nopass', 'bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
     elif actfun == 'bin_duplicate':
         all_actfuns = ['bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
+    elif actfun == 'pg_redo':
+        all_actfuns = ['linf', 'swishk', 'prod']
     else:
         all_actfuns = [actfun]
 
