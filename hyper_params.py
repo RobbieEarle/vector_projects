@@ -1,26 +1,63 @@
 import numpy as np
+import hyper_params_nparam as nparam
 
 
-def get_hyper_params(model, dataset, actfun, rng=None):
+def get_hyper_params(model, dataset, actfun, rng=None, exp='', p=1):
 
     if model == 'nn' or model == 'mlp':
         if dataset == 'mnist':
-            return nn_mnist(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.nn_mnist_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.nn_mnist_p3(rng)[actfun]
+            else:
+                return nn_mnist(rng)[actfun]
         elif dataset == 'cifar10':
-            return nn_cifar10(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.nn_cifar10_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.nn_cifar10_p3(rng)[actfun]
+            else:
+                return nn_cifar10(rng)[actfun]
         elif dataset == 'cifar100':
-            return nn_cifar100(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.nn_cifar100_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.nn_cifar100_p3(rng)[actfun]
+            else:
+                return nn_cifar100(rng)[actfun]
         elif dataset == 'fashion_mnist':
             return nn_fashion_mnist(rng)[actfun]
         elif dataset == 'svhn':
             return nn_svhn(rng)[actfun]
     elif model == 'cnn' or model == 'resnet':
         if dataset == 'mnist':
-            return cnn_mnist(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.cnn_mnist_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.cnn_mnist_p3(rng)[actfun]
+            else:
+                return cnn_mnist(rng)[actfun]
         elif dataset == 'cifar10':
-            return cnn_cifar10(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.cnn_cifar10_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.cnn_cifar10_p3(rng)[actfun]
+            else:
+                return cnn_cifar10(rng)[actfun]
         elif dataset == 'cifar100':
-            return cnn_cifar100(rng)[actfun]
+            if exp == 'nparam':
+                if p == 1:
+                    return nparam.cnn_cifar100_p1(rng)[actfun]
+                elif p == 3:
+                    return nparam.cnn_cifar100_p3(rng)[actfun]
+            else:
+                return cnn_cifar100(rng)[actfun]
         elif dataset == 'fashion_mnist':
             return cnn_fashion_mnist(rng)[actfun]
         elif dataset == 'svhn':

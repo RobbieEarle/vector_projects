@@ -101,6 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--p', type=int, default=1, help='Default p value for model')
     parser.add_argument('--k', type=int, default=2, help='Default k value for model')
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
+    parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=50, help='Which version of ResNet to use')
     parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
     parser.add_argument('--model', type=str, default='cnn', help='cnn, mlp, resnet')  # cnn
@@ -110,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+    parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')

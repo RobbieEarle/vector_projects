@@ -77,8 +77,11 @@ def get_num_params(args, actfun):
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
-        else:
+        elif args.num_params == 0:
             num_params = [1000000]
+
+        else:
+            num_params = [args.num_params]
 
     elif args.model == 'cnn' or args.model == 'resnet':
         if args.var_n_params:
@@ -97,8 +100,11 @@ def get_num_params(args, actfun):
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
-        else:
+        elif args.num_params == 0:
             num_params = [3000000]
+
+        else:
+            num_params = [args.num_params]
 
     return num_params
 
