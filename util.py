@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 import activation_functions as actfuns
+from auto_augment import CIFAR10Policy
+from cutout import Cutout
 
 
 # -------------------- Training Utils
@@ -468,11 +470,13 @@ def permute(x, method, offset, num_groups=2, shuffle_map=None):
         return x[:, shuffle_map, ...]
 
 
-def load_dataset(dataset,
-                 seed=0,
-                 batch_size=None,
-                 sample_size=60000,
-                 kwargs=None):
+def load_dataset(
+        model,
+        dataset,
+        seed=0,
+        batch_size=None,
+        sample_size=60000,
+        kwargs=None):
 
     seed_all(seed)
 
@@ -503,7 +507,15 @@ def load_dataset(dataset,
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar10':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        all_trans = []
+        if model == 'resnet':
+            all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
+            all_trans.append(transforms.RandomHorizontalFlip())
+            all_trans.append(CIFAR10Policy())
+            # all_trans.append(Cutout(n_holes=1, length=16))
+        all_trans.append(transforms.ToTensor())
+        all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        trans = transforms.Compose(all_trans)
         train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans)
 
@@ -516,7 +528,13 @@ def load_dataset(dataset,
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar100':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        all_trans = [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        if model == 'resnet':
+            all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
+            all_trans.append(transforms.RandomHorizontalFlip())
+            all_trans.append(CIFAR10Policy())
+            all_trans.append(Cutout(n_holes=1, length=16))
+        trans = transforms.Compose(all_trans)
         train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans)
 

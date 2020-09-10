@@ -280,9 +280,7 @@ def ResNet(resnet_ver,
            alpha_dist="per_cluster",
            permute_type="shuffle",
            reduce_actfuns=False,
-           wide=False):
-    #
-    # if wide == True:
+           width=1):
 
     if resnet_ver == 18:
         block = PreActBlock

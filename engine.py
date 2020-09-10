@@ -78,7 +78,8 @@ def setup_experiment(args, outfile_path):
 
                                 # ---- Loading Dataset
                                 print()
-                                train_loader, validation_loader, sample_size, batch_size = util.load_dataset(args.dataset,
+                                train_loader, validation_loader, sample_size, batch_size = util.load_dataset(args.model,
+                                                                                                             args.dataset,
                                                                                                              seed=curr_seed,
                                                                                                              batch_size=args.batch_size,
                                                                                                              sample_size=curr_sample_size,
@@ -103,9 +104,9 @@ if __name__ == '__main__':
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=50, help='Which version of ResNet to use')
-    parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--model', type=str, default='cnn', help='cnn, mlp, resnet')  # cnn
-    parser.add_argument('--actfun', type=str, default='all')  # all
+    parser.add_argument('--dataset', type=str, default='cifar10', help='mnist, cifar10, cifar100')  # mnist
+    parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
+    parser.add_argument('--actfun', type=str, default='max')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
