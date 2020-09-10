@@ -56,6 +56,8 @@ def get_actfuns(actfun):
         all_actfuns = ['bin_all_full', 'bin_all_nopass', 'bin_all_nopass_sgm']
     elif actfun == 'pg_redo':
         all_actfuns = ['linf', 'swishk', 'prod']
+    elif actfun == 'rs_nparam':
+        all_actfuns = ['max', 'relu', 'swishk', 'l2']
     else:
         all_actfuns = [actfun]
 

@@ -7,8 +7,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-95%8                      # array value
-#SBATCH --output=logs/rands_nparam/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rands_nparam
+#SBATCH --output=logs/rands_nparam2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rands_nparam2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -36,8 +36,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset cifar10 --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset cifar100 --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset cifar10 --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset cifar100 --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
