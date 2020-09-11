@@ -5,10 +5,10 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
+#SBATCH --time=20:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-39%8                      # array value
-#SBATCH --output=logs/e6_pg/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e6_pg
+#SBATCH --output=logs/e6_overfit/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e6_overfit
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -35,5 +35,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk --var_n_params_log --var_pg
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk --var_n_params_log --var_pg
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 0.1
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 0.1
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 10
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 10

@@ -97,8 +97,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         num_epochs = 50
         hyper_params['cycle_peak'] = 0.35
 
-    if args.no_weight_decay:
-        hyper_params['adam_wd'] = 0
+    hyper_params['adam_wd'] *= args.wd
 
     optimizer = optim.Adam(model_params,
                            lr=10 ** -8,

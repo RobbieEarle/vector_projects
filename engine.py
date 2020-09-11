@@ -113,6 +113,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
     parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+    parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
@@ -126,7 +127,6 @@ if __name__ == '__main__':
     parser.add_argument('--var_perm_method', action='store_true', help='When true, varies permutation method')
     parser.add_argument('--overfit', action='store_true', help='When true, causes model to overfit')
     parser.add_argument('--p_param_eff', action='store_true', help='When true, varies p and number params')
-    parser.add_argument('--no_weight_decay', action='store_true', help='When true, optimizer doesnt use weight decay')
 
     parser.add_argument('--bin_redo', action='store_true', help='')
     parser.add_argument('--bin_peff_redo', action='store_true', help='')
