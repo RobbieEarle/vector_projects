@@ -131,8 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--bin_redo', action='store_true', help='')
     parser.add_argument('--bin_peff_redo', action='store_true', help='')
     parser.add_argument('--nparam_redo', action='store_true', help='')
-    parser.add_argument('--var_pg_mlp', action='store_true', help='')
-    parser.add_argument('--var_pg_cnn', action='store_true', help='')
+    parser.add_argument('--var_pg', action='store_true', help='')
     args = parser.parse_args()
 
     extras = util.get_extras(args)
