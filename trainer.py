@@ -72,9 +72,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         elif args.dataset == 'cifar100':
             input_channels, input_dim, output_dim = 3, 32, 100
 
-        model = models.ResNet(resnet_ver=args.resnet_ver, actfun=actfun, num_input_channels=input_channels,
-                              num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
-                              permute_type=perm_method).to(device)
+        model = models.ResNet(resnet_ver=args.resnet_ver, actfun=actfun,
+                              num_input_channels=input_channels, num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
+                              permute_type=perm_method, width=args.resnet_width).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
 
@@ -117,8 +117,10 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     epoch = 1
     if args.model == 'resnet':
         resnet_ver = args.resnet_ver
+        resnet_width = args.resnet_width
     else:
         resnet_ver = None
+        resnet_width = None
 
     if checkpoint is not None:
         model.load_state_dict(checkpoint['state_dict'])
@@ -144,7 +146,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver)
+                            perm_method, resnet_ver, resnet_width)
 
     # ---- Start Training
     while epoch <= num_epochs:
@@ -267,6 +269,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'perm_method': perm_method,
                              'gen_gap': float(final_val_loss - final_train_loss),
                              'resnet_ver': resnet_ver,
+                             'resnet_width': resnet_width,
                              'eval_train_loss': float(eval_train_loss),
                              'eval_val_loss': float(eval_val_loss),
                              'eval_train_acc': float(eval_train_acc),

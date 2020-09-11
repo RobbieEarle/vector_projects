@@ -288,7 +288,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method, resnet_ver):
+                       curr_g, perm_method, resnet_ver, resnet_width):
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"
@@ -296,13 +296,14 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Outfile Path: {} \n"
         "Model Type: {} \n"
         "ResNet Version: {}\n"
+        "ResNet Width: {}\n"
         "Activation Function: {} \n"
         "Hyper-params: {} \n"
         "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Sample Size: {}\n\n"
-            .format(seed, dataset, outfile_path, curr_model, resnet_ver, curr_actfun, hyper_params,
+            .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
                     curr_k, curr_p, curr_g, perm_method, num_params, sample_size), flush=True
     )
 
@@ -512,9 +513,12 @@ def load_dataset(
             all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
             all_trans.append(transforms.RandomHorizontalFlip())
             all_trans.append(CIFAR10Policy())
-            # all_trans.append(Cutout(n_holes=1, length=16))
-        all_trans.append(transforms.ToTensor())
-        all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            all_trans.append(transforms.ToTensor())
+            all_trans.append(Cutout(n_holes=1, length=16))
+            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        else:
+            all_trans.append(transforms.ToTensor())
+            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         trans = transforms.Compose(all_trans)
         train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans)
@@ -528,12 +532,17 @@ def load_dataset(
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar100':
-        all_trans = [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        all_trans = []
         if model == 'resnet':
             all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
             all_trans.append(transforms.RandomHorizontalFlip())
             all_trans.append(CIFAR10Policy())
+            all_trans.append(transforms.ToTensor())
             all_trans.append(Cutout(n_holes=1, length=16))
+            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        else:
+            all_trans.append(transforms.ToTensor())
+            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         trans = transforms.Compose(all_trans)
         train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans)

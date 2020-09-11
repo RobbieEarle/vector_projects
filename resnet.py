@@ -16,10 +16,11 @@ class PreActBlock(nn.Module):
     '''Pre-activation version of the BasicBlock.'''
     expansion = 1
 
-    def __init__(self, actfun, p, k, g, permute_type, alpha_dist, reduce_actfuns,
+    def __init__(self, actfun, width, p, k, g, permute_type, alpha_dist, reduce_actfuns,
                  in_planes, planes, stride=1):
         super(PreActBlock, self).__init__()
 
+        assert width == 1, "Width must be 1 for standard block"
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type
@@ -105,7 +106,7 @@ class PreActBottleneck(nn.Module):
     '''Pre-activation version of the original Bottleneck module.'''
     expansion = 4
 
-    def __init__(self, actfun, p, k, g, permute_type, alpha_dist, reduce_actfuns,
+    def __init__(self, actfun, width, p, k, g, permute_type, alpha_dist, reduce_actfuns,
                  in_planes, planes, stride=1):
         super(PreActBottleneck, self).__init__()
 
@@ -119,19 +120,22 @@ class PreActBottleneck(nn.Module):
         if actfun == 'bin_partition_full':
             post_act_in_planes = int((in_planes * self.p) + (2 * math.floor((in_planes * self.p) / (3 * self.k)) * (
                     1 - self.k)))
-            post_act_planes = int((planes * self.p) + (2 * math.floor((planes * self.p) / (3 * self.k)) * (
+            post_act_planes1 = int((planes * self.p) + (2 * math.floor((planes * self.p) / (3 * self.k)) * (
+                    1 - self.k)))
+            post_act_planes2 = int((planes * width * self.p) + (2 * math.floor((planes * width * self.p) / (3 * self.k)) * (
                     1 - self.k)))
         else:
             post_act_in_planes = int(in_planes * pk_ratio)
-            post_act_planes = int(planes * pk_ratio)
+            post_act_planes1 = int(planes * pk_ratio)
+            post_act_planes2 = int(planes * width * pk_ratio)
 
         self.bn1 = nn.BatchNorm2d(in_planes)
         self.conv1 = nn.Conv2d(post_act_in_planes, planes, kernel_size=1, bias=False, groups=self.g)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(post_act_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False,
+        self.conv2 = nn.Conv2d(post_act_planes1, planes * width, kernel_size=3, stride=stride, padding=1, bias=False,
                                groups=self.g)
-        self.bn3 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(post_act_planes, self.expansion * planes, kernel_size=1, bias=False, groups=self.g)
+        self.bn3 = nn.BatchNorm2d(planes * width)
+        self.conv3 = nn.Conv2d(post_act_planes2, self.expansion * planes, kernel_size=1, bias=False, groups=self.g)
 
         self.conv_layers = nn.ModuleList([self.conv1, self.conv2, self.conv3])
         self.batch_norms = nn.ModuleList([self.bn1, self.bn2, self.bn3])
@@ -154,8 +158,8 @@ class PreActBottleneck(nn.Module):
                 actfuns.get_combinact_actfuns(reduce_actfuns))  # Number of actfuns used by combinact
             if alpha_dist == "per_cluster":
                 self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_act_in_planes, self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_act_planes, self.num_combinact_actfuns)))
-                self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_act_planes, self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_act_planes1, self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(post_act_planes2, self.num_combinact_actfuns)))
             if alpha_dist == "per_perm":
                 for layer in range(3):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
@@ -208,7 +212,7 @@ class PreActBottleneck(nn.Module):
 
 
 class PreActResNet(nn.Module):
-    def __init__(self, block, num_blocks,
+    def __init__(self, block, num_blocks, width,
                  actfun,
                  num_input_channels=3,
                  num_outputs=10,
@@ -237,20 +241,20 @@ class PreActResNet(nn.Module):
         self.batch_norms = nn.ModuleList([])
 
         self.all_alpha_primes = nn.ParameterList()
-        self.layer1 = self._make_layer(block, block_sizes[0], num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, block_sizes[1], num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, block_sizes[2], num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, block_sizes[3], num_blocks[3], stride=2)
+        self.layer1 = self._make_layer(block, width, block_sizes[0], num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, width, block_sizes[1], num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, width, block_sizes[2], num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, width, block_sizes[3], num_blocks[3], stride=2)
 
         self.linear_layers = nn.ModuleList([
             nn.Linear(block_sizes[3] * block.expansion, num_outputs)
         ])
 
-    def _make_layer(self, block, planes, num_blocks, stride):
+    def _make_layer(self, block, width, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            curr_layer = block(self.actfun, self.p, self.k, self.g,
+            curr_layer = block(self.actfun, width, self.p, self.k, self.g,
                                self.permute_type, self.alpha_dist, self.reduce_actfuns,
                                self.in_planes, planes, stride)
             self.conv_layers += curr_layer.conv_layers
@@ -298,7 +302,8 @@ def ResNet(resnet_ver,
         block = PreActBottleneck
         num_blocks = [3, 8, 36, 3]
 
-    return PreActResNet(block, num_blocks, actfun,
+    return PreActResNet(block, num_blocks, width,
+                        actfun,
                         num_input_channels,
                         num_outputs,
                         k, p, g,

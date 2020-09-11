@@ -318,7 +318,8 @@ def ResNet(resnet_ver, actfun,
            k=2, p=1, g=1,
            alpha_dist="per_cluster",
            permute_type="shuffle",
-           reduce_actfuns=False):
+           reduce_actfuns=False,
+           width=1):
 
     return resnet.ResNet(resnet_ver, actfun,
                          num_input_channels,
@@ -326,4 +327,5 @@ def ResNet(resnet_ver, actfun,
                          k, p, g,
                          alpha_dist,
                          permute_type,
-                         reduce_actfuns)
+                         reduce_actfuns,
+                         width=width)

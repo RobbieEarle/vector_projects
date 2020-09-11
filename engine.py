@@ -30,8 +30,8 @@ def setup_experiment(args, outfile_path):
     fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                  'gen_gap', 'resnet_ver', 'eval_train_loss', 'eval_val_loss', 'eval_train_acc',
-                  'eval_val_acc']
+                  'gen_gap', 'resnet_ver', 'resnet_width', 'eval_train_loss', 'eval_val_loss',
+                  'eval_train_acc', 'eval_val_acc']
 
     checkpoint_location = os.path.join(args.check_path, "cp_{}_{}_{}.pth".format(args.seed, args.model, args.dataset))
     checkpoint = None
@@ -104,9 +104,10 @@ if __name__ == '__main__':
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=50, help='Which version of ResNet to use')
-    parser.add_argument('--dataset', type=str, default='cifar10', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
-    parser.add_argument('--actfun', type=str, default='max')  # all
+    parser.add_argument('--resnet_width', type=int, default=1, help='How wide to make our ResNet layers')
+    parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
+    parser.add_argument('--model', type=str, default='cnn', help='cnn, mlp, resnet')  # cnn
+    parser.add_argument('--actfun', type=str, default='all')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
@@ -136,13 +137,18 @@ if __name__ == '__main__':
 
     extras = util.get_extras(args)
 
+    if args.model == 'resnet':
+        model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
+    else:
+        model = args.model
+
     out = os.path.join(
         args.save_path,
-        '{}-{}-{}-{}-{}{}.csv'.format(
+        '{}-{}-{}-{}_{}{}.csv'.format(
             datetime.date.today(),
             args.seed,
             args.dataset,
-            args.model,
+            model,
             args.actfun,
             extras
         )
