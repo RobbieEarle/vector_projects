@@ -290,7 +290,7 @@ def ResNet(resnet_ver,
         block = PreActBlock
         num_blocks = [2, 2, 2, 2]
     elif resnet_ver == 34:
-        block = PreActBlock
+        block = PreActBottleneck
         num_blocks = [3, 4, 6, 3]
     elif resnet_ver == 50:
         block = PreActBottleneck

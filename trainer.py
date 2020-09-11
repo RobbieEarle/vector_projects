@@ -3,7 +3,7 @@ import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CyclicLR
-# from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
 import models
@@ -107,13 +107,12 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                            )
     num_batches = sample_size / batch_size * num_epochs
     if args.model == 'resnet':
-        scheduler = CyclicLR(optimizer,
-                             base_lr=10 ** -8,
-                             max_lr=hyper_params['max_lr'],
-                             step_size_up=int(hyper_params['cycle_peak'] * num_batches),
-                             step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
-                             cycle_momentum=False
-                             )
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=hyper_params['max_lr'],
+                               total_steps=int(num_batches),
+                               pct_start=hyper_params['cycle_peak'],
+                               cycle_momentum=False
+                               )
     else:
         scheduler = CyclicLR(optimizer,
                              base_lr=10 ** -8,
