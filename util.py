@@ -482,7 +482,12 @@ def load_dataset(
     seed_all(seed)
 
     if dataset == 'mnist':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        all_trans = []
+        if model == 'resnet':
+            all_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.8, 0.8), shear=0.3))
+        all_trans.append(transforms.ToTensor())
+        all_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        trans = transforms.Compose(all_trans)
         train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=trans)
 
