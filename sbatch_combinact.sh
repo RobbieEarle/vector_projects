@@ -6,15 +6,15 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-95%32                      # array value
-#SBATCH --output=logs/rands_nparam4/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rands_nparam4
+#SBATCH --array=0-95%8                      # array value
+#SBATCH --output=logs/e6_resnet_rs/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e6_resnet_rs
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-P="$2"
+DATASET="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -35,5 +35,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset cifar10 --actfun all_pk_comb_relu --p $P --num_params 65500 --hyper_params nparam
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset $DATASET --actfun all_pk_relu --resnet_ver 50 --resnet_width 2
