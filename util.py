@@ -77,7 +77,7 @@ def get_num_params(args, actfun):
                 num_params[i] = 2 ** param
 
         elif args.var_n_params_log:
-            num_params = [14, 18, 22, 26]
+            num_params = [16, 18, 22, 26]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
@@ -145,7 +145,7 @@ def get_pkg_vals(args):
     elif args.var_perm_method:
         p_vals = [2]
     elif args.var_pg:
-        p_vals = [4, 8, 12, 16]
+        p_vals = [2, 4, 6, 8]
     else:
         p_vals = [args.p]
 
