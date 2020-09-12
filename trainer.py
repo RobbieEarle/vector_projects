@@ -105,15 +105,17 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                            eps=hyper_params['adam_eps'],
                            weight_decay=hyper_params['adam_wd']
                            )
-    num_batches = sample_size / batch_size * num_epochs
+
     if args.model == 'resnet':
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
-                               total_steps=int(num_batches),
+                               epochs=num_epochs,
+                               steps_per_epoch=int(sample_size / batch_size),
                                pct_start=hyper_params['cycle_peak'],
                                cycle_momentum=False
                                )
     else:
+        num_batches = (sample_size / batch_size) * num_epochs
         scheduler = CyclicLR(optimizer,
                              base_lr=10 ** -8,
                              max_lr=hyper_params['max_lr'],
