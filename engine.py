@@ -56,7 +56,8 @@ def setup_experiment(args, outfile_path):
             g_vals) * len(perm_methods))
         if checkpoint is not None:
             num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
-            train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
+            if train_samples[0] is not None:
+                train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
             p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
             k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
             g_vals = retrieve_checkpoint(checkpoint['g'], g_vals)
