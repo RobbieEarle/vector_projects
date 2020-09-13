@@ -6,6 +6,7 @@ from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
+import math
 import models
 import util
 import hyper_params as hp
@@ -110,7 +111,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
                                epochs=num_epochs,
-                               steps_per_epoch=int(sample_size / batch_size),
+                               steps_per_epoch=int(math.ceil(sample_size / batch_size)),
                                pct_start=hyper_params['cycle_peak'],
                                cycle_momentum=False
                                )
