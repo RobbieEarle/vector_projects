@@ -74,12 +74,12 @@ def get_num_params(args, actfun):
             num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
 
         elif args.nparam_redo:
-            num_params = [14, 22, 24, 26]
+            num_params = [14, 22, 24]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
         elif args.var_n_params_log:
-            num_params = [16, 18, 22, 26]
+            num_params = [16, 18, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
@@ -100,9 +100,9 @@ def get_num_params(args, actfun):
 
         elif args.var_n_params_log:
             if actfun == 'combinact':
-                num_params = [14, 18, 22, 26]
+                num_params = [14, 18, 22]
             else:
-                num_params = [14, 18, 22, 26]
+                num_params = [14, 18, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
