@@ -9,7 +9,10 @@ import trainer
 
 
 def retrieve_checkpoint(curr_entry, full_arr):
-    return full_arr[full_arr.index(curr_entry):]
+    if curr_entry in full_arr:
+        return full_arr[full_arr.index(curr_entry):]
+    else:
+        return full_arr
 
 
 def setup_experiment(args, outfile_path):
@@ -60,7 +63,6 @@ def setup_experiment(args, outfile_path):
                 train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
             p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
             k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
-            g_vals = retrieve_checkpoint(checkpoint['g'], g_vals)
             perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
             curr_seed = checkpoint['curr_seed']
 

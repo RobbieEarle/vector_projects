@@ -62,6 +62,8 @@ def get_actfuns(actfun):
         all_actfuns = ['max', 'relu', 'swishk', 'l2']
     elif actfun == 'max_relu':
         all_actfuns = ['max', 'relu']
+    elif actfun == 'pg4':
+        all_actfuns = ['linf', 'swishk', 'prod']
     else:
         all_actfuns = [actfun]
 
