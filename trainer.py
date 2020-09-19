@@ -289,7 +289,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'val_loss': float(final_val_loss),
                              'acc': float(accuracy),
                              'time': (time.time() - start_time),
-                             'actfun': model.actfun,
+                             'actfun': args.actfun,
                              'sample_size': sample_size,
                              'hyper_params': hyper_params,
                              'model': args.model,
