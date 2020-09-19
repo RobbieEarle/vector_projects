@@ -112,7 +112,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                weight_decay=hyper_params['adam_wd']
                                )
     else:
-        optimizer = optim.Adam(model.parameters(), lr=10 ** -8, betas=(0.9, 0.99), weight_decay=5e-4)
+        optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
 
     if args.resnet_orig:
         scheduler = OneCycleLR(optimizer,
