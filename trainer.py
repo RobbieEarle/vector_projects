@@ -238,12 +238,14 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         alpha_primes = []
         alphas = []
-        for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
-            curr_alpha_primes = curr_alpha_primes.tolist()
-            alpha_primes.append(curr_alpha_primes)
-            alphas.append(curr_alphas)
+
+        if not args.resnet_orig:
+            for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+                curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+                curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+                curr_alpha_primes = curr_alpha_primes.tolist()
+                alpha_primes.append(curr_alpha_primes)
+                alphas.append(curr_alphas)
 
         eval_train_loss = 0
         eval_val_loss = 0
