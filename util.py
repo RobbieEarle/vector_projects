@@ -29,6 +29,8 @@ def get_extras(args):
         extras += '-var_perm'
     if args.p_param_eff:
         extras += '-p_param_eff'
+    if args.resnet_orig:
+        extras += '-' + str(args.num_epochs) + 'epochs'
     return extras
 
 
@@ -290,7 +292,10 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method, resnet_ver, resnet_width):
+                       curr_g, perm_method, resnet_ver, resnet_width, resnet_orig):
+
+    if resnet_orig:
+        curr_model = curr_model + "_original"
     print(
         "\n===================================================================\n\n"
         "Seed: {} \n"

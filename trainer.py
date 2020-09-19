@@ -76,12 +76,16 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         model = models.ResNet(resnet_ver=args.resnet_ver, actfun=actfun,
                               num_input_channels=input_channels, num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
-                              permute_type=perm_method, width=args.resnet_width).to(device)
+                              permute_type=perm_method, width=args.resnet_width, orig=args.resnet_orig).to(device)
 
-        model_params.append({'params': model.conv_layers.parameters()})
+        if not args.resnet_orig:
+            model_params.append({'params': model.conv_layers.parameters()})
+        else:
+            model_params = model.parameters()
 
-    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
-    model_params.append({'params': model.linear_layers.parameters()})
+    if not args.resnet_orig:
+        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+        model_params.append({'params': model.linear_layers.parameters()})
     if actfun == 'combinact':
         model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
@@ -100,14 +104,25 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     hyper_params['adam_wd'] *= args.wd
 
-    optimizer = optim.Adam(model_params,
-                           lr=10 ** -8,
-                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                           eps=hyper_params['adam_eps'],
-                           weight_decay=hyper_params['adam_wd']
-                           )
+    if not args.resnet_orig:
+        optimizer = optim.Adam(model_params,
+                               lr=10 ** -8,
+                               betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                               eps=hyper_params['adam_eps'],
+                               weight_decay=hyper_params['adam_wd']
+                               )
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=10 ** -8, betas=(0.9, 0.99), weight_decay=5e-4)
 
-    if args.model == 'resnet':
+    if args.resnet_orig:
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=0.1,
+                               epochs=num_epochs,
+                               steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                               pct_start=0.05,
+                               cycle_momentum=False
+                               )
+    elif args.model == 'resnet':
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
                                epochs=num_epochs,
@@ -155,9 +170,17 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
 
+    if not args.resnet_orig:
+        k_print = model.k
+        p_print = model.p
+        g_print = model.g
+    else:
+        k_print = 1
+        p_print = 1
+        g_print = 1
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver, resnet_width)
+                            util.get_model_params(model), sample_size, k_print, p_print, g_print,
+                            perm_method, resnet_ver, resnet_width, args.resnet_orig)
 
     # ---- Start Training
     while epoch <= num_epochs:

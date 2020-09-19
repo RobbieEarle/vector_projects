@@ -4,6 +4,7 @@ import torch.nn as nn
 import activation_functions as actfuns
 import util
 import resnet
+import resnet_orig
 import math
 import numpy as np
 import time
@@ -321,13 +322,23 @@ def ResNet(resnet_ver, actfun,
            alpha_dist="per_cluster",
            permute_type="shuffle",
            reduce_actfuns=False,
-           width=1):
+           width=1, orig=False):
 
-    return resnet.ResNet(resnet_ver, actfun,
-                         num_input_channels,
-                         num_outputs,
-                         k, p, g,
-                         alpha_dist,
-                         permute_type,
-                         reduce_actfuns,
-                         width=width)
+    if orig:
+        if resnet_ver == 34:
+            return resnet_orig.PreActResNet34(num_input_channels)
+        elif resnet_ver == 50:
+            return resnet_orig.PreActResNet34(num_input_channels)
+        elif resnet_ver == 101:
+            return resnet_orig.PreActResNet34(num_input_channels)
+        elif resnet_ver == 152:
+            return resnet_orig.PreActResNet34(num_input_channels)
+    else:
+        return resnet.ResNet(resnet_ver, actfun,
+                             num_input_channels,
+                             num_outputs,
+                             k, p, g,
+                             alpha_dist,
+                             permute_type,
+                             reduce_actfuns,
+                             width=width)
