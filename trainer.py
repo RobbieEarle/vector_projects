@@ -119,7 +119,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                max_lr=0.1,
                                epochs=num_epochs,
                                steps_per_epoch=int(math.ceil(sample_size / batch_size)),
-                               pct_start=0.05,
+                               pct_start=0.2,
                                cycle_momentum=False
                                )
     elif args.model == 'resnet':

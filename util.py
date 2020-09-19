@@ -490,8 +490,8 @@ def load_dataset(
 
     if dataset == 'mnist':
         all_trans = []
-        if model == 'resnet':
-            all_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.8, 0.8), shear=0.3))
+        # if model == 'resnet':
+        #     all_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.8, 0.8), shear=0.3))
         all_trans.append(transforms.ToTensor())
         all_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
         trans = transforms.Compose(all_trans)

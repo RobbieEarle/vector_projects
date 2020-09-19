@@ -5,6 +5,7 @@ import activation_functions as actfuns
 import util
 import resnet
 import resnet_orig
+import resnet_orig2
 import math
 import numpy as np
 import time
@@ -326,13 +327,13 @@ def ResNet(resnet_ver, actfun,
 
     if orig:
         if resnet_ver == 34:
-            return resnet_orig.PreActResNet34(num_input_channels)
+            return resnet_orig2.resnet34(num_input_channels=num_input_channels)
         elif resnet_ver == 50:
-            return resnet_orig.PreActResNet34(num_input_channels)
+            return resnet_orig2.resnet50(num_input_channels=num_input_channels)
         elif resnet_ver == 101:
-            return resnet_orig.PreActResNet34(num_input_channels)
+            return resnet_orig2.resnet101(num_input_channels=num_input_channels)
         elif resnet_ver == 152:
-            return resnet_orig.PreActResNet34(num_input_channels)
+            return resnet_orig2.resnet152(num_input_channels=num_input_channels)
     else:
         return resnet.ResNet(resnet_ver, actfun,
                              num_input_channels,
