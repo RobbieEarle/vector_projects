@@ -279,6 +279,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 eval_val_loss = total_val_loss / n
                 eval_val_acc = num_correct * 1.0 / num_total
 
+        if not args.resnet_orig:
+            print_actfun = args.actfun
+        else:
+            print_actfun = model.actfun
+
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
@@ -289,7 +294,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'val_loss': float(final_val_loss),
                              'acc': float(accuracy),
                              'time': (time.time() - start_time),
-                             'actfun': model.actfun,
+                             'actfun': print_actfun,
                              'sample_size': sample_size,
                              'hyper_params': hyper_params,
                              'model': args.model,
