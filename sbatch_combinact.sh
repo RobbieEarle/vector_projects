@@ -5,10 +5,10 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --time=20:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-39%8                      # array value
-#SBATCH --output=logs/e7_overfit/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e7_overfit
+#SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
+#SBATCH --array=0-95%12                      # array value
+#SBATCH --output=logs/e7_resnet_rs/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e7_resnet_rs
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -35,5 +35,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 10
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset $DATASET --actfun all_pk_comb_relu --overfit --wd 10
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset $DATASET --actfun max_relu --resnet_ver 34 --resnet_width 2 --num_epochs 50

@@ -489,14 +489,23 @@ def load_dataset(
     seed_all(seed)
 
     if dataset == 'mnist':
-        all_trans = []
-        # if model == 'resnet':
-        #     all_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.8, 0.8), shear=0.3))
-        all_trans.append(transforms.ToTensor())
-        all_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
-        trans = transforms.Compose(all_trans)
-        train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=trans)
-        test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=trans)
+        train_trans, test_trans = [], []
+        if model == 'resnet':
+            train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        else:
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+
+        train_trans_all = transforms.Compose(train_trans)
+        test_trans_all = transforms.Compose(test_trans)
+        train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=train_trans_all)
+        test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=test_trans_all)
 
         if sample_size is None:
             sample_size = 60000
@@ -520,20 +529,25 @@ def load_dataset(
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar10':
-        all_trans = []
+        train_trans, test_trans = [], []
         if model == 'resnet':
-            all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
-            all_trans.append(transforms.RandomHorizontalFlip())
-            all_trans.append(CIFAR10Policy())
-            all_trans.append(transforms.ToTensor())
-            all_trans.append(Cutout(n_holes=1, length=16))
-            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            train_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
+            train_trans.append(transforms.RandomHorizontalFlip())
+            train_trans.append(CIFAR10Policy())
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(Cutout(n_holes=1, length=16))
+            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         else:
-            all_trans.append(transforms.ToTensor())
-            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        trans = transforms.Compose(all_trans)
-        train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans)
-        test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans)
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        train_trans_all = transforms.Compose(train_trans)
+        test_trans_all = transforms.Compose(test_trans)
+        train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=train_trans_all)
+        test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=test_trans_all)
 
         if sample_size is None:
             sample_size = 50000
@@ -544,20 +558,25 @@ def load_dataset(
         test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar100':
-        all_trans = []
+        train_trans, test_trans = [], []
         if model == 'resnet':
-            all_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
-            all_trans.append(transforms.RandomHorizontalFlip())
-            all_trans.append(CIFAR10Policy())
-            all_trans.append(transforms.ToTensor())
-            all_trans.append(Cutout(n_holes=1, length=16))
-            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            train_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
+            train_trans.append(transforms.RandomHorizontalFlip())
+            train_trans.append(CIFAR10Policy())
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(Cutout(n_holes=1, length=16))
+            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         else:
-            all_trans.append(transforms.ToTensor())
-            all_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        trans = transforms.Compose(all_trans)
-        train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans)
-        test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans)
+            train_trans.append(transforms.ToTensor())
+            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+            test_trans.append(transforms.ToTensor())
+            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        train_trans_all = transforms.Compose(train_trans)
+        test_trans_all = transforms.Compose(test_trans)
+        train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=train_trans_all)
+        test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=test_trans_all)
 
         if sample_size is None:
             sample_size = 50000
