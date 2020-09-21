@@ -9,6 +9,7 @@ import random
 import activation_functions as actfuns
 from auto_augment import CIFAR10Policy
 from cutout import Cutout
+from collections import namedtuple
 
 
 # -------------------- Training Utils
@@ -610,3 +611,9 @@ def load_dataset(
     validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
 
     return train_loader, validation_loader, sample_size, batch_size
+
+
+class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
+
+    def __call__(self, t):
+        return np.interp([t], self.knots, self.vals)[0]

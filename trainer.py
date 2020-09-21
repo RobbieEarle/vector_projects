@@ -115,6 +115,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
 
     if args.resnet_orig:
+        # scheduler = util.PiecewiseLinear([0, 15, 30, 35], [0, 0.1, 0.005, 0])
         scheduler = OneCycleLR(optimizer,
                                max_lr=0.1,
                                epochs=num_epochs,
@@ -211,7 +212,10 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             train_loss = criterion(output, targetx)
             train_loss.backward()
             optimizer.step()
-            scheduler.step()
+            if args.resnet_orig:
+                scheduler.step()
+            else:
+                scheduler.step()
             final_train_loss = train_loss
 
         # ---- Testing
@@ -232,9 +236,12 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         # Logging test results
         print(
-            "    Epoch {} Completed: gen_gap = {:1.6f}  |  train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
-                .format(epoch, final_val_loss - final_train_loss, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
+            "    Epoch {} Completed: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
+                .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
         )
+
+        for param_group in optimizer.param_groups:
+            print("          " + str(param_group['lr']))
 
         alpha_primes = []
         alphas = []
