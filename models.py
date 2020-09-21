@@ -329,7 +329,7 @@ def ResNet(resnet_ver, actfun,
         if resnet_ver == 34:
             return resnet_orig2.resnet34(num_input_channels=num_input_channels)
         elif resnet_ver == 50:
-            return resnet_orig2.resnet50(num_input_channels=num_input_channels)
+            return resnet_orig2.wide_resnet50_2(num_input_channels=num_input_channels)
         elif resnet_ver == 101:
             return resnet_orig2.resnet101(num_input_channels=num_input_channels)
         elif resnet_ver == 152:
