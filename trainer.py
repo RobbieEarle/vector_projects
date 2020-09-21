@@ -280,9 +280,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 eval_val_acc = num_correct * 1.0 / num_total
 
         if not args.resnet_orig:
-            print_actfun = args.actfun
-        else:
             print_actfun = model.actfun
+        else:
+            print_actfun = args.actfun
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
