@@ -92,7 +92,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
-    num_epochs = args.num_epochs
     if args.overfit:
         num_epochs = 50
         hyper_params['cycle_peak'] = 0.35
@@ -117,13 +116,13 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     if args.model == 'resnet' or args.model == 'dawnnet':
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
-                               epochs=num_epochs,
+                               epochs=args.num_epochs,
                                steps_per_epoch=int(math.ceil(sample_size / batch_size)),
                                pct_start=hyper_params['cycle_peak'],
                                cycle_momentum=False
                                )
     else:
-        num_batches = (sample_size / batch_size) * num_epochs
+        num_batches = (sample_size / batch_size) * args.num_epochs
         scheduler = CyclicLR(optimizer,
                              base_lr=10 ** -8,
                              max_lr=hyper_params['max_lr'],
@@ -176,7 +175,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                             perm_method, resnet_ver, resnet_width)
 
     # ---- Start Training
-    while epoch <= num_epochs:
+    while epoch <= args.num_epochs:
 
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),

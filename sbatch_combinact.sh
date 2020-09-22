@@ -7,7 +7,7 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                      # array value
-#SBATCH --output=logs/resnet_test/t18-%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --output=logs/resnet_test/t19-%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=resnet_test
 
 source ~/.bashrc
