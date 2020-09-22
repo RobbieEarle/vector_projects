@@ -112,7 +112,8 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                weight_decay=hyper_params['adam_wd']
                                )
     else:
-        optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
+        # optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
+        optimizer = optim.SGD(model.parameters(), lr=0.000001, weight_decay=5e-4*batch_size, momentum=0.9)
 
     if args.resnet_orig:
         # scheduler = util.PiecewiseLinear([0, 15, 30, 35], [0, 0.1, 0.005, 0])
