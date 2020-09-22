@@ -202,7 +202,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
-        final_train_loss = 0
+
         # ---- Training
         model.train()
         for batch_idx, (x, targetx) in enumerate(train_loader):
@@ -214,37 +214,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             train_loss.backward()
             optimizer.step()
             scheduler.step()
-            final_train_loss = train_loss
-
-        # ---- Testing
-        num_correct = 0
-        num_total = 0
-        final_val_loss = 0
-        model.eval()
-        with torch.no_grad():
-            for batch_idx2, (y, targety) in enumerate(validation_loader):
-                y, targety = y.to(device), targety.to(device)
-                output = model(y)
-                val_loss = criterion(output, targety)
-                final_val_loss = val_loss
-                _, prediction = torch.max(output.data, 1)
-                num_correct += torch.sum(prediction == targety.data)
-                num_total += len(prediction)
-        accuracy = num_correct * 1.0 / num_total
-
-        lr = ''
-        for param_group in optimizer.param_groups:
-            lr = param_group['lr']
-
-        # Logging test results
-        print(
-            "    Epoch {} Completed: LR = {:1.5f}  |  gen_gap = {:1.5f}  |  curr_val_acc = {:1.5f}  |  time = {:1.5f}"
-                .format(epoch, lr, final_val_loss - final_train_loss, accuracy, (time.time() - start_time)), flush=True
-        )
 
         alpha_primes = []
         alphas = []
-
         if not args.resnet_orig and args.model != 'dawnnet':
             for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
                 curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
@@ -253,42 +225,42 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 alpha_primes.append(curr_alpha_primes)
                 alphas.append(curr_alphas)
 
-        eval_train_loss = 0
-        eval_val_loss = 0
-        eval_train_acc = 0
-        eval_val_acc = 0
-        if epoch == num_epochs:
-            with torch.no_grad():
-                total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
-                for batch_idx, (x, targetx) in enumerate(train_loader):
-                    x, targetx = x.to(device), targetx.to(device)
-                    output = model(x)
-                    train_loss = criterion(output, targetx)
-                    total_train_loss += train_loss
-                    n += 1
-                    _, prediction = torch.max(output.data, 1)
-                    num_correct += torch.sum(prediction == targetx.data)
-                    num_total += len(prediction)
-                eval_train_loss = total_train_loss / n
-                eval_train_acc = num_correct * 1.0 / num_total
+        with torch.no_grad():
+            total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+            for batch_idx, (x, targetx) in enumerate(train_loader):
+                x, targetx = x.to(device), targetx.to(device)
+                output = model(x)
+                train_loss = criterion(output, targetx)
+                total_train_loss += train_loss
+                n += 1
+                _, prediction = torch.max(output.data, 1)
+                num_correct += torch.sum(prediction == targetx.data)
+                num_total += len(prediction)
+            eval_train_loss = total_train_loss / n
+            eval_train_acc = num_correct * 1.0 / num_total
 
-                total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
-                for batch_idx2, (y, targety) in enumerate(validation_loader):
-                    y, targety = y.to(device), targety.to(device)
-                    output = model(y)
-                    val_loss = criterion(output, targety)
-                    total_val_loss += val_loss
-                    n += 1
-                    _, prediction = torch.max(output.data, 1)
-                    num_correct += torch.sum(prediction == targety.data)
-                    num_total += len(prediction)
-                eval_val_loss = total_val_loss / n
-                eval_val_acc = num_correct * 1.0 / num_total
+            total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
+            for batch_idx2, (y, targety) in enumerate(validation_loader):
+                y, targety = y.to(device), targety.to(device)
+                output = model(y)
+                val_loss = criterion(output, targety)
+                total_val_loss += val_loss
+                n += 1
+                _, prediction = torch.max(output.data, 1)
+                num_correct += torch.sum(prediction == targety.data)
+                num_total += len(prediction)
+            eval_val_loss = total_val_loss / n
+            eval_val_acc = num_correct * 1.0 / num_total
 
-            print(
-                "  Training Completed: train_accuracy = {:1.5f}  |  val_accuracy = {:1.5f}"
-                    .format(eval_train_acc, eval_val_acc), flush=True
-            )
+        lr = ''
+        for param_group in optimizer.param_groups:
+            lr = param_group['lr']
+
+        # Logging test results
+        print(
+            "    Epoch {}: LR {:1.5f}  |  train_acc {:1.5f}  |  val_acc {:1.5f}  |  train_loss {:1.5f}  |  val_loss {:1.5f}  |  time = {:1.5f}"
+                .format(epoch, lr, eval_train_acc, eval_val_acc, eval_train_loss, eval_val_loss, (time.time() - start_time)), flush=True
+        )
 
         if args.resnet_orig or args.model == 'dawnnet':
             print_actfun = args.actfun
@@ -301,9 +273,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             writer.writerow({'dataset': args.dataset,
                              'seed': curr_seed,
                              'epoch': epoch,
-                             'train_loss': float(final_train_loss),
-                             'val_loss': float(final_val_loss),
-                             'acc': float(accuracy),
                              'time': (time.time() - start_time),
                              'actfun': print_actfun,
                              'sample_size': sample_size,
@@ -319,13 +288,13 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'p': curr_p,
                              'g': curr_g,
                              'perm_method': perm_method,
-                             'gen_gap': float(final_val_loss - final_train_loss),
+                             'gen_gap': float(eval_val_loss - eval_train_loss),
                              'resnet_ver': resnet_ver,
                              'resnet_width': resnet_width,
-                             'eval_train_loss': float(eval_train_loss),
-                             'eval_val_loss': float(eval_val_loss),
-                             'eval_train_acc': float(eval_train_acc),
-                             'eval_val_acc': float(eval_val_acc)
+                             'train_loss': float(eval_train_loss),
+                             'val_loss': float(eval_val_loss),
+                             'train_acc': float(eval_train_acc),
+                             'val_acc': float(eval_val_acc)
                              })
 
         epoch += 1

@@ -30,11 +30,11 @@ def setup_experiment(args, outfile_path):
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     # =========================== Creating new output file
-    fieldnames = ['dataset', 'seed', 'epoch', 'train_loss', 'val_loss', 'acc', 'time', 'actfun',
+    fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                  'gen_gap', 'resnet_ver', 'resnet_width', 'eval_train_loss', 'eval_val_loss',
-                  'eval_train_acc', 'eval_val_acc']
+                  'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
+                  'train_acc', 'val_acc']
 
     checkpoint_location = os.path.join(args.check_path, "cp_{}_{}_{}.pth".format(args.seed, args.model, args.dataset))
     checkpoint = None
