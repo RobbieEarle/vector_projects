@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import activation_functions as actfuns
 import util
 import math
+import time
 
 
 class PreActBlock(nn.Module):
@@ -19,8 +20,8 @@ class PreActBlock(nn.Module):
     def __init__(self, actfun, width, p, k, g, permute_type, alpha_dist, reduce_actfuns,
                  in_planes, planes, stride=1):
         super(PreActBlock, self).__init__()
-
         assert width == 1, "Width must be 1 for standard block"
+
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type
@@ -110,6 +111,8 @@ class PreActBottleneck(nn.Module):
                  in_planes, planes, stride=1):
         super(PreActBottleneck, self).__init__()
 
+        start_time = time.time()
+
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type
@@ -164,7 +167,10 @@ class PreActBottleneck(nn.Module):
                 for layer in range(3):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
+        print("-> Bottleneck block init: {}".format(time.time() - start_time))
+
     def forward(self, x):
+        start_time = time.time()
         alpha_primes = None
         if self.actfun == 'combinact':
             alpha_primes = self.all_alpha_primes[0]
@@ -178,7 +184,9 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv1(out)
+        print("-> Bottleneck block 1: {}".format(time.time() - start_time))
 
+        start_time - time.time()
         if self.actfun == 'combinact':
             alpha_primes = self.all_alpha_primes[1]
         out = self.bn2(out)
@@ -191,8 +199,9 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv2(out)
+        print("-> Bottleneck block 2: {}".format(time.time() - start_time))
 
-        alpha_primes = None
+        start_time = time.time()
         if self.actfun == 'combinact':
             alpha_primes = self.all_alpha_primes[2]
         out = self.bn3(out)
@@ -205,6 +214,7 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv3(out)
+        print("-> Bottleneck block 3: {}".format(time.time() - start_time))
 
         shortcut = self.shortcut(x) if hasattr(self, 'shortcut') else x
         out += shortcut
@@ -221,6 +231,9 @@ class PreActResNet(nn.Module):
                  permute_type="shuffle",
                  reduce_actfuns=False):
         super(PreActResNet, self).__init__()
+
+        start_time = time.time()
+
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
@@ -250,6 +263,8 @@ class PreActResNet(nn.Module):
             nn.Linear(block_sizes[3] * block.expansion, num_outputs)
         ])
 
+        print("-> ResNet init: {}".format(time.time() - start_time))
+
     def _make_layer(self, block, width, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
@@ -270,9 +285,12 @@ class PreActResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+
+        start_time = time.time()
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear_layers[0](out)
+        print("-> Linear layers: {}".format(time.time() - start_time))
         return out
 
 
