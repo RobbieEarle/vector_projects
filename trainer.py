@@ -95,7 +95,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)
-    model.apply(util.weights_init)
+    # model.apply(util.weights_init)
 
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
@@ -232,14 +232,15 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 num_total += len(prediction)
         accuracy = num_correct * 1.0 / num_total
 
+        lr = ''
+        for param_group in optimizer.param_groups:
+            lr = param_group['lr']
+
         # Logging test results
         print(
-            "    Epoch {} Completed: train_loss = {:1.6f}  |  val_loss = {:1.6f}  |  accuracy = {:1.6f}  |  time = {}"
-                .format(epoch, final_train_loss, final_val_loss, accuracy, (time.time() - start_time)), flush=True
+            "    Epoch {} Completed: LR = {:1.5f}  |  gen_gap = {:1.5f}  |  curr_val_acc = {:1.5f}  |  time = {:1.5f}"
+                .format(epoch, lr, final_val_loss - final_train_loss, accuracy, (time.time() - start_time)), flush=True
         )
-
-        for param_group in optimizer.param_groups:
-            print("          LR = " + str(param_group['lr']))
 
         alpha_primes = []
         alphas = []
@@ -283,6 +284,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                     num_total += len(prediction)
                 eval_val_loss = total_val_loss / n
                 eval_val_acc = num_correct * 1.0 / num_total
+
+            print(
+                "  Training Completed: train_accuracy = {:1.5f}  |  val_accuracy = {:1.5f}"
+                    .format(eval_train_acc, eval_val_acc), flush=True
+            )
 
         if args.resnet_orig or args.model == 'dawnnet':
             print_actfun = args.actfun
