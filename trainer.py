@@ -114,7 +114,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                betas=(0.9, 0.99),
                                weight_decay=5e-4)
         hyper_params['max_lr'] = 0.1
-        hyper_params['cycle_peak'] = 0.2
+        hyper_params['cycle_peak'] = 0.4
     else:
         optimizer = optim.Adam(model_params,
                                lr=10 ** -8,
