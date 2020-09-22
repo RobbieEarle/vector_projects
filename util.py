@@ -531,7 +531,6 @@ def load_dataset(
 
     elif dataset == 'cifar10':
         train_trans, test_trans = [], []
-        print(model)
         if model == 'resnet':
             # train_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
             # train_trans.append(transforms.RandomHorizontalFlip())

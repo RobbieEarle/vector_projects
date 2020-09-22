@@ -6,6 +6,7 @@ import util
 import resnet
 import resnet_orig
 import resnet_orig2
+import dawnnet
 import math
 import numpy as np
 import time
@@ -314,6 +315,9 @@ class CombinactCNN(nn.Module):
             else:
                 all_outputs = torch.cat((all_outputs, curr_outputs), dim=1)
         return all_outputs
+
+def DawnNet():
+    return dawnnet.DawnNet()
 
 
 def ResNet(resnet_ver, actfun,
