@@ -19,7 +19,7 @@ class Block(nn.Module):
     def forward(self, x):
         x = F.relu(self.bn1(x))
 
-        identity = x.clone()
+        identity = x.clone().to(x.device)
 
         x = F.relu(self.bn2(self.conv1(x)))
 
