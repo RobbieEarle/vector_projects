@@ -84,7 +84,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             model_params = model.parameters()
 
     elif args.model == 'dawnnet':
-        model = models.DawnNet()
+        model = models.DawnNet().to(device)
         model_params = model.parameters()
 
     if not args.resnet_orig and args.model != 'dawnnet':
