@@ -64,7 +64,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     if checkpoint is not None:
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        # scheduler.load_state_dict(checkpoint['scheduler'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
         epoch = checkpoint['epoch']
         model.to(device)
         print("*** LOADED CHECKPOINT ***"
@@ -93,7 +93,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
-                        # 'scheduler': scheduler.state_dict(),
+                        'scheduler': scheduler.state_dict(),
                         'curr_seed': curr_seed,
                         'epoch': epoch,
                         'actfun': actfun,
@@ -116,7 +116,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             train_loss = criterion(output, targetx)
             train_loss.backward()
             optimizer.step()
-            # scheduler.step()
+            scheduler.step()
 
         model.eval()
         with torch.no_grad():
