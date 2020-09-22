@@ -6,6 +6,7 @@ import os
 import datetime
 import csv
 import trainer
+import trainer_dawnnet
 
 
 def retrieve_checkpoint(curr_entry, full_arr):
@@ -87,11 +88,20 @@ def setup_experiment(args, outfile_path):
                                                                                                              batch_size=args.batch_size,
                                                                                                              sample_size=curr_sample_size,
                                                                                                              kwargs=kwargs)
+
+                                if args.model == 'dawnnet':
+                                    trainer_dawnnet.train(args, checkpoint, checkpoint_location, actfun, curr_seed,
+                                                  outfile_path,
+                                                  fieldnames, train_loader, validation_loader, sample_size, batch_size,
+                                                  device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
+                                                  perm_method=perm_method)
+
                                 # ---- Begin training model
-                                trainer.train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path,
-                                              fieldnames, train_loader, validation_loader, sample_size, batch_size,
-                                              device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
-                                              perm_method=perm_method)
+                                else:
+                                    trainer.train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path,
+                                                  fieldnames, train_loader, validation_loader, sample_size, batch_size,
+                                                  device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
+                                                  perm_method=perm_method)
                                 print()
 
                                 checkpoint = None
