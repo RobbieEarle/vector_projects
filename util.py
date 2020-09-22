@@ -532,7 +532,7 @@ def load_dataset(
     elif dataset == 'cifar10':
         train_trans, test_trans = [], []
         if model == 'resnet' or model == 'dawnnet':
-            train_trans.append(transforms.RandomCrop(32, padding=4, fill=128))
+            train_trans.append(transforms.RandomCrop(32, padding=4))
             train_trans.append(transforms.RandomHorizontalFlip())
             # train_trans.append(CIFAR10Policy())
             train_trans.append(transforms.ToTensor())
