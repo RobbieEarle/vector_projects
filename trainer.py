@@ -106,6 +106,14 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     #     hyper_params['max_lr'] = 0.1
     #     hyper_params['cycle_peak'] = 0.4
 
+    if args.model == 'resnet':
+        hyper_params['adam_beta_1'] = 0.9
+        hyper_params['adam_beta_2'] = 0.99
+        hyper_params['adam_eps'] = 1e-8
+        hyper_params['adam_wd'] = 5e-4
+        hyper_params['max_lr'] = 0.001
+        hyper_params['cycle_peak'] = 0.4
+
     optimizer = optim.Adam(model_params,
                            lr=10 ** -6,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
