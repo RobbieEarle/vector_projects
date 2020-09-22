@@ -62,7 +62,7 @@ def get_hyper_params(model, dataset, actfun, rng=None, exp='', p=1):
             return cnn_fashion_mnist(rng)[actfun]
         elif dataset == 'svhn':
             return cnn_svhn(rng)[actfun]
-    elif model == 'resnet':
+    elif model == 'resnet' or model == 'dawnnet':
         if dataset == 'mnist':
             return resnet_mnist(rng)[actfun]
         elif dataset == 'cifar10':

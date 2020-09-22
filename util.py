@@ -94,7 +94,7 @@ def get_num_params(args, actfun):
         else:
             num_params = [args.num_params]
 
-    elif args.model == 'cnn' or args.model == 'resnet':
+    elif args.model == 'cnn' or args.model == 'resnet' or args.model == 'dawnnet':
         if args.var_n_params:
             num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
 

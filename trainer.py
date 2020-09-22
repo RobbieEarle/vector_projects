@@ -83,7 +83,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         else:
             model_params = model.parameters()
 
-    if not args.resnet_orig:
+    elif args.model == 'dawnnet':
+        model = models.DawnNet()
+        model_params = model.parameters()
+
+    if not args.resnet_orig and args.model != 'dawnnet':
         model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
         model_params.append({'params': model.linear_layers.parameters()})
     if actfun == 'combinact':
@@ -104,27 +108,22 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     hyper_params['adam_wd'] *= args.wd
 
-    if not args.resnet_orig:
+    if args.resnet_orig or args.model == 'dawnnet':
+        optimizer = optim.Adam(model.parameters(),
+                               lr=0.000001,
+                               betas=(0.9, 0.99),
+                               weight_decay=5e-4)
+        hyper_params['max_lr'] = 0.1
+        hyper_params['cycle_peak'] = 0.2
+    else:
         optimizer = optim.Adam(model_params,
                                lr=10 ** -8,
                                betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
                                eps=hyper_params['adam_eps'],
                                weight_decay=hyper_params['adam_wd']
                                )
-    else:
-        optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
-        # optimizer = optim.SGD(model.parameters(), lr=0.000001, weight_decay=5e-4*batch_size, momentum=0.9)
 
-    if args.resnet_orig:
-        # scheduler = util.PiecewiseLinear([0, 15, 30, 35], [0, 0.1, 0.005, 0])
-        scheduler = OneCycleLR(optimizer,
-                               max_lr=0.1,
-                               epochs=num_epochs,
-                               steps_per_epoch=int(math.ceil(sample_size / batch_size)),
-                               pct_start=0.2,
-                               cycle_momentum=False
-                               )
-    elif args.model == 'resnet':
+    if args.model == 'resnet' or args.model == 'dawnnet':
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
                                epochs=num_epochs,
@@ -172,14 +171,15 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
 
-    if not args.resnet_orig:
-        k_print = model.k
-        p_print = model.p
-        g_print = model.g
-    else:
+    if args.resnet_orig or args.model == 'dawnnet':
         k_print = 1
         p_print = 1
         g_print = 1
+    else:
+        k_print = model.k
+        p_print = model.p
+        g_print = model.g
+
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, k_print, p_print, g_print,
                             perm_method, resnet_ver, resnet_width, args.resnet_orig)
@@ -213,10 +213,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             train_loss = criterion(output, targetx)
             train_loss.backward()
             optimizer.step()
-            if args.resnet_orig:
-                scheduler.step()
-            else:
-                scheduler.step()
+            scheduler.step()
             final_train_loss = train_loss
 
         # ---- Testing
@@ -242,7 +239,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         )
 
         for param_group in optimizer.param_groups:
-            print("          " + str(param_group['lr']))
+            print("          LR = " + str(param_group['lr']))
 
         alpha_primes = []
         alphas = []
@@ -287,10 +284,10 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 eval_val_loss = total_val_loss / n
                 eval_val_acc = num_correct * 1.0 / num_total
 
-        if not args.resnet_orig:
-            print_actfun = model.actfun
-        else:
+        if args.resnet_orig:
             print_actfun = args.actfun
+        else:
+            print_actfun = model.actfun
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
