@@ -99,7 +99,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     hyper_params['adam_wd'] *= args.wd
 
-    if args.resnet_orig or args.model == 'dawnnet':
+    if args.model == 'dawnnet':
         optimizer = optim.Adam(model.parameters(),
                                lr=0.000001,
                                betas=(0.9, 0.99),
@@ -162,7 +162,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
 
-    if args.resnet_orig or args.model == 'dawnnet':
+    if args.model == 'dawnnet':
         k_print = 1
         p_print = 1
         g_print = 1
@@ -173,7 +173,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, k_print, p_print, g_print,
-                            perm_method, resnet_ver, resnet_width, args.resnet_orig)
+                            perm_method, resnet_ver, resnet_width)
 
     # ---- Start Training
     while epoch <= num_epochs:
@@ -208,7 +208,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         alpha_primes = []
         alphas = []
-        if not args.resnet_orig and args.model != 'dawnnet':
+        if args.model != 'dawnnet':
             for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
                 curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
                 curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
@@ -254,7 +254,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 .format(epoch, lr, eval_train_acc, eval_val_acc, eval_train_loss, eval_val_loss, (time.time() - start_time)), flush=True
         )
 
-        if args.resnet_orig or args.model == 'dawnnet':
+        if args.model == 'dawnnet':
             print_actfun = args.actfun
         else:
             print_actfun = model.actfun
