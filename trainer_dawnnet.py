@@ -46,9 +46,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
-    optimizer = optim.SGD(model.parameters(), lr=0.000001, momentum=0.9, weight_decay=5e-4)
-    # optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
-    hyper_params['max_lr'] = 0.1
+    # optimizer = optim.SGD(model.parameters(), lr=0.000001, momentum=0.9, weight_decay=5e-4)
+    optimizer = optim.Adam(model.parameters(), lr=0.000001, betas=(0.9, 0.99), weight_decay=5e-4)
+    hyper_params['max_lr'] = 0.001
     hyper_params['cycle_peak'] = 0.4
 
     scheduler = OneCycleLR(optimizer,
