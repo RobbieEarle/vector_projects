@@ -85,7 +85,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, 1, 1, 1,
-                            perm_method, 0, 0, False)
+                            perm_method, 0, 0)
 
     # ---- Start Training
     while epoch <= args.num_epochs:
