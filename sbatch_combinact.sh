@@ -36,3 +36,4 @@ echo "SEED=$SEED"
 
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model dawnnet --dataset cifar10 --actfun relu --num_epochs 50
 #python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset $DATASET --actfun relu --resnet_ver 34 --resnet_width 2 --num_epochs 35
+
