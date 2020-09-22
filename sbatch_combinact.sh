@@ -34,4 +34,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset cifar10 --actfun relu --resnet_ver 34  --num_epochs 30 --resnet_orig --batch_size 128
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset cifar10 --actfun relu --resnet_ver 34  --num_epochs 10 --resnet_orig --batch_size 128
