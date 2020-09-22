@@ -92,37 +92,37 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
+    num_epochs = args.num_epochs
     if args.overfit:
         num_epochs = 50
         hyper_params['cycle_peak'] = 0.35
-
     hyper_params['adam_wd'] *= args.wd
 
-    if args.model == 'dawnnet':
-        optimizer = optim.Adam(model.parameters(),
-                               lr=0.000001,
-                               betas=(0.9, 0.99),
-                               weight_decay=5e-4)
-        hyper_params['max_lr'] = 0.1
-        hyper_params['cycle_peak'] = 0.4
-    else:
-        optimizer = optim.Adam(model_params,
-                               lr=10 ** -8,
-                               betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                               eps=hyper_params['adam_eps'],
-                               weight_decay=hyper_params['adam_wd']
-                               )
+    # if args.model == 'dawnnet':
+    #     optimizer = optim.Adam(model.parameters(),
+    #                            lr=0.000001,
+    #                            betas=(0.9, 0.99),
+    #                            weight_decay=5e-4)
+    #     hyper_params['max_lr'] = 0.1
+    #     hyper_params['cycle_peak'] = 0.4
 
-    if args.model == 'resnet' or args.model == 'dawnnet':
+    optimizer = optim.Adam(model_params,
+                           lr=10 ** -6,
+                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                           eps=hyper_params['adam_eps'],
+                           weight_decay=hyper_params['adam_wd']
+                           )
+
+    if args.model == 'resnet':
         scheduler = OneCycleLR(optimizer,
                                max_lr=hyper_params['max_lr'],
-                               epochs=args.num_epochs,
+                               epochs=num_epochs,
                                steps_per_epoch=int(math.ceil(sample_size / batch_size)),
                                pct_start=hyper_params['cycle_peak'],
                                cycle_momentum=False
                                )
     else:
-        num_batches = (sample_size / batch_size) * args.num_epochs
+        num_batches = (sample_size / batch_size) * num_epochs
         scheduler = CyclicLR(optimizer,
                              base_lr=10 ** -8,
                              max_lr=hyper_params['max_lr'],
@@ -136,8 +136,8 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         resnet_ver = args.resnet_ver
         resnet_width = args.resnet_width
     else:
-        resnet_ver = None
-        resnet_width = None
+        resnet_ver = 0
+        resnet_width = 0
 
     if checkpoint is not None:
         model.load_state_dict(checkpoint['state_dict'])
@@ -161,21 +161,12 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
 
-    if args.model == 'dawnnet':
-        k_print = 1
-        p_print = 1
-        g_print = 1
-    else:
-        k_print = model.k
-        p_print = model.p
-        g_print = model.g
-
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
-                            util.get_model_params(model), sample_size, k_print, p_print, g_print,
+                            util.get_model_params(model), sample_size, model.k, model.p, model.g,
                             perm_method, resnet_ver, resnet_width)
 
     # ---- Start Training
-    while epoch <= args.num_epochs:
+    while epoch <= num_epochs:
 
         if args.check_path != '':
             torch.save({'state_dict': model.state_dict(),
@@ -207,13 +198,12 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         alpha_primes = []
         alphas = []
-        if args.model != 'dawnnet':
-            for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-                curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-                curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
-                curr_alpha_primes = curr_alpha_primes.tolist()
-                alpha_primes.append(curr_alpha_primes)
-                alphas.append(curr_alphas)
+        for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+            curr_alpha_primes = curr_alpha_primes.tolist()
+            alpha_primes.append(curr_alpha_primes)
+            alphas.append(curr_alphas)
 
         model.eval()
         with torch.no_grad():
@@ -246,17 +236,10 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         lr = ''
         for param_group in optimizer.param_groups:
             lr = param_group['lr']
-
-        # Logging test results
         print(
             "    Epoch {}: LR {:1.5f}  |  train_acc {:1.5f}  |  val_acc {:1.5f}  |  train_loss {:1.5f}  |  val_loss {:1.5f}  |  time = {:1.5f}"
                 .format(epoch, lr, eval_train_acc, eval_val_acc, eval_train_loss, eval_val_loss, (time.time() - start_time)), flush=True
         )
-
-        if args.model == 'dawnnet':
-            print_actfun = args.actfun
-        else:
-            print_actfun = model.actfun
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
@@ -265,7 +248,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'seed': curr_seed,
                              'epoch': epoch,
                              'time': (time.time() - start_time),
-                             'actfun': print_actfun,
+                             'actfun': model.actfun,
                              'sample_size': sample_size,
                              'hyper_params': hyper_params,
                              'model': args.model,

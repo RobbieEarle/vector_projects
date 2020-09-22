@@ -532,7 +532,7 @@ def load_dataset(
             train_trans.append(transforms.RandomHorizontalFlip())
             train_trans.append(CIFAR10Policy())
             train_trans.append(transforms.ToTensor())
-            train_trans.append(Cutout(n_holes=1, length=16))
+            train_trans.append(Cutout(n_holes=1, length=8))
             train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
             test_trans.append(transforms.ToTensor())
             test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
