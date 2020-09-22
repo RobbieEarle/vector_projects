@@ -16,8 +16,52 @@ import csv
 import time
 
 
-# -------------------- Setting Up & Running Training Function
+# -------------------- Loading Model
+def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device, resnet_ver, resnet_width):
 
+    model_params = []
+
+    if dataset == 'mnist' or dataset == 'fashion_mnist':
+        input_channels, input_dim, output_dim = 1, 28, 10
+    elif dataset == 'cifar10' or dataset == 'svhn':
+        input_channels, input_dim, output_dim = 3, 32, 10
+    elif dataset == 'cifar100':
+        input_channels, input_dim, output_dim = 3, 32, 100
+
+    if model == 'nn' or model == 'mlp':
+        if dataset == 'mnist' or dataset == 'fashion_mnist':
+            input_dim = 784
+        elif dataset == 'cifar10' or dataset == 'svhn':
+            input_dim = 3072
+        elif dataset == 'cifar100':
+            input_dim = 3072
+        model = models.CombinactMLP(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
+                                    k=k, p=p, g=g, num_params=num_params, permute_type=perm_method).to(device)
+
+    elif model == 'cnn':
+        model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
+                                    num_outputs=output_dim, k=k, p=p, g=g, num_params=num_params,
+                                    permute_type=perm_method).to(device)
+
+        model_params.append({'params': model.conv_layers.parameters()})
+        model_params.append({'params': model.pooling.parameters()})
+
+    elif model == 'resnet':
+        model = models.ResNet(resnet_ver=resnet_ver, actfun=actfun,
+                              num_input_channels=input_channels, num_outputs=output_dim, k=k, p=p, g=g,
+                              permute_type=perm_method, width=resnet_width).to(device)
+
+        model_params.append({'params': model.conv_layers.parameters()})
+
+    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+    model_params.append({'params': model.linear_layers.parameters()})
+    if actfun == 'combinact':
+        model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+
+    return model, model_params
+
+
+# -------------------- Setting Up & Running Training Function
 def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path, fieldnames, train_loader,
           validation_loader, sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1,
           perm_method='shuffle'):
@@ -37,61 +81,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     :return:
     """
 
-    # ---- Initialization
-
-    model_params = []
-    if args.model == 'nn' or args.model == 'mlp':
-        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
-            input_dim, output_dim = 784, 10
-        elif args.dataset == 'cifar10' or args.dataset == 'svhn':
-            input_dim, output_dim = 3072, 10
-        elif args.dataset == 'cifar100':
-            input_dim, output_dim = 3072, 100
-        model = models.CombinactMLP(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
-                                    k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
-                                    num_params=num_params, permute_type=perm_method).to(device)
-
-    elif args.model == 'cnn':
-        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
-            input_channels, input_dim, output_dim = 1, 28, 10
-        elif args.dataset == 'cifar10' or args.dataset == 'svhn':
-            input_channels, input_dim, output_dim = 3, 32, 10
-        elif args.dataset == 'cifar100':
-            input_channels, input_dim, output_dim = 3, 32, 100
-
-        model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
-                                    num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, num_params=num_params,
-                                    reduce_actfuns=args.reduce_actfuns, permute_type=perm_method).to(device)
-
-        model_params.append({'params': model.conv_layers.parameters()})
-        model_params.append({'params': model.pooling.parameters()})
-
-    elif args.model == 'resnet':
-        if args.dataset == 'mnist' or args.dataset == 'fashion_mnist':
-            input_channels, input_dim, output_dim = 1, 28, 10
-        elif args.dataset == 'cifar10' or args.dataset == 'svhn':
-            input_channels, input_dim, output_dim = 3, 32, 10
-        elif args.dataset == 'cifar100':
-            input_channels, input_dim, output_dim = 3, 32, 100
-
-        model = models.ResNet(resnet_ver=args.resnet_ver, actfun=actfun,
-                              num_input_channels=input_channels, num_outputs=output_dim, k=curr_k, p=curr_p, g=curr_g, reduce_actfuns=args.reduce_actfuns,
-                              permute_type=perm_method, width=args.resnet_width, orig=args.resnet_orig).to(device)
-
-        if not args.resnet_orig:
-            model_params.append({'params': model.conv_layers.parameters()})
-        else:
-            model_params = model.parameters()
-
-    elif args.model == 'dawnnet':
-        model = models.DawnNet().to(device)
-        model_params = model.parameters()
-
-    if not args.resnet_orig and args.model != 'dawnnet':
-        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
-        model_params.append({'params': model.linear_layers.parameters()})
-    if actfun == 'combinact':
-        model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+    model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
+                                     perm_method=perm_method, device=device,
+                                     resnet_ver=args.resnet_ver, resnet_width=args.resnet_width)
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)

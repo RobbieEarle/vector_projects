@@ -128,7 +128,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', type=int, default=35, help='Number of training epochs')
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
-    parser.add_argument('--resnet_orig', action='store_true', help='')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')

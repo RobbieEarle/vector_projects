@@ -316,6 +316,7 @@ class CombinactCNN(nn.Module):
                 all_outputs = torch.cat((all_outputs, curr_outputs), dim=1)
         return all_outputs
 
+
 def DawnNet():
     return dawnnet.DawnNet()
 
@@ -327,23 +328,13 @@ def ResNet(resnet_ver, actfun,
            alpha_dist="per_cluster",
            permute_type="shuffle",
            reduce_actfuns=False,
-           width=1, orig=False):
+           width=1):
 
-    if orig:
-        if resnet_ver == 34:
-            return resnet_orig2.resnet34(num_input_channels=num_input_channels)
-        elif resnet_ver == 50:
-            return resnet_orig2.wide_resnet50_2(num_input_channels=num_input_channels)
-        elif resnet_ver == 101:
-            return resnet_orig2.resnet101(num_input_channels=num_input_channels)
-        elif resnet_ver == 152:
-            return resnet_orig2.resnet152(num_input_channels=num_input_channels)
-    else:
-        return resnet.ResNet(resnet_ver, actfun,
-                             num_input_channels,
-                             num_outputs,
-                             k, p, g,
-                             alpha_dist,
-                             permute_type,
-                             reduce_actfuns,
-                             width=width)
+    return resnet.ResNet(resnet_ver, actfun,
+                         num_input_channels,
+                         num_outputs,
+                         k, p, g,
+                         alpha_dist,
+                         permute_type,
+                         reduce_actfuns,
+                         width=width)
