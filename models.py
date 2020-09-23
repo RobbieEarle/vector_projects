@@ -7,6 +7,7 @@ import resnet
 import resnet_orig
 import resnet_orig2
 import dawnnet
+import preact_resnet
 import math
 import numpy as np
 import time
@@ -318,7 +319,12 @@ class CombinactCNN(nn.Module):
 
 
 def DawnNet():
-    return dawnnet.DawnNet()
+    # return dawnnet.DawnNet()
+    block = preact_resnet.BottleneckBlock
+    # num_blocks = [2, 2, 2, 2]
+    num_blocks = [3, 4, 6, 3]
+    width = 2
+    return preact_resnet.PreActResNet(block=block, num_blocks=num_blocks, width=width)
 
 
 def ResNet(resnet_ver, actfun,
@@ -328,7 +334,7 @@ def ResNet(resnet_ver, actfun,
            alpha_dist="per_cluster",
            permute_type="shuffle",
            reduce_actfuns=False,
-           width=1):
+           width=1, verbose=False):
 
     return resnet.ResNet(resnet_ver, actfun,
                          num_input_channels,
@@ -337,4 +343,4 @@ def ResNet(resnet_ver, actfun,
                          alpha_dist,
                          permute_type,
                          reduce_actfuns,
-                         width=width)
+                         width=width, verbose=verbose)

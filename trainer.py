@@ -17,7 +17,7 @@ import time
 
 
 # -------------------- Loading Model
-def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device, resnet_ver, resnet_width):
+def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device, resnet_ver, resnet_width, verbose):
 
     model_params = []
 
@@ -49,7 +49,7 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
     elif model == 'resnet':
         model = models.ResNet(resnet_ver=resnet_ver, actfun=actfun,
                               num_input_channels=input_channels, num_outputs=output_dim, k=k, p=p, g=g,
-                              permute_type=perm_method, width=resnet_width).to(device)
+                              permute_type=perm_method, width=resnet_width, verbose=verbose).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
 
@@ -82,8 +82,8 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     """
 
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
-                                     perm_method=perm_method, device=device,
-                                     resnet_ver=args.resnet_ver, resnet_width=args.resnet_width)
+                                     perm_method=perm_method, device=device, resnet_ver=args.resnet_ver,
+                                     resnet_width=args.resnet_width, verbose=args.verbose)
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)

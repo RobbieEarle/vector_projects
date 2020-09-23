@@ -18,10 +18,11 @@ class PreActBlock(nn.Module):
     expansion = 1
 
     def __init__(self, actfun, width, p, k, g, permute_type, alpha_dist, reduce_actfuns,
-                 in_planes, planes, stride=1):
+                 in_planes, planes, stride=1, verbose=False):
         super(PreActBlock, self).__init__()
         assert width == 1, "Width must be 1 for standard block"
 
+        self.verbose = verbose
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type
@@ -108,11 +109,12 @@ class PreActBottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, actfun, width, p, k, g, permute_type, alpha_dist, reduce_actfuns,
-                 in_planes, planes, stride=1):
+                 in_planes, planes, stride=1, verbose=False):
         super(PreActBottleneck, self).__init__()
 
         start_time = time.time()
 
+        self.verbose = verbose
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type
@@ -167,7 +169,8 @@ class PreActBottleneck(nn.Module):
                 for layer in range(3):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
-        print("-> Bottleneck block init: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> Bottleneck block init: {}".format(time.time() - start_time))
 
     def forward(self, x):
         start_time = time.time()
@@ -184,7 +187,8 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv1(out)
-        print("-> Bottleneck block 1: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> Bottleneck block 1: {}".format(time.time() - start_time))
 
         start_time - time.time()
         if self.actfun == 'combinact':
@@ -199,7 +203,8 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv2(out)
-        print("-> Bottleneck block 2: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> Bottleneck block 2: {}".format(time.time() - start_time))
 
         start_time = time.time()
         if self.actfun == 'combinact':
@@ -214,7 +219,8 @@ class PreActBottleneck(nn.Module):
                                alpha_dist=self.alpha_dist,
                                reduce_actfuns=self.reduce_actfuns)
         out = self.conv3(out)
-        print("-> Bottleneck block 3: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> Bottleneck block 3: {}".format(time.time() - start_time))
 
         shortcut = self.shortcut(x) if hasattr(self, 'shortcut') else x
         out += shortcut
@@ -229,11 +235,13 @@ class PreActResNet(nn.Module):
                  k=2, p=1, g=1,
                  alpha_dist="per_cluster",
                  permute_type="shuffle",
-                 reduce_actfuns=False):
+                 reduce_actfuns=False,
+                 verbose=False):
         super(PreActResNet, self).__init__()
 
         start_time = time.time()
 
+        self.verbose = verbose
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
@@ -254,24 +262,25 @@ class PreActResNet(nn.Module):
         self.batch_norms = nn.ModuleList([])
 
         self.all_alpha_primes = nn.ParameterList()
-        self.layer1 = self._make_layer(block, width, block_sizes[0], num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, width, block_sizes[1], num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, width, block_sizes[2], num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, width, block_sizes[3], num_blocks[3], stride=2)
+        self.layer1 = self._make_layer(block, width, block_sizes[0], num_blocks[0], stride=1, verbose=verbose)
+        self.layer2 = self._make_layer(block, width, block_sizes[1], num_blocks[1], stride=2, verbose=verbose)
+        self.layer3 = self._make_layer(block, width, block_sizes[2], num_blocks[2], stride=2, verbose=verbose)
+        self.layer4 = self._make_layer(block, width, block_sizes[3], num_blocks[3], stride=2, verbose=verbose)
 
         self.linear_layers = nn.ModuleList([
             nn.Linear(block_sizes[3] * block.expansion, num_outputs)
         ])
 
-        print("-> ResNet init: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> ResNet init: {}".format(time.time() - start_time))
 
-    def _make_layer(self, block, width, planes, num_blocks, stride):
+    def _make_layer(self, block, width, planes, num_blocks, stride, verbose=False):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
             curr_layer = block(self.actfun, width, self.p, self.k, self.g,
                                self.permute_type, self.alpha_dist, self.reduce_actfuns,
-                               self.in_planes, planes, stride)
+                               self.in_planes, planes, stride, verbose)
             self.conv_layers += curr_layer.conv_layers
             self.batch_norms += curr_layer.batch_norms
             self.all_alpha_primes += curr_layer.all_alpha_primes
@@ -280,17 +289,21 @@ class PreActResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+        start_time = time.time()
         out = self.conv_layers[0](x)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
 
-        start_time = time.time()
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear_layers[0](out)
-        print("-> Linear layers: {}".format(time.time() - start_time))
+
+        print("-> Forward: {}".format(time.time() - start_time))
+        if self.verbose:
+            print("-> Forward: {}".format(time.time() - start_time))
+
         return out
 
 
@@ -302,7 +315,8 @@ def ResNet(resnet_ver,
            alpha_dist="per_cluster",
            permute_type="shuffle",
            reduce_actfuns=False,
-           width=1):
+           width=1,
+           verbose=False):
 
     if resnet_ver == 18:
         block = PreActBlock
@@ -327,4 +341,5 @@ def ResNet(resnet_ver,
                         k, p, g,
                         alpha_dist,
                         permute_type,
-                        reduce_actfuns)
+                        reduce_actfuns,
+                        verbose=verbose)
