@@ -112,7 +112,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)
-    model.apply(util.weights_init)
+    # model.apply(util.weights_init)
 
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
@@ -223,12 +223,13 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         alpha_primes = []
         alphas = []
-        for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
-            curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
-            curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
-            curr_alpha_primes = curr_alpha_primes.tolist()
-            alpha_primes.append(curr_alpha_primes)
-            alphas.append(curr_alphas)
+        if model.actfun == 'combinact':
+            for i, layer_alpha_primes in enumerate(model.all_alpha_primes):
+                curr_alpha_primes = torch.mean(layer_alpha_primes, dim=0)
+                curr_alphas = F.softmax(curr_alpha_primes, dim=0).data.tolist()
+                curr_alpha_primes = curr_alpha_primes.tolist()
+                alpha_primes.append(curr_alpha_primes)
+                alphas.append(curr_alphas)
 
         model.eval()
         with torch.no_grad():
