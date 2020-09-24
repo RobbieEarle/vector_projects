@@ -112,7 +112,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)
-    # model.apply(util.weights_init)
+    model.apply(util.weights_init)
 
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
