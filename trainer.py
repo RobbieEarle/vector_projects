@@ -35,28 +35,50 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
             input_dim = 3072
         elif dataset == 'cifar100':
             input_dim = 3072
-        model = models.CombinactMLP(actfun=actfun, input_dim=input_dim, output_dim=output_dim,
-                                    k=k, p=p, g=g, num_params=num_params, permute_type=perm_method).to(device)
+        model = models.CombinactMLP(actfun=actfun,
+                                    input_dim=input_dim,
+                                    output_dim=output_dim,
+                                    k=k,
+                                    p=p,
+                                    g=g,
+                                    num_params=num_params,
+                                    permute_type=perm_method).to(device)
+        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+        model_params.append({'params': model.linear_layers.parameters()})
+        if actfun == 'combinact':
+            model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     elif model == 'cnn':
-        model = models.CombinactCNN(actfun=actfun, num_input_channels=input_channels, input_dim=input_dim,
-                                    num_outputs=output_dim, k=k, p=p, g=g, num_params=num_params,
+        model = models.CombinactCNN(actfun=actfun,
+                                    num_input_channels=input_channels,
+                                    input_dim=input_dim,
+                                    num_outputs=output_dim,
+                                    k=k,
+                                    p=p,
+                                    g=g,
+                                    num_params=num_params,
                                     permute_type=perm_method).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
+        model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
+        model_params.append({'params': model.linear_layers.parameters()})
+        if actfun == 'combinact':
+            model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     elif model == 'resnet':
-        model = models.ResNet(resnet_ver=resnet_ver, actfun=actfun,
-                              num_input_channels=input_channels, num_outputs=output_dim, k=k, p=p, g=g,
-                              permute_type=perm_method, width=resnet_width, verbose=verbose).to(device)
+        model = models.ResNet(resnet_ver=resnet_ver,
+                              actfun=actfun,
+                              num_input_channels=input_channels,
+                              num_outputs=output_dim,
+                              k=k,
+                              p=p,
+                              g=g,
+                              permute_type=perm_method,
+                              width=resnet_width,
+                              verbose=verbose).to(device)
 
-        model_params.append({'params': model.conv_layers.parameters()})
-
-    model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
-    model_params.append({'params': model.linear_layers.parameters()})
-    if actfun == 'combinact':
-        model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
+        model_params = model.parameters()
 
     return model, model_params
 
@@ -81,6 +103,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     :return:
     """
 
+    if actfun == 'relu':
+        curr_k = 1
+
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
                                      perm_method=perm_method, device=device, resnet_ver=args.resnet_ver,
                                      resnet_width=args.resnet_width, verbose=args.verbose)
@@ -97,14 +122,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         num_epochs = 50
         hyper_params['cycle_peak'] = 0.35
     hyper_params['adam_wd'] *= args.wd
-
-    # if args.model == 'dawnnet':
-    #     optimizer = optim.Adam(model.parameters(),
-    #                            lr=0.000001,
-    #                            betas=(0.9, 0.99),
-    #                            weight_decay=5e-4)
-    #     hyper_params['max_lr'] = 0.1
-    #     hyper_params['cycle_peak'] = 0.4
 
     if args.model == 'resnet':
         hyper_params['adam_beta_1'] = 0.9

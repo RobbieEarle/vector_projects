@@ -319,28 +319,23 @@ class CombinactCNN(nn.Module):
 
 
 def DawnNet():
-    # return dawnnet.DawnNet()
+    return dawnnet.DawnNet()
+
+
+def ResNet(resnet_ver, **kwargs):
+
     block = preact_resnet.BottleneckBlock
-    # num_blocks = [2, 2, 2, 2]
-    num_blocks = [3, 4, 6, 3]
-    width = 2
-    return preact_resnet.PreActResNet(block=block, num_blocks=num_blocks, width=width)
+    if resnet_ver == 18:
+        num_blocks = [2, 2, 2, 2]
+    elif resnet_ver == 34:
+        num_blocks = [3, 4, 6, 3]
+    elif resnet_ver == 50:
+        num_blocks = [3, 4, 6, 3]
+    elif resnet_ver == 101:
+        num_blocks = [3, 4, 23, 3]
+    elif resnet_ver == 152:
+        num_blocks = [3, 8, 36, 3]
+    else:
+        num_blocks = [2, 2, 2, 2]
 
-
-def ResNet(resnet_ver, actfun,
-           num_input_channels=3,
-           num_outputs=10,
-           k=2, p=1, g=1,
-           alpha_dist="per_cluster",
-           permute_type="shuffle",
-           reduce_actfuns=False,
-           width=1, verbose=False):
-
-    return resnet.ResNet(resnet_ver, actfun,
-                         num_input_channels,
-                         num_outputs,
-                         k, p, g,
-                         alpha_dist,
-                         permute_type,
-                         reduce_actfuns,
-                         width=width, verbose=verbose)
+    return preact_resnet.PreActResNet(block=block, num_blocks=num_blocks, hyper_params=kwargs)

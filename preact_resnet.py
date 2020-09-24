@@ -1,66 +1,96 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
+import activation_functions as actfuns
+import util
 import time
-
-
-class Block(nn.Module):
-
-    def __init__(self, c_in, c_out, stride=1, **kwargs):
-        super(Block, self).__init__()
-        self.bn1 = nn.BatchNorm2d(c_in)
-        self.conv1 = nn.Conv2d(c_in, c_out, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(c_out)
-        self.conv2 = nn.Conv2d(c_out, c_out, kernel_size=3, stride=1, padding=1, bias=False)
-
-        self.proj = (c_in != c_out or stride > 1)
-        if self.proj:
-            self.conv_proj = nn.Conv2d(c_in, c_out, kernel_size=1, stride=stride, padding=0, bias=False)
-
-    def forward(self, x):
-        x = F.relu(self.bn1(x))
-
-        identity = x.clone().to(x.device)
-
-        x = F.relu(self.bn2(self.conv1(x)))
-
-        if self.proj:
-            identity = self.conv_proj(identity)
-
-        x += identity
-
-        return x
 
 
 class BottleneckBlock(nn.Module):
 
-    def __init__(self, c_in, c_out, stride=1, width=1):
+    def __init__(self, c_in, c_out, hyper_params, stride=1):
         super(BottleneckBlock, self).__init__()
+
+        # -------- Calculating number of input channels for each layer after applying activations
+        self.actfun = hyper_params['actfun'] if 'actfun' in hyper_params else 'relu'
+        self.k = hyper_params['k'] if 'k' in hyper_params else 2
+        self.p = hyper_params['p'] if 'p' in hyper_params else 1
+        self.g = hyper_params['g'] if 'g' in hyper_params else 1
+        width = hyper_params['width'] if 'width' in hyper_params else 1
+
+        pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
+        if self.actfun == 'bin_partition_full':
+            conv1_in = int((c_in * self.p) + (2 * math.floor((c_in * self.p) / (3 * self.k)) * (1 - self.k)))
+            conv2_in = int((c_out * self.p) + (2 * math.floor((c_out * self.p) / (3 * self.k)) * (1 - self.k)))
+            conv3_in = int((c_out*width*self.p) + (2*math.floor((c_out*width*self.p) / (3*self.k)) * (1-self.k)))
+        else:
+            conv1_in = int(c_in * pk_ratio)
+            conv2_in = int(c_out * pk_ratio)
+            conv3_in = int(c_out * width * pk_ratio)
+
+        # -------- Defining layers in current block
         self.bn1 = nn.BatchNorm2d(c_in)
-        self.conv1 = nn.Conv2d(c_in, c_out, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv2d(conv1_in, c_out, kernel_size=1, bias=False)
         self.bn2 = nn.BatchNorm2d(c_out)
-        self.conv2 = nn.Conv2d(c_out, c_out * width, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(conv2_in, c_out * width, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(c_out * width)
-        self.conv3 = nn.Conv2d(c_out * width, c_out, kernel_size=1, bias=False)
+        self.conv3 = nn.Conv2d(conv3_in, c_out, kernel_size=1, bias=False)
 
         self.proj = (c_in != c_out or stride > 1)
         if self.proj:
             self.conv_proj = nn.Conv2d(c_in, c_out, kernel_size=1, stride=stride, padding=0, bias=False)
 
+        # -------- Setting up shuffle maps and alpha prime params for higher order activations
+        self.alpha_dist = hyper_params['alpha_dist'] if 'alpha_dist' in hyper_params else 'per_cluster'
+        self.permute_type = hyper_params['permute_type'] if 'permute_type' in hyper_params else 'shuffle'
+        self.reduce_actfuns = hyper_params['reduce_actfuns'] if 'reduce_actfuns' in hyper_params else False
+
+        self.shuffle_maps = []
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
+        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
+        self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
+        if self.actfun == "combinact":
+            self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(self.reduce_actfuns))
+            if self.alpha_dist == "per_cluster":
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv1_in, self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv2_in, self.num_combinact_actfuns)))
+                self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv3_in, self.num_combinact_actfuns)))
+            if self.alpha_dist == "per_perm":
+                for layer in range(3):
+                    self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
+
+    def activate(self, x, layer_type, shuffle_map, alpha_primes):
+        return actfuns.activate(x,
+                                actfun=self.actfun,
+                                k=self.k,
+                                p=self.p,
+                                M=x.shape[1],
+                                layer_type=layer_type,
+                                permute_type=self.permute_type,
+                                shuffle_maps=shuffle_map,
+                                alpha_primes=alpha_primes,
+                                alpha_dist=self.alpha_dist,
+                                reduce_actfuns=self.reduce_actfuns)
+
     def forward(self, x):
 
         identity = x.clone().to(x.device)
 
+        alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
         x = self.bn1(x)
-        x = F.relu(x)
+        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
         x = self.conv1(x)
 
+        alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
         x = self.bn2(x)
-        x = F.relu(x)
+        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
         x = self.conv2(x)
 
+        alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
         x = self.bn3(x)
-        x = F.relu(x)
+        x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
         x = self.conv3(x)
 
         if self.proj:
@@ -73,42 +103,58 @@ class BottleneckBlock(nn.Module):
 
 class PreActResNet(nn.Module):
 
-    def __init__(self, block, num_blocks, width=1, in_channels=3, out_channels=10, c=64):
+    def __init__(self, block, num_blocks, hyper_params):
         super(PreActResNet, self).__init__()
 
+        # -------- Error handling
         assert len(num_blocks) == 4, "Network must have four layers"
+        assert all(i >= 0 for i in num_blocks), "All layers must have one or more block(s)"
 
+        self.hyper_params = hyper_params
+
+        # -------- Setting number of layer channels
+        self.actfun = hyper_params['actfun'] if 'actfun' in hyper_params else 'relu'
+        self.k = hyper_params['k'] if 'k' in hyper_params else 1
+        self.p = hyper_params['p'] if 'p' in hyper_params else 1
+        self.g = hyper_params['g'] if 'g' in hyper_params else 1
+        if self.actfun == 'relu':
+            assert self.k == 1, "k = {} with ReLU activation. ReLU cannot have k != 1".format(self.k)
+
+        c = hyper_params['c'] if 'c' in hyper_params else 64
         c = [c, 2 * c, 4 * c, 8 * c]
+        for i, curr_num_params in enumerate(c):
+            c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
 
+        # -------- Defining layers in network
+        in_channels = hyper_params['in_channels'] if 'in_channels' in hyper_params else 3
+        out_channels = hyper_params['out_channels'] if 'out_channels' in hyper_params else 10
         self.conv0 = nn.Conv2d(in_channels, c[0], kernel_size=3, stride=1, padding=1, bias=False)
         self.bn0 = nn.BatchNorm2d(c[0])
-
-        self.layer1 = self.make_layer(block, num_blocks[0], in_dim=c[0], out_dim=c[0], width=width)
-        self.layer2 = self.make_layer(block, num_blocks[1], in_dim=c[0], out_dim=c[1], width=width)
-        self.layer3 = self.make_layer(block, num_blocks[2], in_dim=c[1], out_dim=c[2], width=width)
-        self.layer4 = self.make_layer(block, num_blocks[3], in_dim=c[2], out_dim=c[3], width=width)
-
+        self.layer1 = self.make_layer(block, num_blocks[0], in_dim=c[0], out_dim=c[0], hyper_params=hyper_params)
+        self.layer2 = self.make_layer(block, num_blocks[1], in_dim=c[0], out_dim=c[1], hyper_params=hyper_params)
+        self.layer3 = self.make_layer(block, num_blocks[2], in_dim=c[1], out_dim=c[2], hyper_params=hyper_params)
+        self.layer4 = self.make_layer(block, num_blocks[3], in_dim=c[2], out_dim=c[3], hyper_params=hyper_params)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(c[3], out_channels)
 
-    def make_layer(self, block, num_blocks, in_dim, out_dim, width):
+    def make_layer(self, block, num_blocks, in_dim, out_dim, hyper_params):
 
         layer = nn.ModuleList([])
         if in_dim == out_dim:
             for i in range(num_blocks):
-                layer.append(block(in_dim, out_dim, width=width))
+                layer.append(block(in_dim, out_dim, hyper_params=hyper_params))
         else:
             for i in range(num_blocks):
                 if i == 0:
-                    layer.append(block(in_dim, out_dim, stride=2, width=width))
+                    layer.append(block(in_dim, out_dim, stride=2, hyper_params=hyper_params))
                 else:
-                    layer.append(block(out_dim, out_dim, width=width))
+                    layer.append(block(out_dim, out_dim, hyper_params=hyper_params))
 
         return layer
 
     def forward(self, x):
 
-        start_time = time.time()
+        # start_time = time.time()
 
         x = F.relu(self.bn0(self.conv0(x)))
 
@@ -125,7 +171,7 @@ class PreActResNet(nn.Module):
         x = torch.flatten(x, 1)
         x = self.fc(x)
 
-        print("-> Forward: {}".format(time.time() - start_time))
+        # print("-> Forward: {}".format(time.time() - start_time))
 
         return x
 

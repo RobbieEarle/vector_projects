@@ -82,25 +82,54 @@ def setup_experiment(args, outfile_path):
 
                                 # ---- Loading Dataset
                                 print()
-                                train_loader, validation_loader, sample_size, batch_size = util.load_dataset(args.model,
-                                                                                                             args.dataset,
-                                                                                                             seed=curr_seed,
-                                                                                                             batch_size=args.batch_size,
-                                                                                                             sample_size=curr_sample_size,
-                                                                                                             kwargs=kwargs)
+
+                                dataset = util.load_dataset(args.model,
+                                                            args.dataset,
+                                                            seed=curr_seed,
+                                                            batch_size=args.batch_size,
+                                                            sample_size=curr_sample_size,
+                                                            kwargs=kwargs)
+                                train_loader, validation_loader = dataset[0], dataset[1]
+                                sample_size = dataset[2]
+                                batch_size = dataset[3]
 
                                 if args.model == 'dawnnet':
-                                    trainer_dawnnet.train(args, checkpoint, checkpoint_location, actfun, curr_seed,
-                                                  outfile_path,
-                                                  fieldnames, train_loader, validation_loader, sample_size, batch_size,
-                                                  device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
-                                                  perm_method=perm_method)
+                                    trainer_dawnnet.train(args,
+                                                          checkpoint,
+                                                          checkpoint_location,
+                                                          actfun,
+                                                          curr_seed,
+                                                          outfile_path,
+                                                          fieldnames,
+                                                          train_loader,
+                                                          validation_loader,
+                                                          sample_size,
+                                                          batch_size,
+                                                          device,
+                                                          num_params=curr_num_params,
+                                                          curr_p=p,
+                                                          curr_k=k,
+                                                          curr_g=g,
+                                                          perm_method=perm_method)
 
                                 # ---- Begin training model
                                 else:
-                                    trainer.train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path,
-                                                  fieldnames, train_loader, validation_loader, sample_size, batch_size,
-                                                  device, num_params=curr_num_params, curr_p=p, curr_k=k, curr_g=g,
+                                    trainer.train(args,
+                                                  checkpoint,
+                                                  checkpoint_location,
+                                                  actfun,
+                                                  curr_seed,
+                                                  outfile_path,
+                                                  fieldnames,
+                                                  train_loader,
+                                                  validation_loader,
+                                                  sample_size,
+                                                  batch_size,
+                                                  device,
+                                                  num_params=curr_num_params,
+                                                  curr_p=p,
+                                                  curr_k=k,
+                                                  curr_g=g,
                                                   perm_method=perm_method)
                                 print()
 
