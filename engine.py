@@ -79,7 +79,6 @@ def setup_experiment(args, outfile_path):
                             for perm_method in perm_methods:
 
                                 util.seed_all(curr_seed)
-
                                 # ---- Loading Dataset
                                 print()
 
