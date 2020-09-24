@@ -9,6 +9,8 @@ import time
 
 class BottleneckBlock(nn.Module):
 
+    expansion = 4
+
     def __init__(self, c_in, c_out, hyper_params, stride=1):
         super(BottleneckBlock, self).__init__()
 
@@ -22,24 +24,24 @@ class BottleneckBlock(nn.Module):
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
         if self.actfun == 'bin_partition_full':
             conv1_in = int((c_in * self.p) + (2 * math.floor((c_in * self.p) / (3 * self.k)) * (1 - self.k)))
-            conv2_in = int((c_out * self.p) + (2 * math.floor((c_out * self.p) / (3 * self.k)) * (1 - self.k)))
+            conv2_in = int((c_out*width*self.p) + (2*math.floor((c_out*width*self.p) / (3*self.k)) * (1-self.k)))
             conv3_in = int((c_out*width*self.p) + (2*math.floor((c_out*width*self.p) / (3*self.k)) * (1-self.k)))
         else:
             conv1_in = int(c_in * pk_ratio)
-            conv2_in = int(c_out * pk_ratio)
+            conv2_in = int(c_out * width * pk_ratio)
             conv3_in = int(c_out * width * pk_ratio)
 
         # -------- Defining layers in current block
         self.bn1 = nn.BatchNorm2d(c_in)
-        self.conv1 = nn.Conv2d(conv1_in, c_out, kernel_size=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(c_out)
+        self.conv1 = nn.Conv2d(conv1_in, c_out * width, kernel_size=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(c_out * width)
         self.conv2 = nn.Conv2d(conv2_in, c_out * width, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(c_out * width)
-        self.conv3 = nn.Conv2d(conv3_in, c_out, kernel_size=1, bias=False)
+        self.conv3 = nn.Conv2d(conv3_in, c_out * self.expansion, kernel_size=1, bias=False)
 
-        self.proj = (c_in != c_out or stride > 1)
+        self.proj = (c_in != self.expansion * c_out or stride > 1)
         if self.proj:
-            self.conv_proj = nn.Conv2d(c_in, c_out, kernel_size=1, stride=stride, padding=0, bias=False)
+            self.conv_proj = nn.Conv2d(c_in, self.expansion * c_out, kernel_size=1, stride=stride, padding=0, bias=False)
 
         # -------- Setting up shuffle maps and alpha prime params for higher order activations
         self.alpha_dist = hyper_params['alpha_dist'] if 'alpha_dist' in hyper_params else 'per_cluster'
@@ -124,40 +126,35 @@ class PreActResNet(nn.Module):
         c = [c, 2 * c, 4 * c, 8 * c]
         for i, curr_num_params in enumerate(c):
             c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
+        self.inplanes = c[0]
 
         # -------- Defining layers in network
         in_channels = hyper_params['in_channels'] if 'in_channels' in hyper_params else 3
         out_channels = hyper_params['out_channels'] if 'out_channels' in hyper_params else 10
-        self.conv0 = nn.Conv2d(in_channels, c[0], kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv0 = nn.Conv2d(in_channels, c[0], kernel_size=7, stride=2, padding=3, bias=False)
         self.bn0 = nn.BatchNorm2d(c[0])
-        self.layer1 = self.make_layer(block, num_blocks[0], in_dim=c[0], out_dim=c[0], hyper_params=hyper_params)
-        self.layer2 = self.make_layer(block, num_blocks[1], in_dim=c[0], out_dim=c[1], hyper_params=hyper_params)
-        self.layer3 = self.make_layer(block, num_blocks[2], in_dim=c[1], out_dim=c[2], hyper_params=hyper_params)
-        self.layer4 = self.make_layer(block, num_blocks[3], in_dim=c[2], out_dim=c[3], hyper_params=hyper_params)
+        self.layer1 = self.make_layer(block, num_blocks[0], c=c[0], hyper_params=hyper_params)
+        self.layer2 = self.make_layer(block, num_blocks[1], c=c[1], hyper_params=hyper_params, stride=2)
+        self.layer3 = self.make_layer(block, num_blocks[2], c=c[2], hyper_params=hyper_params, stride=2)
+        self.layer4 = self.make_layer(block, num_blocks[3], c=c[3], hyper_params=hyper_params, stride=2)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(c[3], out_channels)
+        self.fc = nn.Linear(self.inplanes, out_channels)
 
-    def make_layer(self, block, num_blocks, in_dim, out_dim, hyper_params):
+    def make_layer(self, block, num_blocks, c, hyper_params, stride=1):
 
         layer = nn.ModuleList([])
-        if in_dim == out_dim:
-            for i in range(num_blocks):
-                layer.append(block(in_dim, out_dim, hyper_params=hyper_params))
-        else:
-            for i in range(num_blocks):
-                if i == 0:
-                    layer.append(block(in_dim, out_dim, stride=2, hyper_params=hyper_params))
-                else:
-                    layer.append(block(out_dim, out_dim, hyper_params=hyper_params))
+        for i in range(num_blocks):
+            layer.append(block(self.inplanes, c, hyper_params=hyper_params, stride=stride))
+            if i == 0:
+                self.inplanes = c * block.expansion
+                stride = 1
 
         return layer
 
     def forward(self, x):
 
         # start_time = time.time()
-
         x = F.relu(self.bn0(self.conv0(x)))
-
         for block in self.layer1:
             x = block(x)
         for block in self.layer2:

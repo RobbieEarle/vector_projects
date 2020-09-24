@@ -100,18 +100,24 @@ class Bottleneck(nn.Module):
         identity = x
 
         out = self.conv1(x)
+        print(out.shape, identity.shape)
         out = self.bn1(out)
         out = self.relu(out)
 
         out = self.conv2(out)
+        print(out.shape, identity.shape)
         out = self.bn2(out)
         out = self.relu(out)
 
         out = self.conv3(out)
+        print(out.shape, identity.shape)
         out = self.bn3(out)
 
         if self.downsample is not None:
             identity = self.downsample(x)
+
+        print(out.shape, identity.shape)
+        print("234"+234)
 
         out += identity
         out = self.relu(out)
@@ -243,7 +249,7 @@ def resnet34(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet('resnet34', BasicBlock, [3, 4, 6, 3], pretrained, progress,
+    return _resnet('resnet34', Bottleneck, [3, 4, 6, 3], pretrained, progress,
                    **kwargs)
 
 

@@ -105,10 +105,18 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     if actfun == 'relu':
         curr_k = 1
+        resnet_ver = args.resnet_ver
+        resnet_width = args.resnet_width
+    else:
+        resnet_ver = args.resnet_ver
+        resnet_width = args.resnet_width + math.ceil(curr_k/2)
+    if args.model != 'resnet':
+        resnet_ver = 0
+        resnet_width = 0
 
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
-                                     perm_method=perm_method, device=device, resnet_ver=args.resnet_ver,
-                                     resnet_width=args.resnet_width, verbose=args.verbose)
+                                     perm_method=perm_method, device=device, resnet_ver=resnet_ver,
+                                     resnet_width=resnet_width, verbose=args.verbose)
 
     util.seed_all(curr_seed)
     rng = np.random.RandomState(curr_seed)
@@ -157,12 +165,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              )
 
     epoch = 1
-    if args.model == 'resnet':
-        resnet_ver = args.resnet_ver
-        resnet_width = args.resnet_width
-    else:
-        resnet_ver = 0
-        resnet_width = 0
 
     if checkpoint is not None:
         model.load_state_dict(checkpoint['state_dict'])
@@ -185,6 +187,17 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['num_params'], checkpoint['sample_size'],
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
+
+    # for name, param in model.named_parameters():
+    #     if len(list(param.shape)) != 1 and 'conv' in str(name):
+    #         shape = list(param.shape)
+    #         shape[0], shape[1] = shape[1], shape[0]
+    #         # shape = list(param.shape)
+    #         # else:
+    #         #     shape = list(param.shape)
+    #         print(name, shape)
+    # time.sleep(1)
+    # print(util.get_model_params(model))
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
