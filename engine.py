@@ -6,7 +6,6 @@ import os
 import datetime
 import csv
 import trainer
-import trainer_dawnnet
 
 
 def retrieve_checkpoint(curr_entry, full_arr):
@@ -20,9 +19,8 @@ def setup_experiment(args, outfile_path):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
-    :param seed: seed for parameter randomization
+    :param args: args passed in for current experiment
     :param outfile_path: path to save outputs from experiment
-    :param actfun: model architecture
     :return:
     """
 
@@ -92,44 +90,24 @@ def setup_experiment(args, outfile_path):
                                 sample_size = dataset[2]
                                 batch_size = dataset[3]
 
-                                if args.model == 'dawnnet':
-                                    trainer_dawnnet.train(args,
-                                                          checkpoint,
-                                                          checkpoint_location,
-                                                          actfun,
-                                                          curr_seed,
-                                                          outfile_path,
-                                                          fieldnames,
-                                                          train_loader,
-                                                          validation_loader,
-                                                          sample_size,
-                                                          batch_size,
-                                                          device,
-                                                          num_params=curr_num_params,
-                                                          curr_p=p,
-                                                          curr_k=k,
-                                                          curr_g=g,
-                                                          perm_method=perm_method)
-
                                 # ---- Begin training model
-                                else:
-                                    trainer.train(args,
-                                                  checkpoint,
-                                                  checkpoint_location,
-                                                  actfun,
-                                                  curr_seed,
-                                                  outfile_path,
-                                                  fieldnames,
-                                                  train_loader,
-                                                  validation_loader,
-                                                  sample_size,
-                                                  batch_size,
-                                                  device,
-                                                  num_params=curr_num_params,
-                                                  curr_p=p,
-                                                  curr_k=k,
-                                                  curr_g=g,
-                                                  perm_method=perm_method)
+                                trainer.train(args,
+                                              checkpoint,
+                                              checkpoint_location,
+                                              actfun,
+                                              curr_seed,
+                                              outfile_path,
+                                              fieldnames,
+                                              train_loader,
+                                              validation_loader,
+                                              sample_size,
+                                              batch_size,
+                                              device,
+                                              num_params=curr_num_params,
+                                              curr_p=p,
+                                              curr_k=k,
+                                              curr_g=g,
+                                              perm_method=perm_method)
                                 print()
 
                                 checkpoint = None
@@ -148,7 +126,7 @@ if __name__ == '__main__':
     parser.add_argument('--resnet_width', type=int, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='cifar10', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='relu')  # all
+    parser.add_argument('--actfun', type=str, default='max')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')

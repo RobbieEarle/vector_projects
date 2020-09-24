@@ -7,7 +7,9 @@ from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
 import math
-import models
+from models import mlp
+from models import cnn
+from models import preact_resnet
 import util
 import hyper_params as hp
 
@@ -35,29 +37,29 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
             input_dim = 3072
         elif dataset == 'cifar100':
             input_dim = 3072
-        model = models.CombinactMLP(actfun=actfun,
-                                    input_dim=input_dim,
-                                    output_dim=output_dim,
-                                    k=k,
-                                    p=p,
-                                    g=g,
-                                    num_params=num_params,
-                                    permute_type=perm_method).to(device)
+        model = mlp.MLP(actfun=actfun,
+                        input_dim=input_dim,
+                        output_dim=output_dim,
+                        k=k,
+                        p=p,
+                        g=g,
+                        num_params=num_params,
+                        permute_type=perm_method).to(device)
         model_params.append({'params': model.batch_norms.parameters(), 'weight_decay': 0})
         model_params.append({'params': model.linear_layers.parameters()})
         if actfun == 'combinact':
             model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     elif model == 'cnn':
-        model = models.CombinactCNN(actfun=actfun,
-                                    num_input_channels=input_channels,
-                                    input_dim=input_dim,
-                                    num_outputs=output_dim,
-                                    k=k,
-                                    p=p,
-                                    g=g,
-                                    num_params=num_params,
-                                    permute_type=perm_method).to(device)
+        model = cnn.CNN(actfun=actfun,
+                        num_input_channels=input_channels,
+                        input_dim=input_dim,
+                        num_outputs=output_dim,
+                        k=k,
+                        p=p,
+                        g=g,
+                        num_params=num_params,
+                        permute_type=perm_method).to(device)
 
         model_params.append({'params': model.conv_layers.parameters()})
         model_params.append({'params': model.pooling.parameters()})
@@ -67,16 +69,16 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
             model_params.append({'params': model.all_alpha_primes.parameters(), 'weight_decay': 0})
 
     elif model == 'resnet':
-        model = models.ResNet(resnet_ver=resnet_ver,
-                              actfun=actfun,
-                              num_input_channels=input_channels,
-                              num_outputs=output_dim,
-                              k=k,
-                              p=p,
-                              g=g,
-                              permute_type=perm_method,
-                              width=resnet_width,
-                              verbose=verbose).to(device)
+        model = preact_resnet.PreActResNet(resnet_ver=resnet_ver,
+                                           actfun=actfun,
+                                           num_input_channels=input_channels,
+                                           num_outputs=output_dim,
+                                           k=k,
+                                           p=p,
+                                           g=g,
+                                           permute_type=perm_method,
+                                           width=resnet_width,
+                                           verbose=verbose).to(device)
 
         model_params = model.parameters()
 
@@ -91,6 +93,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     Runs training session for a given randomized model
     :param args: arguments for this job
     :param checkpoint: current checkpoint
+    :param checkpoint_location: output directory for checkpoints
     :param actfun: activation function currently being used
     :param curr_seed: seed being used by current job
     :param outfile_path: path to save outputs from training session
@@ -100,6 +103,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     :param sample_size: number of training samples used in this experiment
     :param batch_size: number of samples per batch
     :param device: reference to CUDA device for GPU support
+    :param num_params: number of parameters in the network
+    :param curr_k: k value for this iteration
+    :param curr_p: p value for this iteration
+    :param curr_g: g value for this iteration
+    :param perm_method: permutation strategy for our network
     :return:
     """
 
@@ -187,17 +195,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                                          checkpoint['num_params'], checkpoint['sample_size'],
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                          checkpoint['perm_method']))
-
-    # for name, param in model.named_parameters():
-    #     if len(list(param.shape)) != 1 and 'conv' in str(name):
-    #         shape = list(param.shape)
-    #         shape[0], shape[1] = shape[1], shape[0]
-    #         # shape = list(param.shape)
-    #         # else:
-    #         #     shape = list(param.shape)
-    #         print(name, shape)
-    # time.sleep(1)
-    # print(util.get_model_params(model))
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,

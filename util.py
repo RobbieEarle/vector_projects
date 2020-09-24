@@ -488,7 +488,7 @@ def load_dataset(
     if dataset == 'mnist':
         train_trans, test_trans = [], []
         if model == 'resnet' or model == 'dawnnet':
-            # train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
+            train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
             train_trans.append(transforms.ToTensor())
             train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
             test_trans.append(transforms.ToTensor())
@@ -527,12 +527,10 @@ def load_dataset(
 
     elif dataset == 'cifar10':
         train_trans, test_trans = [], []
-        if model == 'resnet' or model == 'dawnnet':
-            # train_trans.append(transforms.RandomCrop(32, padding=4))
+        if model == 'resnet':
             train_trans.append(transforms.RandomHorizontalFlip())
             train_trans.append(CIFAR10Policy())
             train_trans.append(transforms.ToTensor())
-            # train_trans.append(Cutout(n_holes=1, length=8))
             train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
             test_trans.append(transforms.ToTensor())
             test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
@@ -556,12 +554,10 @@ def load_dataset(
 
     elif dataset == 'cifar100':
         train_trans, test_trans = [], []
-        if model == 'resnet' or model == 'dawnnet':
-            train_trans.append(transforms.RandomCrop(32, padding=4))
+        if model == 'resnet':
             train_trans.append(transforms.RandomHorizontalFlip())
             train_trans.append(CIFAR10Policy())
             train_trans.append(transforms.ToTensor())
-            train_trans.append(Cutout(n_holes=1, length=8))
             train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
             test_trans.append(transforms.ToTensor())
             test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
