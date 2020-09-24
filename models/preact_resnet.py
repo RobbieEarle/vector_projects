@@ -129,7 +129,6 @@ class PreActResNet(nn.Module):
             c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
         self.inplanes = c[0]
 
-        print(kwargs)
         # -------- Defining layers in network
         in_channels = kwargs['in_channels'] if 'in_channels' in kwargs else 3
         out_channels = kwargs['out_channels'] if 'out_channels' in kwargs else 10
