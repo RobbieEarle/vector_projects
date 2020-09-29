@@ -1878,20 +1878,22 @@ def cnn_svhn(rng):
 
 def resnet_mnist(rng):
     return {
-        "relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
-                 "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
-                 "adam_eps": np.power(10., rng.uniform(-10, -6)),
-                 "adam_wd": np.power(10., rng.uniform(-6, -2)),
-                 "max_lr": np.power(10., rng.uniform(-6, -1)),
-                 "cycle_peak": rng.uniform(0.1, 0.5)
-                 },
-        "max": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
-                "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
-                "adam_eps": np.power(10., rng.uniform(-10, -6)),
-                "adam_wd": np.power(10., rng.uniform(-6, -2)),
-                "max_lr": np.power(10., rng.uniform(-6, -1)),
-                "cycle_peak": rng.uniform(0.1, 0.5)
-                },
+        "max": {
+            "adam_beta_1": np.power(10., rng.uniform(-2.73, 0.15)),
+            "adam_beta_2": np.power(10., rng.uniform(-2.9, -0.87)),
+            "adam_eps": np.power(10., rng.uniform(-10.38, -5.15)),
+            "adam_wd": np.power(10., rng.uniform(-5.68, -2.66)),
+            "max_lr": np.power(10., rng.uniform(-4.66, -3.49)),
+            "cycle_peak": rng.uniform(0.17, 0.49),
+        },
+        "relu": {
+            "adam_beta_1": np.power(10., rng.uniform(-3.08, -0.38)),
+            "adam_beta_2": np.power(10., rng.uniform(-2.85, 0.39)),
+            "adam_eps": np.power(10., rng.uniform(-7.12, -6.58)),
+            "adam_wd": np.power(10., rng.uniform(-5.73, -1.59)),
+            "max_lr": np.power(10., rng.uniform(-5.42, -3.09)),
+            "cycle_peak": rng.uniform(0.09, 0.42),
+        },
         "multi_relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
                        "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
                        "adam_eps": np.power(10., rng.uniform(-10, -6)),
@@ -2224,20 +2226,22 @@ def resnet_cifar10(rng):
 
 def resnet_cifar100(rng):
     return {
-        "relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
-                 "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
-                 "adam_eps": np.power(10., rng.uniform(-10, -6)),
-                 "adam_wd": np.power(10., rng.uniform(-6, -2)),
-                 "max_lr": np.power(10., rng.uniform(-6, -1)),
-                 "cycle_peak": rng.uniform(0.1, 0.5)
-                 },
-        "max": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
-                "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
-                "adam_eps": np.power(10., rng.uniform(-10, -6)),
-                "adam_wd": np.power(10., rng.uniform(-6, -2)),
-                "max_lr": np.power(10., rng.uniform(-6, -1)),
-                "cycle_peak": rng.uniform(0.1, 0.5)
-                },
+        "max": {
+            "adam_beta_1": np.power(10., rng.uniform(-2.69, -1.23)),
+            "adam_beta_2": np.power(10., rng.uniform(-2.2, -0.88)),
+            "adam_eps": np.power(10., rng.uniform(-9.41, -7.67)),
+            "adam_wd": np.power(10., rng.uniform(-5.15, -3.85)),
+            "max_lr": np.power(10., rng.uniform(-3.55, -2.69)),
+            "cycle_peak": rng.uniform(0.26, 0.4),
+        },
+        "relu": {
+            "adam_beta_1": np.power(10., rng.uniform(-2.73, 0.0)),
+            "adam_beta_2": np.power(10., rng.uniform(-1.77, -0.32)),
+            "adam_eps": np.power(10., rng.uniform(-9.06, -7.43)),
+            "adam_wd": np.power(10., rng.uniform(-5.61, -3.84)),
+            "max_lr": np.power(10., rng.uniform(-4.06, -3.37)),
+            "cycle_peak": rng.uniform(0.14, 0.24),
+        },
         "multi_relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
                        "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
                        "adam_eps": np.power(10., rng.uniform(-10, -6)),

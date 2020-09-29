@@ -42,7 +42,8 @@ def setup_experiment(args, outfile_path):
     if os.path.exists(checkpoint_location):
         checkpoint = torch.load(checkpoint_location)
         all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
-    else:
+
+    if not os.path.exists(outfile_path):
         with open(outfile_path, mode='w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writeheader()

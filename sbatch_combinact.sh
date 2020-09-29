@@ -6,9 +6,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0%1                     # array value
-#SBATCH --output=logs/testing_mixpr/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=testing_mixpr
+#SBATCH --array=0-95%12                     # array value
+#SBATCH --output=logs/e8_resnet_rs2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e8_resnet_rs2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
