@@ -139,14 +139,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         hyper_params['cycle_peak'] = 0.35
     hyper_params['adam_wd'] *= args.wd
 
-    # if args.model == 'resnet':
-    #     hyper_params['adam_beta_1'] = 0.9
-    #     hyper_params['adam_beta_2'] = 0.99
-    #     hyper_params['adam_eps'] = 1e-8
-    #     hyper_params['adam_wd'] = 5e-4
-    #     hyper_params['max_lr'] = 0.001
-    #     hyper_params['cycle_peak'] = 0.4
-
     optimizer = optim.Adam(model_params,
                            lr=10 ** -6,
                            betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
@@ -218,6 +210,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
+        scaler = torch.cuda.amp.GradScaler()
 
         # ---- Training
         model.train()
@@ -225,10 +218,12 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             optimizer.zero_grad()
-            output = model(x)
-            train_loss = criterion(output, targetx)
-            train_loss.backward()
-            optimizer.step()
+            with torch.cuda.amp.autocast():
+                output = model(x)
+                train_loss = criterion(output, targetx)
+            scaler.scale(train_loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             scheduler.step()
 
         alpha_primes = []
