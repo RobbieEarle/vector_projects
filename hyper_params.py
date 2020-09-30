@@ -1888,7 +1888,7 @@ def resnet_mnist(rng):
         },
         "relu": {
             "adam_beta_1": np.power(10., rng.uniform(-3.08, -0.38)),
-            "adam_beta_2": np.power(10., rng.uniform(-2.85, 0.39)),
+            "adam_beta_2": np.power(10., rng.uniform(-2.85, 0)),
             "adam_eps": np.power(10., rng.uniform(-7.12, -6.58)),
             "adam_wd": np.power(10., rng.uniform(-5.73, -1.59)),
             "max_lr": np.power(10., rng.uniform(-5.42, -3.09)),
