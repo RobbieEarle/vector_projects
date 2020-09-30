@@ -21,9 +21,6 @@ class CNN(nn.Module):
 
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
-        actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
-        if actfun in actfuns_1d:
-            self.k = 1
         self.permute_type = permute_type
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []

@@ -8,7 +8,6 @@ import numpy as np
 import random
 import activation_functions as actfuns
 from auto_augment import CIFAR10Policy
-from cutout import Cutout
 from collections import namedtuple
 
 
@@ -129,11 +128,11 @@ def get_train_samples(args):
     return train_samples
 
 
-def get_perm_methods(perm_method):
-    if perm_method:
+def get_perm_methods(args):
+    if args.var_perm_method:
         perm_methods = ['shuffle', 'roll', 'roll_grouped']
     else:
-        perm_methods = ['shuffle']
+        perm_methods = [args.perm_method]
     return perm_methods
 
 
@@ -453,7 +452,7 @@ def add_shuffle_map(shuffle_maps, num_nodes, p):
     return shuffle_maps
 
 
-def permute(x, method, offset, num_groups=2, shuffle_map=None):
+def permute(x, method, layer_type, offset, num_groups=2, shuffle_map=None):
     if method == "roll":
         return torch.cat((x[:, offset:, ...], x[:, :offset, ...]), dim=1)
     elif method == "roll_grouped":
@@ -473,6 +472,16 @@ def permute(x, method, offset, num_groups=2, shuffle_map=None):
         return output
     elif method == "shuffle":
         return x[:, shuffle_map, ...]
+    elif method == 'invert':
+        if layer_type == 'linear':
+            x = x.reshape(x.shape[0], int(x.shape[1] / 2), 2)
+            x = x[:, :, [1, 0]]
+            x = x.reshape(x.shape[0], x.shape[1] * x.shape[2])
+        elif layer_type == 'conv':
+            x = x.reshape(x.shape[0], int(x.shape[1] / 2), 2, x.shape[2], x.shape[3])
+            x = x[:, :, [1, 0], ...]
+            x = x.reshape(x.shape[0], x.shape[1] * x.shape[2], x.shape[3], x.shape[4])
+        return x
 
 
 def load_dataset(

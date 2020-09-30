@@ -17,10 +17,15 @@ def activate(x, actfun, p=1, k=1, M=None,
              reduce_actfuns=False
              ):
 
+    if permute_type == 'invert':
+        assert p == 2, 'p must be 2 if you use the invert shuffle type ya big dummy.'
+        assert k == 2, 'k must be 2 if you use the invert shuffle type ya big dummy.'
+        assert actfun == 'swishk', 'SwishK is the only asymmetric actfun, so using other actfuns doesn\'t make sense!'
+
     # Unsqueeze a dimension and populate it with permutations of our inputs
     x = x.unsqueeze(2)
     for i in range(1, p):
-        permutation = util.permute(x[:, :, 0, ...], permute_type,
+        permutation = util.permute(x[:, :, 0, ...], permute_type, layer_type,
                                    offset=i, shuffle_map=shuffle_maps[i]).unsqueeze(2)
         x = torch.cat((x[:, :, :i, ...], permutation), dim=2)
 
@@ -95,7 +100,7 @@ _ACTFUNS = {
     'signed_geomean':
         lambda z: sgm(z),
     'swishk':
-        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
+        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
     'l1':
         lambda z: (torch.sum(z.abs(), dim=2)),
     'l2':
@@ -120,10 +125,6 @@ _ACTFUNS = {
         lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'nlaen-approx':
         lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'cf_relu':
-        lambda z: coin_flip(z, 'relu'),
-    'cf_abs':
-        lambda z: coin_flip(z, 'abs'),
     'multi_relu':
         lambda z: multi_relu(z),
 }

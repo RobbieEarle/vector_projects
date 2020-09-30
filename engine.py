@@ -54,7 +54,7 @@ def setup_experiment(args, outfile_path):
         num_params = util.get_num_params(args, actfun)
         train_samples = util.get_train_samples(args)
         p_vals, k_vals, g_vals = util.get_pkg_vals(args)
-        perm_methods = util.get_perm_methods(args.var_perm_method)
+        perm_methods = util.get_perm_methods(args)
         curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
             g_vals) * len(perm_methods))
         if checkpoint is not None:
@@ -132,9 +132,10 @@ if __name__ == '__main__':
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
-    parser.add_argument('--num_epochs', type=int, default=35, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
+    parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')

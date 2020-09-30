@@ -122,6 +122,10 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
         resnet_ver = 0
         resnet_width = 0
 
+    actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
+    if actfun in actfuns_1d:
+        curr_k = 1
+
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
                                      perm_method=perm_method, device=device, resnet_ver=resnet_ver,
                                      resnet_width=resnet_width, verbose=args.verbose)
