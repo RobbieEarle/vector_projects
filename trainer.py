@@ -135,7 +135,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     model.apply(util.weights_init)
 
     criterion = nn.CrossEntropyLoss()
-    hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
+    hyper_params = hp.get_hyper_params(args, args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
     num_epochs = args.num_epochs
     if args.overfit:

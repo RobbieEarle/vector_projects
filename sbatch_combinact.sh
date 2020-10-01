@@ -38,5 +38,5 @@ python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --m
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk --num_epochs 10
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swish --num_epochs 10 --k 1
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swish --num_epochs 10 --k 1
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk --p 2 perm_method invert --num_epochs 10 --label inverted
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk --p 2 --perm_method invert --num_epochs 10 --label inverted
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk --p 2 --perm_method invert --num_epochs 10 --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk --p 2 --perm_method invert --num_epochs 10 --label _inv

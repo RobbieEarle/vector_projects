@@ -39,14 +39,14 @@ def setup_experiment(args):
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
     else:
         model = args.model
-    filename = '{}-{}-{}-{}_{}{}.csv'.format(datetime.date.today(),
+    filename = '{}-{}-{}-{}-{}{}'.format(datetime.date.today(),
                                              args.seed,
                                              args.dataset,
                                              model,
                                              args.actfun,
                                              args.label)
-    outfile_path = os.path.join(args.save_path, filename)
-    checkpoint_path = os.path.join(args.check_path, filename)
+    outfile_path = os.path.join(args.save_path, filename) + '.csv'
+    checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
     checkpoint = None
 
     if not os.path.exists(outfile_path):

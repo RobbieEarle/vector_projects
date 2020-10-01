@@ -2,7 +2,10 @@ import numpy as np
 import hyper_params_nparam as nparam
 
 
-def get_hyper_params(model, dataset, actfun, rng=None, exp='', p=1):
+def get_hyper_params(args, model, dataset, actfun, rng=None, exp='', p=1):
+
+    if args.perm_method == 'invert':
+        actfun += '_inv'
 
     if model == 'nn' or model == 'mlp':
         if dataset == 'mnist':
@@ -201,13 +204,6 @@ def nn_mnist(rng):
                       "max_lr": np.exp(rng.uniform(-8, -2)),
                       "cycle_peak": rng.uniform(0.1, 0.5)
                       },
-        "swish": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
-                  "adam_beta_2": np.exp(rng.uniform(-12, -4)),
-                  "adam_eps": np.exp(rng.uniform(-22, -15)),
-                  "adam_wd": np.exp(rng.uniform(-15, -8)),
-                  "max_lr": np.exp(rng.uniform(-8, -2)),
-                  "cycle_peak": rng.uniform(0.1, 0.5)
-                  },
         "leaky_relu": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
                        "adam_beta_2": np.exp(rng.uniform(-12, -4)),
                        "adam_eps": np.exp(rng.uniform(-22, -15)),
@@ -261,14 +257,27 @@ def nn_mnist(rng):
             "max_lr": np.exp(-6.874),
             "cycle_peak": 0.38,
         },
-        "swishk": {
-            "adam_beta_1": np.exp(-2.123),
-            "adam_beta_2": np.exp(-9.406),
-            "adam_eps": np.exp(-17.43),
-            "adam_wd": np.exp(-11.853),
-            "max_lr": np.exp(-6.208),
-            "cycle_peak": 0.2,
-        },
+        "swishk": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                   "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                   "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                   "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                   "max_lr": np.power(10., rng.uniform(-6, -1)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "swishk_inv": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                       "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                       "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                       "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                       "max_lr": np.power(10., rng.uniform(-6, -1)),
+                       "cycle_peak": rng.uniform(0.1, 0.5)
+                       },
+        "swish": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                  "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                  "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                  "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                  "max_lr": np.power(10., rng.uniform(-6, -1)),
+                  "cycle_peak": rng.uniform(0.1, 0.5)
+                  },
 
     }
 
@@ -1091,13 +1100,6 @@ def cnn_mnist(rng):
                       "max_lr": np.exp(rng.uniform(-8, -2)),
                       "cycle_peak": rng.uniform(0.1, 0.5)
                       },
-        "swish": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
-                  "adam_beta_2": np.exp(rng.uniform(-12, -4)),
-                  "adam_eps": np.exp(rng.uniform(-22, -15)),
-                  "adam_wd": np.exp(rng.uniform(-15, -8)),
-                  "max_lr": np.exp(rng.uniform(-8, -2)),
-                  "cycle_peak": rng.uniform(0.1, 0.5)
-                  },
         "leaky_relu": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
                        "adam_beta_2": np.exp(rng.uniform(-12, -4)),
                        "adam_eps": np.exp(rng.uniform(-22, -15)),
@@ -1151,14 +1153,27 @@ def cnn_mnist(rng):
             "max_lr": np.exp(-6.644),
             "cycle_peak": 0.3,
         },
-        "swishk": {
-            "adam_beta_1": np.exp(-1.982),
-            "adam_beta_2": np.exp(-5.511),
-            "adam_eps": np.exp(-18.54),
-            "adam_wd": np.exp(-11.097),
-            "max_lr": np.exp(-6.618),
-            "cycle_peak": 0.26,
-        },
+        "swishk": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                   "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                   "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                   "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                   "max_lr": np.power(10., rng.uniform(-6, -1)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "swishk_inv": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                   "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                   "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                   "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                   "max_lr": np.power(10., rng.uniform(-6, -1)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "swish": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
+                   "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
+                   "adam_eps": np.power(10., rng.uniform(-10, -6)),
+                   "adam_wd": np.power(10., rng.uniform(-6, -2)),
+                   "max_lr": np.power(10., rng.uniform(-6, -1)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
     }
 
 
