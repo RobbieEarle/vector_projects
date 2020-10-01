@@ -15,7 +15,7 @@ def retrieve_checkpoint(curr_entry, full_arr):
         return full_arr
 
 
-def setup_experiment(args, outfile_path):
+def setup_experiment(args):
     """
     Retrieves training / validation data, randomizes network structure and activation functions, creates model,
     creates new output file, sets hyperparameters for optimizer and scheduler during training, initializes training
@@ -35,18 +35,29 @@ def setup_experiment(args, outfile_path):
                   'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
                   'train_acc', 'val_acc']
 
-    checkpoint_location = os.path.join(args.check_path, "cp_{}_{}_{}.pth".format(args.seed, args.model, args.dataset))
+    if args.model == 'resnet':
+        model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
+    else:
+        model = args.model
+    filename = '{}-{}-{}-{}_{}{}.csv'.format(datetime.date.today(),
+                                             args.seed,
+                                             args.dataset,
+                                             model,
+                                             args.actfun,
+                                             args.label)
+    outfile_path = os.path.join(args.save_path, filename)
+    checkpoint_path = os.path.join(args.check_path, filename)
     checkpoint = None
-
-    all_actfuns = util.get_actfuns(args.actfun)
-    if os.path.exists(checkpoint_location):
-        checkpoint = torch.load(checkpoint_location)
-        all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
 
     if not os.path.exists(outfile_path):
         with open(outfile_path, mode='w') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
             writer.writeheader()
+
+    all_actfuns = util.get_actfuns(args.actfun)
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
 
     # =========================== Training
     for actfun in all_actfuns:
@@ -94,7 +105,7 @@ def setup_experiment(args, outfile_path):
                                 # ---- Begin training model
                                 trainer.train(args,
                                               checkpoint,
-                                              checkpoint_location,
+                                              checkpoint_path,
                                               actfun,
                                               curr_seed,
                                               outfile_path,
@@ -136,6 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
+    parser.add_argument('--label', type=str, default='', help='Label to differentiate different jobs')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')
@@ -155,23 +167,4 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='')
     args = parser.parse_args()
 
-    extras = util.get_extras(args)
-
-    if args.model == 'resnet':
-        model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
-    else:
-        model = args.model
-
-    out = os.path.join(
-        args.save_path,
-        '{}-{}-{}-{}_{}{}.csv'.format(
-            datetime.date.today(),
-            args.seed,
-            args.dataset,
-            model,
-            args.actfun,
-            extras
-        )
-    )
-
-    setup_experiment(args, out)
+    setup_experiment(args)

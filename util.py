@@ -13,25 +13,6 @@ from collections import namedtuple
 
 # -------------------- Training Utils
 
-def get_extras(args):
-    extras = ""
-    if args.var_n_params:
-        extras += '-var_n_params'
-    if args.var_n_samples:
-        extras += '-var_n_samples'
-    if args.reduce_actfuns:
-        extras += '-reduce_actfuns'
-    if args.var_k:
-        extras += '-var_k'
-    if args.var_p:
-        extras += '-var_p'
-    if args.var_perm_method:
-        extras += '-var_perm'
-    if args.p_param_eff:
-        extras += '-p_param_eff'
-    return extras
-
-
 def get_actfuns(actfun):
     if actfun == 'all':
         all_actfuns = ['combinact', 'relu', 'abs', 'max', 'min', 'lse', 'lae', 'l2', 'linf', 'prod', 'signed_geomean',
