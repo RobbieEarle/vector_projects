@@ -20,7 +20,7 @@ def activate(x, actfun, p=1, k=1, M=None,
     if permute_type == 'invert':
         assert p == 2, 'p must be 2 if you use the invert shuffle type ya big dummy.'
         assert k == 2, 'k must be 2 if you use the invert shuffle type ya big dummy.'
-        assert actfun == 'swishk', 'SwishK is the only asymmetric actfun, so using other actfuns doesn\'t make sense!'
+        assert actfun == 'swishk_p', 'SwishK\' is the only asymmetric actfun, so using other actfuns doesn\'t make sense!'
 
     # Unsqueeze a dimension and populate it with permutations of our inputs
     x = x.unsqueeze(2)
