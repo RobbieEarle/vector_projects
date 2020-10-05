@@ -7,8 +7,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-39%8                      # array value
-#SBATCH --output=logs/e9_nparam/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e9_nparam
+#SBATCH --output=logs/e9_peff/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=e9_peff
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -34,10 +34,8 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk_p --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk --k 2 --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk_p --p 2 --perm_method invert --var_n_params_log --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk_p --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun swishk --k 2 --p_param_eff --var_n_params_log
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk_p --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk --k 2 --var_n_params_log
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk_p --p 2 --perm_method invert --var_n_params_log --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk_p --p_param_eff --var_n_params_log
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --dataset mnist --actfun swishk --k 2 --p_param_eff --var_n_params_log
