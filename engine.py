@@ -33,7 +33,7 @@ def setup_experiment(args):
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
-                  'train_acc', 'val_acc']
+                  'train_acc', 'val_acc', 'hp_idx']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -165,6 +165,7 @@ if __name__ == '__main__':
     parser.add_argument('--bin_peff_redo', action='store_true', help='')
     parser.add_argument('--nparam_redo', action='store_true', help='')
     parser.add_argument('--verbose', action='store_true', help='')
+    parser.add_argument('--hp_idx', type=int, default=None, help='')
     args = parser.parse_args()
 
     setup_experiment(args)

@@ -67,13 +67,277 @@ def get_hyper_params(args, model, dataset, actfun, rng=None, exp='', p=1):
             return cnn_svhn(rng)[actfun]
     elif model == 'resnet' or model == 'dawnnet':
         if dataset == 'mnist':
-            return resnet_mnist(rng)[actfun]
+            if args.hp_idx is not None:
+                return temp_resnet_mnist()[actfun+str(args.hp_idx)]
+            else:
+                return resnet_mnist(rng)[actfun]
         elif dataset == 'cifar10':
-            return resnet_cifar10(rng)[actfun]
+            if args.hp_idx is not None:
+                return temp_resnet_cifar10()[actfun + str(args.hp_idx)]
+            else:
+                return resnet_cifar10(rng)[actfun]
         elif dataset == 'cifar100':
-            return resnet_cifar100(rng)[actfun]
+            if args.hp_idx is not None:
+                return temp_resnet_cifar100()[actfun + str(args.hp_idx)]
+            else:
+                return resnet_cifar100(rng)[actfun]
     else:
         raise ValueError("Error: No hyper-parameters found for {}, {}".format(model, dataset))
+
+
+def temp_resnet_mnist():
+    return {
+        "max0": {
+            "adam_beta_1": np.exp(-2.569),
+            "adam_beta_2": np.exp(-2.31),
+            "adam_eps": np.exp(-4.968),
+            "adam_wd": np.exp(-5.084),
+            "max_lr": np.exp(-3.708),
+            "cycle_peak": 0.4,
+        },
+        "max1": {
+            "adam_beta_1": np.exp(-2.683),
+            "adam_beta_2": np.exp(-1.672),
+            "adam_eps": np.exp(-4.88),
+            "adam_wd": np.exp(-4.561),
+            "max_lr": np.exp(-3.659),
+            "cycle_peak": 0.39,
+        },
+        "max2": {
+            "adam_beta_1": np.exp(-2.289),
+            "adam_beta_2": np.exp(-2.58),
+            "adam_eps": np.exp(-5.226),
+            "adam_wd": np.exp(-2.948),
+            "max_lr": np.exp(-4.442),
+            "cycle_peak": 0.26,
+        },
+        "max3": {
+            "adam_beta_1": np.exp(-2.628),
+            "adam_beta_2": np.exp(-2.123),
+            "adam_eps": np.exp(-6.075),
+            "adam_wd": np.exp(-4.774),
+            "max_lr": np.exp(-3.509),
+            "cycle_peak": 0.34,
+        },
+        "max4": {
+            "adam_beta_1": np.exp(-2.634),
+            "adam_beta_2": np.exp(-1.842),
+            "adam_eps": np.exp(-6.719),
+            "adam_wd": np.exp(-3.431),
+            "max_lr": np.exp(-3.621),
+            "cycle_peak": 0.34,
+        },
+        "relu0": {
+            "adam_beta_1": np.exp(-2.036),
+            "adam_beta_2": np.exp(-0.731),
+            "adam_eps": np.exp(-6.967),
+            "adam_wd": np.exp(-4.513),
+            "max_lr": np.exp(-4.083),
+            "cycle_peak": 0.11,
+        },
+        "relu1": {
+            "adam_beta_1": np.exp(-1.865),
+            "adam_beta_2": np.exp(-1.169),
+            "adam_eps": np.exp(-6.915),
+            "adam_wd": np.exp(-4.594),
+            "max_lr": np.exp(-4.703),
+            "cycle_peak": 0.22,
+        },
+        "relu2": {
+            "adam_beta_1": np.exp(-1.695),
+            "adam_beta_2": np.exp(-0.48),
+            "adam_eps": np.exp(-6.622),
+            "adam_wd": np.exp(-4.263),
+            "max_lr": np.exp(-4.229),
+            "cycle_peak": 0.22,
+        },
+        "relu3": {
+            "adam_beta_1": np.exp(-2.168),
+            "adam_beta_2": np.exp(-0.693),
+            "adam_eps": np.exp(-6.965),
+            "adam_wd": np.exp(-4.142),
+            "max_lr": np.exp(-4.514),
+            "cycle_peak": 0.21,
+        },
+        "relu4": {
+            "adam_beta_1": np.exp(-3.027),
+            "adam_beta_2": np.exp(-0.133),
+            "adam_eps": np.exp(-6.753),
+            "adam_wd": np.exp(-3.716),
+            "max_lr": np.exp(-3.171),
+            "cycle_peak": 0.22,
+        },
+    }
+
+
+def temp_resnet_cifar10():
+    return {
+        "max0": {
+            "adam_beta_1": np.exp(-1.651),
+            "adam_beta_2": np.exp(-0.174),
+            "adam_eps": np.exp(-8.402),
+            "adam_wd": np.exp(-4.098),
+            "max_lr": np.exp(-3.297),
+            "cycle_peak": 0.41,
+        },
+        "max1": {
+            "adam_beta_1": np.exp(-1.713),
+            "adam_beta_2": np.exp(-0.076),
+            "adam_eps": np.exp(-8.436),
+            "adam_wd": np.exp(-4.671),
+            "max_lr": np.exp(-3.222),
+            "cycle_peak": 0.44,
+        },
+        "max2": {
+            "adam_beta_1": np.exp(-1.863),
+            "adam_beta_2": np.exp(-0.053),
+            "adam_eps": np.exp(-9.05),
+            "adam_wd": np.exp(-4.936),
+            "max_lr": np.exp(-3.379),
+            "cycle_peak": 0.33,
+        },
+        "max3": {
+            "adam_beta_1": np.exp(-1.523),
+            "adam_beta_2": np.exp(-0.046),
+            "adam_eps": np.exp(-7.512),
+            "adam_wd": np.exp(-4.273),
+            "max_lr": np.exp(-3.368),
+            "cycle_peak": 0.34,
+        },
+        "max4": {
+            "adam_beta_1": np.exp(-2.144),
+            "adam_beta_2": np.exp(-0.273),
+            "adam_eps": np.exp(-7.587),
+            "adam_wd": np.exp(-5.29),
+            "max_lr": np.exp(-3.241),
+            "cycle_peak": 0.39,
+        },
+        "relu0": {
+            "adam_beta_1": np.exp(-0.167),
+            "adam_beta_2": np.exp(-0.218),
+            "adam_eps": np.exp(-8.203),
+            "adam_wd": np.exp(-5.103),
+            "max_lr": np.exp(-3.321),
+            "cycle_peak": 0.24,
+        },
+        "relu1": {
+            "adam_beta_1": np.exp(-0.184),
+            "adam_beta_2": np.exp(-1.317),
+            "adam_eps": np.exp(-7.909),
+            "adam_wd": np.exp(-4.602),
+            "max_lr": np.exp(-3.608),
+            "cycle_peak": 0.24,
+        },
+        "relu2": {
+            "adam_beta_1": np.exp(-0.169),
+            "adam_beta_2": np.exp(-0.623),
+            "adam_eps": np.exp(-7.954),
+            "adam_wd": np.exp(-4.925),
+            "max_lr": np.exp(-3.483),
+            "cycle_peak": 0.23,
+        },
+        "relu3": {
+            "adam_beta_1": np.exp(-0.208),
+            "adam_beta_2": np.exp(-0.46),
+            "adam_eps": np.exp(-8.244),
+            "adam_wd": np.exp(-4.441),
+            "max_lr": np.exp(-3.486),
+            "cycle_peak": 0.25,
+        },
+        "relu4": {
+            "adam_beta_1": np.exp(-0.939),
+            "adam_beta_2": np.exp(-0.188),
+            "adam_eps": np.exp(-7.768),
+            "adam_wd": np.exp(-4.001),
+            "max_lr": np.exp(-3.545),
+            "cycle_peak": 0.26,
+        },
+    }
+
+
+def temp_resnet_cifar100():
+    return {
+        "max0": {
+            "adam_beta_1": np.exp(-1.891),
+            "adam_beta_2": np.exp(-0.628),
+            "adam_eps": np.exp(-7.962),
+            "adam_wd": np.exp(-3.985),
+            "max_lr": np.exp(-3.352),
+            "cycle_peak": 0.32,
+        },
+        "max1": {
+            "adam_beta_1": np.exp(-2.279),
+            "adam_beta_2": np.exp(-1.179),
+            "adam_eps": np.exp(-8.279),
+            "adam_wd": np.exp(-3.921),
+            "max_lr": np.exp(-3.33),
+            "cycle_peak": 0.38,
+        },
+        "max2": {
+            "adam_beta_1": np.exp(-2.252),
+            "adam_beta_2": np.exp(-1.079),
+            "adam_eps": np.exp(-7.949),
+            "adam_wd": np.exp(-3.923),
+            "max_lr": np.exp(-3.316),
+            "cycle_peak": 0.42,
+        },
+        "max3": {
+            "adam_beta_1": np.exp(-2.152),
+            "adam_beta_2": np.exp(-1.158),
+            "adam_eps": np.exp(-8.025),
+            "adam_wd": np.exp(-4.065),
+            "max_lr": np.exp(-3.326),
+            "cycle_peak": 0.36,
+        },
+        "max4": {
+            "adam_beta_1": np.exp(-1.938),
+            "adam_beta_2": np.exp(-1.117),
+            "adam_eps": np.exp(-8.523),
+            "adam_wd": np.exp(-3.932),
+            "max_lr": np.exp(-3.311),
+            "cycle_peak": 0.41,
+        },
+        "relu0": {
+            "adam_beta_1": np.exp(-1.617),
+            "adam_beta_2": np.exp(-0.608),
+            "adam_eps": np.exp(-8.876),
+            "adam_wd": np.exp(-4.475),
+            "max_lr": np.exp(-3.588),
+            "cycle_peak": 0.2,
+        },
+        "relu1": {
+            "adam_beta_1": np.exp(-1.244),
+            "adam_beta_2": np.exp(-0.736),
+            "adam_eps": np.exp(-8.698),
+            "adam_wd": np.exp(-4.397),
+            "max_lr": np.exp(-3.604),
+            "cycle_peak": 0.2,
+        },
+        "relu2": {
+            "adam_beta_1": np.exp(-1.969),
+            "adam_beta_2": np.exp(-0.895),
+            "adam_eps": np.exp(-8.622),
+            "adam_wd": np.exp(-4.043),
+            "max_lr": np.exp(-3.574),
+            "cycle_peak": 0.23,
+        },
+        "relu3": {
+            "adam_beta_1": np.exp(-0.854),
+            "adam_beta_2": np.exp(-0.787),
+            "adam_eps": np.exp(-8.971),
+            "adam_wd": np.exp(-4.379),
+            "max_lr": np.exp(-3.611),
+            "cycle_peak": 0.21,
+        },
+        "relu4": {
+            "adam_beta_1": np.exp(-1.507),
+            "adam_beta_2": np.exp(-0.755),
+            "adam_eps": np.exp(-8.933),
+            "adam_wd": np.exp(-3.953),
+            "max_lr": np.exp(-3.619),
+            "cycle_peak": 0.22,
+        },
+    }
 
 
 def nn_mnist(rng):

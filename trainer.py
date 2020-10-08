@@ -134,6 +134,26 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     rng = np.random.RandomState(curr_seed)
     model.apply(util.weights_init)
 
+    print("=============================== Hyper params:")
+    i = 0
+    for name, param in model.named_parameters():
+        # print(name, param.shape)
+        if len(param.shape) == 4:
+            print(param[:2, :2, :4, :4])
+            break
+        elif len(param.shape) == 3:
+            print(param[:2, :2, :2])
+        elif len(param.shape) == 2:
+            print(param[:4, :4])
+            break
+        elif len(param.shape) == 1:
+            print(param[:3])
+        print()
+        i += 1
+        if i == 4:
+            break
+    print("===================================================================")
+
     criterion = nn.CrossEntropyLoss()
     hyper_params = hp.get_hyper_params(args, args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
 
@@ -276,6 +296,11 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                 .format(epoch, lr, eval_train_acc, eval_val_acc, eval_train_loss, eval_val_loss, (time.time() - start_time)), flush=True
         )
 
+        if args.hp_idx is None:
+            hp_idx = -1
+        else:
+            hp_idx = args.hp_idx
+
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
@@ -303,7 +328,8 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              'train_loss': float(eval_train_loss),
                              'val_loss': float(eval_val_loss),
                              'train_acc': float(eval_train_acc),
-                             'val_acc': float(eval_val_acc)
+                             'val_acc': float(eval_val_acc),
+                             'hp_idx': hp_idx
                              })
 
         epoch += 1
