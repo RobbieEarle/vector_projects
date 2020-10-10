@@ -7,7 +7,7 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-27%4                      # array value
-#SBATCH --output=logs/e8_swishy/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --output=logs/e8_swishy_inv/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=e8_swishy_inv
 
 source ~/.bashrc
