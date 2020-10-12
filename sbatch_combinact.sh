@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p t4v2
-#SBATCH --exclude=gpu102, gpu115
+#SBATCH --exclude=gpu102 gpu115
 #SBATCH --gres=gpu:1                        # request GPU(s)
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
