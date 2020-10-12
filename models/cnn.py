@@ -19,6 +19,9 @@ class CNN(nn.Module):
                  num_params=3000000):
         super(CNN, self).__init__()
 
+        if permute_type == 'invert' and p % k != 0:
+            p = k
+
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
         self.permute_type = permute_type

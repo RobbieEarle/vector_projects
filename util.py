@@ -433,7 +433,7 @@ def add_shuffle_map(shuffle_maps, num_nodes, p):
     return shuffle_maps
 
 
-def permute(x, method, layer_type, offset, num_groups=2, shuffle_map=None):
+def permute(x, method, layer_type, k, offset, num_groups=2, shuffle_map=None):
     if method == "roll":
         return torch.cat((x[:, offset:, ...], x[:, :offset, ...]), dim=1)
     elif method == "roll_grouped":
@@ -455,13 +455,14 @@ def permute(x, method, layer_type, offset, num_groups=2, shuffle_map=None):
         return x[:, shuffle_map, ...]
     elif method == 'invert':
         if layer_type == 'linear':
-            x = x.reshape(x.shape[0], int(x.shape[1] / 2), 2)
-            x = x[:, :, [1, 0]]
+            x = x.reshape(x.shape[0], int(x.shape[1] / k), k)
+            x = x[:, :, shuffle_map]
             x = x.reshape(x.shape[0], x.shape[1] * x.shape[2])
         elif layer_type == 'conv':
-            x = x.reshape(x.shape[0], int(x.shape[1] / 2), 2, x.shape[2], x.shape[3])
-            x = x[:, :, [1, 0], ...]
+            x = x.reshape(x.shape[0], int(x.shape[1] / k), k, x.shape[2], x.shape[3])
+            x = x[:, :, shuffle_map, ...]
             x = x.reshape(x.shape[0], x.shape[1] * x.shape[2], x.shape[3], x.shape[4])
+
         return x
 
 

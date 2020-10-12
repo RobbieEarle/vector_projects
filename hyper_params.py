@@ -374,6 +374,14 @@ def nn_mnist(rng):
             "max_lr": np.power(10., -2.731),
             "cycle_peak": 0.26,
         },
+        "swishk_inv": {
+            "adam_beta_1": np.power(10., -2.04),
+            "adam_beta_2": np.power(10., -0.049),
+            "adam_eps": np.power(10., -9.687),
+            "adam_wd": np.power(10., -3.531),
+            "max_lr": np.power(10., -2.731),
+            "cycle_peak": 0.26,
+        },
 
     }
 
@@ -1274,6 +1282,14 @@ def cnn_mnist(rng):
             "cycle_peak": 0.28,
         },
         "swishk_p_inv": {
+            "adam_beta_1": np.power(10., -0.917),
+            "adam_beta_2": np.power(10., -1.278),
+            "adam_eps": np.power(10., -5.779),
+            "adam_wd": np.power(10., -4.871),
+            "max_lr": np.power(10., -2.909),
+            "cycle_peak": 0.27,
+        },
+        "swishk_inv": {
             "adam_beta_1": np.power(10., -0.917),
             "adam_beta_2": np.power(10., -1.278),
             "adam_eps": np.power(10., -5.779),

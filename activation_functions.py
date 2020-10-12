@@ -18,15 +18,26 @@ def activate(x, actfun, p=1, k=1, M=None,
              ):
 
     if permute_type == 'invert':
-        assert p == 2, 'p must be 2 if you use the invert shuffle type ya big dummy.'
-        assert k == 2, 'k must be 2 if you use the invert shuffle type ya big dummy.'
-        assert actfun == 'swishk_p', 'SwishK\' is the only asymmetric actfun, so using other actfuns doesn\'t make sense!'
+        assert p % k == 0, 'k must divide p if you use the invert shuffle type ya big dummy.'
 
     # Unsqueeze a dimension and populate it with permutations of our inputs
     x = x.unsqueeze(2)
+    curr_permute = permute_type
+    permute_base = 0
     for i in range(1, p):
-        permutation = util.permute(x[:, :, 0, ...], permute_type, layer_type,
-                                   offset=i, shuffle_map=shuffle_maps[i]).unsqueeze(2)
+        curr_shuffle = shuffle_maps[i]
+        if permute_type == 'invert':
+            if i % k == 0:
+                curr_permute = 'shuffle'
+                permute_base = 0
+            else:
+                curr_permute = 'invert'
+                permute_base = x.shape[2] - 1
+                curr_shuffle = torch.arange(k)
+                curr_shuffle[0] = i % k
+                curr_shuffle[i % k] = 0
+        permutation = util.permute(x[:, :, permute_base, ...], curr_permute, layer_type, k,
+                                   offset=i, shuffle_map=curr_shuffle).unsqueeze(2)
         x = torch.cat((x[:, :, :i, ...], permutation), dim=2)
 
     # This transpose makes it so that during the next reshape (when we combine our p permutations

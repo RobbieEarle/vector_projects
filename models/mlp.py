@@ -19,6 +19,9 @@ class MLP(nn.Module):
                  num_params=600000):
         super(MLP, self).__init__()
 
+        if permute_type == 'invert' and p % k != 0:
+            p = k
+
         self.input_dim = input_dim
         self.actfun = actfun
         self.p, self.k, self.g = p, k, g
