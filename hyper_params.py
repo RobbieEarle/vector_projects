@@ -67,192 +67,13 @@ def get_hyper_params(args, model, dataset, actfun, rng=None, exp='', p=1):
             return cnn_svhn(rng)[actfun]
     elif model == 'resnet' or model == 'dawnnet':
         if dataset == 'mnist':
-            if args.hp_idx is not None:
-                return temp_resnet_mnist()[actfun+str(args.hp_idx)]
-            else:
-                return resnet_mnist(rng)[actfun]
+            return resnet_mnist(rng)[actfun]
         elif dataset == 'cifar10':
-            if args.hp_idx is not None:
-                return temp_resnet_cifar10()[actfun + str(args.hp_idx)]
-            else:
-                return resnet_cifar10(rng)[actfun]
+            return resnet_cifar10(rng)[actfun]
         elif dataset == 'cifar100':
-            if args.hp_idx is not None:
-                return temp_resnet_cifar100()[actfun + str(args.hp_idx)]
-            else:
-                return resnet_cifar100(rng)[actfun]
+            return resnet_cifar100(rng)[actfun]
     else:
         raise ValueError("Error: No hyper-parameters found for {}, {}".format(model, dataset))
-
-
-def temp_resnet_mnist():
-    return {
-        "max0": {
-            "adam_beta_1": np.power(10., -2.683),
-            "adam_beta_2": np.power(10., -1.672),
-            "adam_eps": np.power(10., -4.88),
-            "adam_wd": np.power(10., -4.561),
-            "max_lr": np.power(10., -3.659),
-            "cycle_peak": 0.39,
-        },
-        "max1": {
-            "adam_beta_1": np.power(10., -2.628),
-            "adam_beta_2": np.power(10., -2.123),
-            "adam_eps": np.power(10., -6.075),
-            "adam_wd": np.power(10., -4.774),
-            "max_lr": np.power(10., -3.509),
-            "cycle_peak": 0.34,
-        },
-        "max2": {
-            "adam_beta_1": np.power(10., -2.569),
-            "adam_beta_2": np.power(10., -2.31),
-            "adam_eps": np.power(10., -4.968),
-            "adam_wd": np.power(10., -5.084),
-            "max_lr": np.power(10., -3.708),
-            "cycle_peak": 0.4,
-        },
-        "max4": {
-            "adam_beta_1": np.power(10., -2.634),
-            "adam_beta_2": np.power(10., -1.842),
-            "adam_eps": np.power(10., -6.719),
-            "adam_wd": np.power(10., -3.431),
-            "max_lr": np.power(10., -3.621),
-            "cycle_peak": 0.34,
-        },
-        "max5": {
-            "adam_beta_1": np.power(10., -2.289),
-            "adam_beta_2": np.power(10., -2.58),
-            "adam_eps": np.power(10., -5.226),
-            "adam_wd": np.power(10., -2.948),
-            "max_lr": np.power(10., -4.442),
-            "cycle_peak": 0.26,
-        },
-        "relu0": {
-            "adam_beta_1": np.power(10., -1.865),
-            "adam_beta_2": np.power(10., -1.169),
-            "adam_eps": np.power(10., -6.915),
-            "adam_wd": np.power(10., -4.594),
-            "max_lr": np.power(10., -4.703),
-            "cycle_peak": 0.22,
-        },
-        "relu1": {
-            "adam_beta_1": np.power(10., -1.695),
-            "adam_beta_2": np.power(10., -0.48),
-            "adam_eps": np.power(10., -6.622),
-            "adam_wd": np.power(10., -4.263),
-            "max_lr": np.power(10., -4.229),
-            "cycle_peak": 0.22,
-        },
-        "relu2": {
-            "adam_beta_1": np.power(10., -2.168),
-            "adam_beta_2": np.power(10., -0.693),
-            "adam_eps": np.power(10., -6.965),
-            "adam_wd": np.power(10., -4.142),
-            "max_lr": np.power(10., -4.514),
-            "cycle_peak": 0.21,
-        },
-        "relu3": {
-            "adam_beta_1": np.power(10., -3.027),
-            "adam_beta_2": np.power(10., -0.133),
-            "adam_eps": np.power(10., -6.753),
-            "adam_wd": np.power(10., -3.716),
-            "max_lr": np.power(10., -3.171),
-            "cycle_peak": 0.22,
-        },
-        "relu4": {
-            "adam_beta_1": np.power(10., -2.036),
-            "adam_beta_2": np.power(10., -0.731),
-            "adam_eps": np.power(10., -6.967),
-            "adam_wd": np.power(10., -4.513),
-            "max_lr": np.power(10., -4.083),
-            "cycle_peak": 0.11,
-        },
-    }
-
-
-def temp_resnet_cifar10():
-    return {
-        "max0": {
-            "adam_beta_1": np.power(10., -1.651),
-            "adam_beta_2": np.power(10., -0.174),
-            "adam_eps": np.power(10., -8.402),
-            "adam_wd": np.power(10., -4.098),
-            "max_lr": np.power(10., -3.297),
-            "cycle_peak": 0.41,
-        },
-        "max1": {
-            "adam_beta_1": np.power(10., -1.713),
-            "adam_beta_2": np.power(10., -0.076),
-            "adam_eps": np.power(10., -8.436),
-            "adam_wd": np.power(10., -4.671),
-            "max_lr": np.power(10., -3.222),
-            "cycle_peak": 0.44,
-        },
-        "max2": {
-            "adam_beta_1": np.power(10., -1.863),
-            "adam_beta_2": np.power(10., -0.053),
-            "adam_eps": np.power(10., -9.05),
-            "adam_wd": np.power(10., -4.936),
-            "max_lr": np.power(10., -3.379),
-            "cycle_peak": 0.33,
-        },
-        "max3": {
-            "adam_beta_1": np.power(10., -1.523),
-            "adam_beta_2": np.power(10., -0.046),
-            "adam_eps": np.power(10., -7.512),
-            "adam_wd": np.power(10., -4.273),
-            "max_lr": np.power(10., -3.368),
-            "cycle_peak": 0.34,
-        },
-        "max4": {
-            "adam_beta_1": np.power(10., -2.144),
-            "adam_beta_2": np.power(10., -0.273),
-            "adam_eps": np.power(10., -7.587),
-            "adam_wd": np.power(10., -5.29),
-            "max_lr": np.power(10., -3.241),
-            "cycle_peak": 0.39,
-        },
-        "relu0": {
-            "adam_beta_1": np.power(10., -0.167),
-            "adam_beta_2": np.power(10., -0.218),
-            "adam_eps": np.power(10., -8.203),
-            "adam_wd": np.power(10., -5.103),
-            "max_lr": np.power(10., -3.321),
-            "cycle_peak": 0.24,
-        },
-        "relu1": {
-            "adam_beta_1": np.power(10., -0.184),
-            "adam_beta_2": np.power(10., -1.317),
-            "adam_eps": np.power(10., -7.909),
-            "adam_wd": np.power(10., -4.602),
-            "max_lr": np.power(10., -3.608),
-            "cycle_peak": 0.24,
-        },
-        "relu2": {
-            "adam_beta_1": np.power(10., -0.169),
-            "adam_beta_2": np.power(10., -0.623),
-            "adam_eps": np.power(10., -7.954),
-            "adam_wd": np.power(10., -4.925),
-            "max_lr": np.power(10., -3.483),
-            "cycle_peak": 0.23,
-        },
-        "relu3": {
-            "adam_beta_1": np.power(10., -0.208),
-            "adam_beta_2": np.power(10., -0.46),
-            "adam_eps": np.power(10., -8.244),
-            "adam_wd": np.power(10., -4.441),
-            "max_lr": np.power(10., -3.486),
-            "cycle_peak": 0.25,
-        },
-        "relu4": {
-            "adam_beta_1": np.power(10., -0.939),
-            "adam_beta_2": np.power(10., -0.188),
-            "adam_eps": np.power(10., -7.768),
-            "adam_wd": np.power(10., -4.001),
-            "max_lr": np.power(10., -3.545),
-            "cycle_peak": 0.26,
-        },
-    }
 
 
 def temp_resnet_cifar100():
@@ -2180,20 +2001,20 @@ def cnn_svhn(rng):
 def resnet_mnist(rng):
     return {
         "max": {
-            "adam_beta_1": np.power(10., rng.uniform(-2.73, -2.32)),
-            "adam_beta_2": np.power(10., rng.uniform(-2.51, -1.65)),
-            "adam_eps": np.power(10., rng.uniform(-7.62, -3.86)),
-            "adam_wd": np.power(10., rng.uniform(-5.38, -3.05)),
-            "max_lr": np.power(10., rng.uniform(-4.31, -3.39)),
-            "cycle_peak": rng.uniform(0.32, 0.41),
+            "adam_beta_1": np.power(10., -2.683),
+            "adam_beta_2": np.power(10., -1.672),
+            "adam_eps": np.power(10., -4.88),
+            "adam_wd": np.power(10., -4.561),
+            "max_lr": np.power(10., -3.659),
+            "cycle_peak": 0.39,
         },
         "relu": {
-            "adam_beta_1": np.power(10., rng.uniform(-2.59, -0.89)),
-            "adam_beta_2": np.power(10., rng.uniform(-1.64, 0.22)),
-            "adam_eps": np.power(10., rng.uniform(-7.01, -6.51)),
-            "adam_wd": np.power(10., rng.uniform(-5.1, -3.88)),
-            "max_lr": np.power(10., rng.uniform(-4.71, -4.22)),
-            "cycle_peak": rng.uniform(0.17, 0.25),
+            "adam_beta_1": np.power(10., -1.695),
+            "adam_beta_2": np.power(10., -0.48),
+            "adam_eps": np.power(10., -6.622),
+            "adam_wd": np.power(10., -4.263),
+            "max_lr": np.power(10., -4.229),
+            "cycle_peak": 0.22,
         },
         "multi_relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
                        "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
@@ -2355,20 +2176,20 @@ def resnet_mnist(rng):
 def resnet_cifar10(rng):
     return {
         "max": {
-            "adam_beta_1": np.power(10., rng.uniform(-2.33, -1.21)),
-            "adam_beta_2": np.power(10., rng.uniform(-1.45, 0.49)),
-            "adam_eps": np.power(10., rng.uniform(-9.05, -6.94)),
-            "adam_wd": np.power(10., rng.uniform(-5.32, -4.05)),
-            "max_lr": np.power(10., rng.uniform(-3.41, -3.2)),
-            "cycle_peak": rng.uniform(0.32, 0.45),
+            "adam_beta_1": np.power(10., -1.713),
+            "adam_beta_2": np.power(10., -0.076),
+            "adam_eps": np.power(10., -8.436),
+            "adam_wd": np.power(10., -4.671),
+            "max_lr": np.power(10., -3.222),
+            "cycle_peak": 0.44,
         },
         "relu": {
-            "adam_beta_1": np.power(10., rng.uniform(-1.58, 0.48)),
-            "adam_beta_2": np.power(10., rng.uniform(-1.31, 0.26)),
-            "adam_eps": np.power(10., rng.uniform(-8.26, -7.71)),
-            "adam_wd": np.power(10., rng.uniform(-5.41, -4.09)),
-            "max_lr": np.power(10., rng.uniform(-3.66, -3.22)),
-            "cycle_peak": rng.uniform(0.23, 0.26),
+            "adam_beta_1": np.power(10., -0.167),
+            "adam_beta_2": np.power(10., -0.218),
+            "adam_eps": np.power(10., -8.203),
+            "adam_wd": np.power(10., -5.103),
+            "max_lr": np.power(10., -3.321),
+            "cycle_peak": 0.24,
         },
         "multi_relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
                        "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
@@ -2530,20 +2351,20 @@ def resnet_cifar10(rng):
 def resnet_cifar100(rng):
     return {
         "max": {
-            "adam_beta_1": np.power(10., rng.uniform(-2.38, -1.82)),
-            "adam_beta_2": np.power(10., rng.uniform(-1.19, -0.61)),
-            "adam_eps": np.power(10., rng.uniform(-8.64, -7.86)),
-            "adam_wd": np.power(10., rng.uniform(-4.16, -3.83)),
-            "max_lr": np.power(10., rng.uniform(-3.38, -3.26)),
-            "cycle_peak": rng.uniform(0.32, 0.44),
+            "adam_beta_1": np.power(10., -1.891),
+            "adam_beta_2": np.power(10., -0.628),
+            "adam_eps": np.power(10., -7.962),
+            "adam_wd": np.power(10., -3.985),
+            "max_lr": np.power(10., -3.352),
+            "cycle_peak": 0.32,
         },
         "relu": {
-            "adam_beta_1": np.power(10., rng.uniform(-2.1, -0.85)),
-            "adam_beta_2": np.power(10., rng.uniform(-0.92, -0.5)),
-            "adam_eps": np.power(10., rng.uniform(-9.06, -8.41)),
-            "adam_wd": np.power(10., rng.uniform(-4.79, -3.72)),
-            "max_lr": np.power(10., rng.uniform(-3.64, -3.55)),
-            "cycle_peak": rng.uniform(0.2, 0.24),
+            "adam_beta_1": np.power(10., -1.507),
+            "adam_beta_2": np.power(10., -0.755),
+            "adam_eps": np.power(10., -8.933),
+            "adam_wd": np.power(10., -3.953),
+            "max_lr": np.power(10., -3.619),
+            "cycle_peak": 0.22,
         },
         "multi_relu": {"adam_beta_1": np.power(10., rng.uniform(-3, 0)),
                        "adam_beta_2": np.power(10., rng.uniform(-3, 0)),
