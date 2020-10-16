@@ -33,7 +33,7 @@ def setup_experiment(args):
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
-                  'train_acc', 'val_acc', 'hp_idx']
+                  'train_acc', 'val_acc', 'hp_idx', 'lr_gamma', 'curr_lr']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -104,7 +104,7 @@ def setup_experiment(args):
                                 sample_size = dataset[2]
                                 batch_size = dataset[3]
 
-                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}-{}_{}'.format(args.seed,
+                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
                                                                                      args.dataset,
                                                                                      model,
                                                                                      actfun,

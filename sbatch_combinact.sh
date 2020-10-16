@@ -35,8 +35,8 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.9 --validation --label g9
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.925 --validation --label g925
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.95 --validation --label g95
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.975 --validation --label g975
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.99 --validation --label g99
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.9 --validation --label _g9
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.925 --validation --label _g925
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.95 --validation --label _g95
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.975 --validation --label _g975
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --dataset mnist --actfun relu --num_epochs 100 --lr_gamma 0.99 --validation --label _g99
