@@ -9,6 +9,7 @@ import random
 import activation_functions as actfuns
 from auto_augment import CIFAR10Policy
 from collections import namedtuple
+import time
 
 
 # -------------------- Training Utils
@@ -271,7 +272,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method, resnet_ver, resnet_width):
+                       curr_g, perm_method, resnet_ver, resnet_width, validation):
 
     print(
         "\n===================================================================\n\n"
@@ -286,9 +287,10 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
-        "Sample Size: {}\n\n"
+        "Sample Size: {}\n"
+        "Validation: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
-                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size), flush=True
+                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, validation), flush=True
     )
 
 
@@ -470,6 +472,7 @@ def load_dataset(
         model,
         dataset,
         seed=0,
+        validation=False,
         batch_size=None,
         sample_size=60000,
         kwargs=None):
@@ -495,26 +498,28 @@ def load_dataset(
         train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=train_trans_all)
         test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=test_trans_all)
 
+        dataset_size = 60000
         if sample_size is None:
-            sample_size = 60000
+            if validation:
+                sample_size = 50000
+            else:
+                sample_size = 60000
         if batch_size is None:
             batch_size = 100
-
-        train_set_indices = np.random.choice(60000, sample_size, replace=False)
-        test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'fashion_mnist':
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         train_set_full = datasets.FashionMNIST(root='./data', train=True, download=True, transform=trans)
         test_set_full = datasets.FashionMNIST(root='./data', train=False, download=True, transform=trans)
 
+        dataset_size = 60000
         if sample_size is None:
-            sample_size = 60000
+            if validation:
+                sample_size = 50000
+            else:
+                sample_size = 60000
         if batch_size is None:
             batch_size = 100
-
-        train_set_indices = np.random.choice(60000, sample_size, replace=False)
-        test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar10':
         train_trans, test_trans = [], []
@@ -535,13 +540,14 @@ def load_dataset(
         train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=train_trans_all)
         test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=test_trans_all)
 
+        dataset_size = 50000
         if sample_size is None:
-            sample_size = 50000
+            if validation:
+                sample_size = 45000
+            else:
+                sample_size = 50000
         if batch_size is None:
             batch_size = 64
-
-        train_set_indices = np.random.choice(50000, sample_size, replace=False)
-        test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'cifar100':
         train_trans, test_trans = [], []
@@ -562,13 +568,14 @@ def load_dataset(
         train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=train_trans_all)
         test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=test_trans_all)
 
+        dataset_size = 50000
         if sample_size is None:
-            sample_size = 50000
+            if validation:
+                sample_size = 45000
+            else:
+                sample_size = 50000
         if batch_size is None:
             batch_size = 64
-
-        train_set_indices = np.random.choice(50000, sample_size, replace=False)
-        test_set_indices = np.random.choice(10000, 10000, replace=False)
 
     elif dataset == 'svhn':
         trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -576,24 +583,65 @@ def load_dataset(
         train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(60000))
         test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 60000)
 
+        dataset_size = 60000
         if sample_size is None:
-            sample_size = 60000
+            if validation:
+                sample_size = 50000
+            else:
+                sample_size = 60000
         if batch_size is None:
             batch_size = 64
 
-        train_set_indices = np.random.choice(60000, sample_size, replace=False)
-        test_set_indices = np.random.choice(10000, 10000, replace=False)
-
-    print("------------ Sample Size " + str(sample_size) + "...", flush=True)
-    print()
-
+    train_set_indices = np.random.choice(dataset_size, sample_size, replace=False)
     train_set = torch.utils.data.Subset(train_set_full, train_set_indices)
-    test_set = torch.utils.data.Subset(test_set_full, test_set_indices)
+    if validation:
+        all_indices = np.arange(dataset_size)
+        mask = np.invert(np.isin(all_indices, train_set_indices))
+        test_set_indices = np.random.choice(all_indices[mask], dataset_size - sample_size, replace=False)
+        test_set = torch.utils.data.Subset(train_set_full, test_set_indices)
+    else:
+        test_set = test_set_full
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
     validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
 
+    # sampleFromClass(train_set_full, 20)
+
+    print("------------ Sample Size " + str(sample_size) + "...", flush=True)
+    print()
+
     return train_loader, validation_loader, sample_size, batch_size
+
+
+def sampleFromClass(ds, k):
+    class_counts = {}
+    train_data = []
+    train_label = []
+    test_data = []
+    test_label = []
+    for data, label in ds:
+        print(label)
+        c = label.item()
+        class_counts[c] = class_counts.get(c, 0) + 1
+        if class_counts[c] <= k:
+            train_data.append(data)
+            train_label.append(torch.unsqueeze(label, 0))
+        else:
+            test_data.append(data)
+            test_label.append(torch.unsqueeze(label, 0))
+    train_data = torch.cat(train_data)
+    for ll in train_label:
+        print(ll)
+    train_label = torch.cat(train_label)
+    test_data = torch.cat(test_data)
+    test_label = torch.cat(test_label)
+
+    print(train_data)
+    time.sleep(1)
+    print("1234"+124)
+
+    return (TensorDataset(train_data, train_label),
+            TensorDataset(test_data, test_label))
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):

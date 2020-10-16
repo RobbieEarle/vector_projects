@@ -2,6 +2,7 @@ import torch
 import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
@@ -86,9 +87,9 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
 
 
 # -------------------- Setting Up & Running Training Function
-def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path, fieldnames, train_loader,
-          validation_loader, sample_size, batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1,
-          perm_method='shuffle'):
+def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, best_checkpoint_location,
+          actfun, curr_seed, outfile_path, fieldnames, train_loader, validation_loader, sample_size,
+          batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1, perm_method='shuffle'):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
@@ -160,34 +161,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
     num_epochs = args.num_epochs
     if args.overfit:
         num_epochs = 50
-        hyper_params['cycle_peak'] = 0.35
-    hyper_params['adam_wd'] *= args.wd
 
-    optimizer = optim.Adam(model_params,
-                           lr=10 ** -6,
-                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                           eps=hyper_params['adam_eps'],
-                           weight_decay=hyper_params['adam_wd']
-                           )
-
-    if args.model == 'resnet':
-        scheduler = OneCycleLR(optimizer,
-                               max_lr=hyper_params['max_lr'],
-                               epochs=num_epochs,
-                               steps_per_epoch=int(math.ceil(sample_size / batch_size)),
-                               pct_start=hyper_params['cycle_peak'],
-                               cycle_momentum=False
-                               )
-    else:
-        num_batches = (sample_size / batch_size) * num_epochs
-        scheduler = CyclicLR(optimizer,
-                             base_lr=10 ** -8,
-                             max_lr=hyper_params['max_lr'],
-                             step_size_up=int(hyper_params['cycle_peak'] * num_batches),
-                             step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
-                             cycle_momentum=False
-                             )
-
+    optimizer = optim.RMSprop(model_params)
+    scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
     epoch = 1
 
     if checkpoint is not None:
@@ -206,7 +182,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
               "\np: {}"
               "\nk: {}"
               "\ng: {}"
-              "\nperm_method: {}".format(checkpoint_location, checkpoint['curr_seed'],
+              "\nperm_method: {}".format(mid_checkpoint_location, checkpoint['curr_seed'],
                                          checkpoint['epoch'], checkpoint['actfun'],
                                          checkpoint['num_params'], checkpoint['sample_size'],
                                          checkpoint['p'], checkpoint['k'], checkpoint['g'],
@@ -214,7 +190,9 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver, resnet_width)
+                            perm_method, resnet_ver, resnet_width, args.validation)
+
+    best_val_acc = 0
 
     # ---- Start Training
     while epoch <= num_epochs:
@@ -230,7 +208,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                         'sample_size': sample_size,
                         'p': curr_p, 'k': curr_k, 'g': curr_g,
                         'perm_method': perm_method
-                        }, checkpoint_location)
+                        }, mid_checkpoint_location)
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
@@ -248,7 +226,6 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             scaler.scale(train_loss).backward()
             scaler.step(optimizer)
             scaler.update()
-            scheduler.step()
 
         alpha_primes = []
         alphas = []
@@ -288,7 +265,7 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
             eval_val_loss = total_val_loss / n
             eval_val_acc = num_correct * 1.0 / num_total
 
-        lr = ''
+        lr = 0
         for param_group in optimizer.param_groups:
             lr = param_group['lr']
         print(
@@ -333,3 +310,30 @@ def train(args, checkpoint, checkpoint_location, actfun, curr_seed, outfile_path
                              })
 
         epoch += 1
+        scheduler.step()
+
+        if eval_val_acc > best_val_acc:
+            best_val_acc = eval_val_acc
+            torch.save({'state_dict': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
+                        'curr_seed': curr_seed,
+                        'epoch': epoch,
+                        'actfun': actfun,
+                        'num_params': num_params,
+                        'sample_size': sample_size,
+                        'p': curr_p, 'k': curr_k, 'g': curr_g,
+                        'perm_method': perm_method
+                        }, best_checkpoint_location)
+
+        torch.save({'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
+                    'curr_seed': curr_seed,
+                    'epoch': epoch,
+                    'actfun': actfun,
+                    'num_params': num_params,
+                    'sample_size': sample_size,
+                    'p': curr_p, 'k': curr_k, 'g': curr_g,
+                    'perm_method': perm_method
+                    }, final_checkpoint_location)

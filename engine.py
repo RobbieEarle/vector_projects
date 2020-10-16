@@ -45,8 +45,9 @@ def setup_experiment(args):
                                              model,
                                              args.actfun,
                                              args.label)
+
     outfile_path = os.path.join(args.save_path, filename) + '.csv'
-    checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
+    mid_checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
     checkpoint = None
 
     if not os.path.exists(outfile_path):
@@ -55,8 +56,8 @@ def setup_experiment(args):
             writer.writeheader()
 
     all_actfuns = util.get_actfuns(args.actfun)
-    if os.path.exists(checkpoint_path):
-        checkpoint = torch.load(checkpoint_path)
+    if os.path.exists(mid_checkpoint_path):
+        checkpoint = torch.load(mid_checkpoint_path)
         all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
 
     # =========================== Training
@@ -95,6 +96,7 @@ def setup_experiment(args):
                                 dataset = util.load_dataset(args.model,
                                                             args.dataset,
                                                             seed=curr_seed,
+                                                            validation=args.validation,
                                                             batch_size=args.batch_size,
                                                             sample_size=curr_sample_size,
                                                             kwargs=kwargs)
@@ -102,10 +104,24 @@ def setup_experiment(args):
                                 sample_size = dataset[2]
                                 batch_size = dataset[3]
 
+                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}-{}_{}'.format(args.seed,
+                                                                                     args.dataset,
+                                                                                     model,
+                                                                                     actfun,
+                                                                                     curr_num_params,
+                                                                                     curr_sample_size,
+                                                                                     p, k, g, perm_method,
+                                                                                     args.label
+                                                                                     )
+                                final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
+                                best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
+
                                 # ---- Begin training model
                                 trainer.train(args,
                                               checkpoint,
-                                              checkpoint_path,
+                                              mid_checkpoint_path,
+                                              final_checkpoint_path,
+                                              best_checkpoint_path,
                                               actfun,
                                               curr_seed,
                                               outfile_path,
@@ -129,7 +145,7 @@ def setup_experiment(args):
 # --------------------  Entry Point
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Higher order activation function testing')
-    parser.add_argument('--seed', type=int, default=1, help='Job seed')
+    parser.add_argument('--seed', type=int, default=0, help='Job seed')
     parser.add_argument('--p', type=int, default=1, help='Default p value for model')
     parser.add_argument('--k', type=int, default=2, help='Default k value for model')
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
@@ -143,11 +159,13 @@ if __name__ == '__main__':
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
-    parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=100, help='Number of training epochs')
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
     parser.add_argument('--label', type=str, default='', help='Label to differentiate different jobs')
+    parser.add_argument('--validation', action='store_true', help='When true, varies number of network parameters')
+    parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')
