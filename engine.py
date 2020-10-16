@@ -98,7 +98,7 @@ def setup_experiment(args):
                                                             seed=curr_seed,
                                                             validation=args.validation,
                                                             batch_size=args.batch_size,
-                                                            sample_size=curr_sample_size,
+                                                            train_sample_size=curr_sample_size,
                                                             kwargs=kwargs)
                                 train_loader, validation_loader = dataset[0], dataset[1]
                                 sample_size = dataset[2]

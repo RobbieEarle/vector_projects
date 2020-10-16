@@ -7,9 +7,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-20%20                      # array value
-#SBATCH --output=logs/rms1_test1/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms1_test1
+#SBATCH --array=0-11%12                      # array value
+#SBATCH --output=logs/rms1_mlp/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rms1_mlp
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -30,6 +30,7 @@ echo ""
 python -c "import torch; print('torch version = {}'.format(torch.__version__))"
 python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()))"
 python -c "import scipy; print('scipy version = {}'.format(scipy.__version__))"
+python -c "import sklearn; print('sklearn version = {}'.format(sklearn.__version__))"
 echo ""
 
 echo "SAVE_PATH=$SAVE_PATH"
