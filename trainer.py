@@ -307,7 +307,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'train_acc': float(eval_train_acc),
                              'val_acc': float(eval_val_acc),
                              'hp_idx': hp_idx,
-                             'lr_gamme': args.lr_gamma,
+                             'lr_gamma': args.lr_gamma,
                              'curr_lr': lr
                              })
 
