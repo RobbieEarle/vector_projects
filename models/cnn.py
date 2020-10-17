@@ -4,6 +4,7 @@ import torch.nn as nn
 import activation_functions as actfuns
 import util
 import math
+import time
 
 
 class CNN(nn.Module):
@@ -116,6 +117,12 @@ class CNN(nn.Module):
             actfun = 'l2'
         else:
             actfun = self.actfun
+
+        if len(x.shape) != 4:
+            x = x.unsqueeze(3)
+
+        x = torch.transpose(x, 1, 3)
+        x = torch.transpose(x, 2, 3)
 
         for block in range(3):
             x = self.conv_layers[block][0](x)

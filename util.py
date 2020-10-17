@@ -10,7 +10,6 @@ import activation_functions as actfuns
 from auto_augment import CIFAR10Policy
 from collections import namedtuple
 from sklearn import model_selection
-import time
 
 
 # -------------------- Training Utils
@@ -585,7 +584,14 @@ def load_dataset(
     X_train, X_val, y_train, y_val = model_selection.train_test_split(x, y, test_size=test_size, stratify=y)
 
     train_dataset = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
-    test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_val), torch.tensor(y_val)) if validation else test_set_full
+    if not validation:
+        if type(test_set_full.data) is torch.Tensor:
+            X_val = test_set_full.data.numpy()
+            y_val = test_set_full.targets.numpy()
+        else:
+            X_val = test_set_full.data.astype(np.float32)
+            y_val = test_set_full.targets
+    test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_val), torch.tensor(y_val))
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs)
     validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, **kwargs)
