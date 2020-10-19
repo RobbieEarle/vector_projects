@@ -170,7 +170,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                            weight_decay=hyper_params['adam_wd']
                            )
     scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
-    num_batches = (sample_size / batch_size) * num_epochs
+    num_batches = (50000 / batch_size) * num_epochs
     scheduler = CyclicLR(optimizer,
                          base_lr=10 ** -8,
                          max_lr=hyper_params['max_lr'],
