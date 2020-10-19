@@ -163,9 +163,23 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         num_epochs = 50
 
     optimizer = optim.RMSprop(model_params)
+    optimizer = optim.Adam(model_params,
+                           lr=10 ** -6,
+                           betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                           eps=hyper_params['adam_eps'],
+                           weight_decay=hyper_params['adam_wd']
+                           )
     scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
-    epoch = 1
+    num_batches = (sample_size / batch_size) * num_epochs
+    scheduler = CyclicLR(optimizer,
+                         base_lr=10 ** -8,
+                         max_lr=hyper_params['max_lr'],
+                         step_size_up=int(hyper_params['cycle_peak'] * num_batches),
+                         step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
+                         cycle_momentum=False
+                         )
 
+    epoch = 1
     if checkpoint is not None:
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
