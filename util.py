@@ -574,29 +574,26 @@ def load_dataset(
         y = y[:train_sample_size, ...]
 
     if validation:
-        if dataset == 'mnist':
-            test_size = 0.16666666
-        else:
-            test_size = 0.1
+        test_size = 0.16666666 if dataset == 'mnist' else 0.1
+        X_train, X_val, y_train, y_val = model_selection.train_test_split(x, y, test_size=test_size, stratify=y)
     else:
-        test_size = 10
-
-    X_train, X_val, y_train, y_val = model_selection.train_test_split(x, y, test_size=test_size, stratify=y)
-
-    train_dataset = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
-    if not validation:
-        if type(test_set_full.data) is torch.Tensor:
-            X_val = test_set_full.data.numpy()
+        if type(train_set_full.data) is torch.Tensor:
+            X_train = train_set_full.data.numpy().astype(np.float32)
+            y_train = train_set_full.targets.numpy()
+            X_val = test_set_full.data.numpy().astype(np.float32)
             y_val = test_set_full.targets.numpy()
         else:
+            X_train = train_set_full.data.astype(np.float32)
+            y_train = train_set_full.targets
             X_val = test_set_full.data.astype(np.float32)
             y_val = test_set_full.targets
+
+    train_dataset = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
     test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_val), torch.tensor(y_val))
 
-    # train_dataset = train_set_full
-    # test_dataset = test_set_full
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs)
     validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, **kwargs)
+    train_sample_size = X_train.shape[0]
 
     print("------------ Sample Size " + str(train_sample_size) + "...", flush=True)
     print()
