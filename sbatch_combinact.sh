@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-7%8                      # array value
-#SBATCH --output=logs/rms1_resnet01/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms1_resnet01
+#SBATCH --output=logs/rms1_resnet005/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rms1_resnet005
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -39,4 +39,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset cifar10 --actfun relu --num_epochs 200 --lr_gamma $LRGAMMA --validation --lr_init 0.01 --label $LABEL
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset cifar10 --actfun relu --num_epochs 200 --lr_gamma $LRGAMMA --validation --lr_init 0.005 --label $LABEL
