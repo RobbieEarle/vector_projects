@@ -171,6 +171,11 @@ class PreActResNet(nn.Module):
 
     def forward(self, x):
 
+        if len(x.shape) != 4:
+            x = x.unsqueeze(3)
+        x = torch.transpose(x, 1, 3).contiguous()
+        x = torch.transpose(x, 2, 3).contiguous()
+
         x = F.relu(self.bn0(self.conv0(x)))
         for block in self.layer1:
             x = block(x)

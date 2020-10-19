@@ -168,6 +168,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         lr_init = 0.01
     elif args.model == 'cnn':
         lr_init = 0.001
+    elif args.model == 'resnet':
+        lr_init = 0.001
     optimizer = optim.RMSprop(model_params, lr=lr_init)
     scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
 
