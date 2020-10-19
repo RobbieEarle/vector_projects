@@ -154,7 +154,7 @@ class CNN(nn.Module):
                                  reduce_actfuns=self.reduce_actfuns)
             x = self.pooling[block](x)
 
-        x = x.view(x.size(0), -1)
+        x = x.reshape(x.size(0), -1)
 
         # ------------- Linear layers
         if self.actfun == 'l2_lae':
