@@ -240,6 +240,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             scaler.scale(train_loss).backward()
             scaler.step(optimizer)
             scaler.update()
+            scheduler.step()
 
         alpha_primes = []
         alphas = []
@@ -326,7 +327,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              })
 
         epoch += 1
-        scheduler.step()
+        # scheduler.step()
 
         if eval_val_acc > best_val_acc:
             best_val_acc = eval_val_acc
