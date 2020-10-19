@@ -121,8 +121,8 @@ class CNN(nn.Module):
         if len(x.shape) != 4:
             x = x.unsqueeze(3)
 
-        # x = torch.transpose(x, 1, 3).contiguous()
-        # x = torch.transpose(x, 2, 3).contiguous()
+        x = torch.transpose(x, 1, 3).contiguous()
+        x = torch.transpose(x, 2, 3).contiguous()
 
         for block in range(3):
             x = self.conv_layers[block][0](x)

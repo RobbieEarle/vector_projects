@@ -593,8 +593,8 @@ def load_dataset(
             y_val = test_set_full.targets
     test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_val), torch.tensor(y_val))
 
-    train_dataset = train_set_full
-    test_dataset = test_set_full
+    # train_dataset = train_set_full
+    # test_dataset = test_set_full
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs)
     validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, **kwargs)
 
