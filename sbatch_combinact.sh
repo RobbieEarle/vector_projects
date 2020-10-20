@@ -7,16 +7,14 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-7%8                      # array value
-#SBATCH --output=logs/rms1_resnet005/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms1_resnet005
+#SBATCH --array=0-99%50                      # array value
+#SBATCH --output=logs/rs_resnet_relu1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rs_resnet_relu1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-LRGAMMA="$2"
-LABEL="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -38,5 +36,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --dataset cifar10 --actfun relu --num_epochs 200 --lr_gamma $LRGAMMA --validation --lr_init 0.005 --label $LABEL
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset mnist --actfun relu --resnet_ver 34 --resnet_width 2 --validation --num_epochs 50
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar10 --actfun relu --resnet_ver 34 --resnet_width 2 --validation --num_epochs 50

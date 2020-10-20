@@ -481,17 +481,11 @@ def load_dataset(
 
     if dataset == 'mnist':
         train_trans, test_trans = [], []
-        if model == 'resnet' or model == 'dawnnet':
-            train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
-        else:
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
+        train_trans.append(transforms.ToTensor())
+        train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        test_trans.append(transforms.ToTensor())
+        test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
 
         train_trans_all = transforms.Compose(train_trans)
         test_trans_all = transforms.Compose(test_trans)
@@ -501,99 +495,49 @@ def load_dataset(
         if batch_size is None:
             batch_size = 100
 
-    elif dataset == 'fashion_mnist':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        train_set_full = datasets.FashionMNIST(root='./data', train=True, download=True, transform=trans)
-        test_set_full = datasets.FashionMNIST(root='./data', train=False, download=True, transform=trans)
-
-        if batch_size is None:
-            batch_size = 100
-
-    elif dataset == 'cifar10':
+    elif dataset == 'cifar10' or dataset == 'cifar100':
         train_trans, test_trans = [], []
-        if model == 'resnet':
-            train_trans.append(transforms.RandomHorizontalFlip())
-            train_trans.append(CIFAR10Policy())
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        else:
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        train_trans.append(transforms.RandomHorizontalFlip())
+        train_trans.append(CIFAR10Policy())
+        train_trans.append(transforms.ToTensor())
+        train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        test_trans.append(transforms.ToTensor())
+        test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+
         train_trans_all = transforms.Compose(train_trans)
         test_trans_all = transforms.Compose(test_trans)
-        train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=train_trans_all)
-        test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=test_trans_all)
+        if dataset == 'cifar10':
+            train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=train_trans_all)
+            test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=test_trans_all)
+        elif dataset == 'cifar100':
+            train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=train_trans_all)
+            test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=test_trans_all)
 
         if batch_size is None:
             batch_size = 64
 
-    elif dataset == 'cifar100':
-        train_trans, test_trans = [], []
-        if model == 'resnet':
-            train_trans.append(transforms.RandomHorizontalFlip())
-            train_trans.append(CIFAR10Policy())
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        else:
-            train_trans.append(transforms.ToTensor())
-            train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-            test_trans.append(transforms.ToTensor())
-            test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        train_trans_all = transforms.Compose(train_trans)
-        test_trans_all = transforms.Compose(test_trans)
-        train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=train_trans_all)
-        test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=test_trans_all)
-
-        if batch_size is None:
-            batch_size = 64
-
-    elif dataset == 'svhn':
-        trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_full = datasets.SVHN(root='./data', download=True, transform=trans)
-        train_set_full = torch.utils.data.Subset(dataset_full, torch.arange(60000))
-        test_set_full = torch.utils.data.Subset(dataset_full, torch.arange(10000) + 60000)
-
-        if batch_size is None:
-            batch_size = 64
-
-    if type(train_set_full.data) is torch.Tensor:
-        x = train_set_full.data.float().numpy()
-        y = train_set_full.targets.numpy()
-    else:
-        x = train_set_full.data.astype(np.float32)
-        y = train_set_full.targets
-
-    if train_sample_size is not None:
-        x = x[:train_sample_size, ...]
-        y = y[:train_sample_size, ...]
-
+    train_sample_size = len(train_set_full) if train_sample_size is None else train_sample_size
     if validation:
+        train_sample_indices = np.arange(train_sample_size)
+        train_sample_lbls = train_set_full.targets[:train_sample_size]
+        train_sample_lbls = train_sample_lbls.numpy() if type(train_set_full.data) is torch.Tensor else train_sample_lbls
+
         test_size = 0.16666666 if dataset == 'mnist' else 0.1
-        X_train, X_val, y_train, y_val = model_selection.train_test_split(x, y, test_size=test_size, stratify=y)
+        train_idx, val_idx, train_lbls, val_lbls = model_selection.train_test_split(train_sample_indices,
+                                                                                    train_sample_lbls,
+                                                                                    test_size=test_size,
+                                                                                    stratify=train_sample_lbls,
+                                                                                    random_state=0)
     else:
-        if type(train_set_full.data) is torch.Tensor:
-            X_train = train_set_full.data.numpy().astype(np.float32)
-            y_train = train_set_full.targets.numpy()
-            X_val = test_set_full.data.numpy().astype(np.float32)
-            y_val = test_set_full.targets.numpy()
-        else:
-            X_train = train_set_full.data.astype(np.float32)
-            y_train = train_set_full.targets
-            X_val = test_set_full.data.astype(np.float32)
-            y_val = test_set_full.targets
+        train_idx = np.random.choice(len(train_set_full), train_sample_size, replace=False)
+        val_idx = np.arange(len(test_set_full))
 
-    train_dataset = torch.utils.data.TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
-    test_dataset = torch.utils.data.TensorDataset(torch.tensor(X_val), torch.tensor(y_val))
+    train_sample_size = train_idx.shape[0]
+    train_set = torch.utils.data.Subset(train_set_full, train_idx)
+    test_set = torch.utils.data.Subset(train_set_full, val_idx)
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs)
-    validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, **kwargs)
-    train_sample_size = X_train.shape[0]
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
+    validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
 
     print("------------ Sample Size " + str(train_sample_size) + "...", flush=True)
     print()

@@ -155,6 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
     parser.add_argument('--actfun', type=str, default='max')  # all
+    parser.add_argument('--optim', type=str, default='rmsprop')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
@@ -167,6 +168,7 @@ if __name__ == '__main__':
     parser.add_argument('--validation', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--lr_init', type=float, default=None, help='Initial learning rate value')
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
+    parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')

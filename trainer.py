@@ -161,17 +161,45 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     num_epochs = args.num_epochs
     if args.overfit:
         num_epochs = 50
+        hyper_params['cycle_peak'] = 0.35
+    hyper_params['adam_wd'] *= args.wd
 
-    if args.lr_init is not None:
-        lr_init = args.lr_init
-    elif args.model == 'mlp':
-        lr_init = 0.01
-    elif args.model == 'cnn':
-        lr_init = 0.001
-    elif args.model == 'resnet':
-        lr_init = 0.001
-    optimizer = optim.RMSprop(model_params, lr=lr_init)
-    scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
+    if args.optim == 'onecycle':
+        optimizer = optim.Adam(model_params,
+                               lr=10 ** -6,
+                               betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                               eps=hyper_params['adam_eps'],
+                               weight_decay=hyper_params['adam_wd']
+                               )
+        if args.model == 'resnet':
+            scheduler = OneCycleLR(optimizer,
+                                   max_lr=hyper_params['max_lr'],
+                                   epochs=num_epochs,
+                                   steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                                   pct_start=hyper_params['cycle_peak'],
+                                   cycle_momentum=False
+                                   )
+        else:
+            num_batches = (sample_size / batch_size) * num_epochs
+            scheduler = CyclicLR(optimizer,
+                                 base_lr=10 ** -8,
+                                 max_lr=hyper_params['max_lr'],
+                                 step_size_up=int(hyper_params['cycle_peak'] * num_batches),
+                                 step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
+                                 cycle_momentum=False
+                                 )
+
+    elif args.optim == 'rmsprop':
+        if args.lr_init is not None:
+            lr_init = args.lr_init
+        elif args.model == 'mlp':
+            lr_init = 0.01
+        elif args.model == 'cnn':
+            lr_init = 0.001
+        elif args.model == 'resnet':
+            lr_init = 0.001
+        optimizer = optim.RMSprop(model_params, lr=lr_init)
+        scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
 
     epoch = 1
     if checkpoint is not None:
@@ -234,6 +262,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             scaler.scale(train_loss).backward()
             scaler.step(optimizer)
             scaler.update()
+            if args.optim == 'onecycle':
+                scheduler.step()
 
         alpha_primes = []
         alphas = []
@@ -320,10 +350,25 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              })
 
         epoch += 1
-        scheduler.step()
 
-        if eval_val_acc > best_val_acc:
-            best_val_acc = eval_val_acc
+        if args.optim == 'rmsprop':
+            scheduler.step()
+
+        if args.checkpoints:
+            if eval_val_acc > best_val_acc:
+                best_val_acc = eval_val_acc
+                torch.save({'state_dict': model.state_dict(),
+                            'optimizer': optimizer.state_dict(),
+                            'scheduler': scheduler.state_dict(),
+                            'curr_seed': curr_seed,
+                            'epoch': epoch,
+                            'actfun': actfun,
+                            'num_params': num_params,
+                            'sample_size': sample_size,
+                            'p': curr_p, 'k': curr_k, 'g': curr_g,
+                            'perm_method': perm_method
+                            }, best_checkpoint_location)
+
             torch.save({'state_dict': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
@@ -334,16 +379,4 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                         'sample_size': sample_size,
                         'p': curr_p, 'k': curr_k, 'g': curr_g,
                         'perm_method': perm_method
-                        }, best_checkpoint_location)
-
-        torch.save({'state_dict': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scheduler': scheduler.state_dict(),
-                    'curr_seed': curr_seed,
-                    'epoch': epoch,
-                    'actfun': actfun,
-                    'num_params': num_params,
-                    'sample_size': sample_size,
-                    'p': curr_p, 'k': curr_k, 'g': curr_g,
-                    'perm_method': perm_method
-                    }, final_checkpoint_location)
+                        }, final_checkpoint_location)
