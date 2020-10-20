@@ -272,7 +272,8 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method, resnet_ver, resnet_width, validation):
+                       curr_g, perm_method, resnet_ver, resnet_width, validation,
+                       lr_init, lr_gamma, weight_decay):
 
     print(
         "\n===================================================================\n\n"
@@ -287,10 +288,14 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
-        "Sample Size: {}\n"
-        "Validation: {}\n\n"
+        "Num Training Samples: {}\n"
+        "Validation: {}\n"
+        "Initial LR: {}\n"
+        "LR Gamma: {}\n"
+        "Weight Decay: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
-                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, validation), flush=True
+                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, validation,
+                    lr_init, lr_gamma, weight_decay), flush=True
     )
 
 
@@ -518,29 +523,31 @@ def load_dataset(
 
     train_sample_size = len(train_set_full) if train_sample_size is None else train_sample_size
     if validation:
-        train_sample_indices = np.arange(train_sample_size)
-        train_sample_lbls = train_set_full.targets[:train_sample_size]
-        train_sample_lbls = train_sample_lbls.numpy() if type(train_set_full.data) is torch.Tensor else train_sample_lbls
-
-        test_size = 0.16666666 if dataset == 'mnist' else 0.1
-        train_idx, val_idx, train_lbls, val_lbls = model_selection.train_test_split(train_sample_indices,
-                                                                                    train_sample_lbls,
-                                                                                    test_size=test_size,
-                                                                                    stratify=train_sample_lbls,
-                                                                                    random_state=0)
+        if dataset == 'mnist':
+            train_idx = np.arange(50000)
+            train_idx = train_idx[:train_sample_size]
+            val_idx = np.arange(50000, 60000)
+        else:
+            train_sample_indices = np.arange(train_sample_size)
+            train_sample_lbls = train_set_full.targets[:train_sample_size]
+            train_sample_lbls = train_sample_lbls.numpy() if isinstance(train_set_full.data, torch.Tensor) else train_sample_lbls
+            train_idx, val_idx, _, _ = model_selection.train_test_split(train_sample_indices,
+                                                                        train_sample_lbls,
+                                                                        test_size=0.1,
+                                                                        stratify=train_sample_lbls,
+                                                                        random_state=0)
+        val_set_full = train_set_full
     else:
         train_idx = np.random.choice(len(train_set_full), train_sample_size, replace=False)
         val_idx = np.arange(len(test_set_full))
+        val_set_full = test_set_full
 
     train_sample_size = train_idx.shape[0]
     train_set = torch.utils.data.Subset(train_set_full, train_idx)
-    test_set = torch.utils.data.Subset(train_set_full, val_idx)
+    val_set = torch.utils.data.Subset(val_set_full, val_idx)
 
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, **kwargs)
-    validation_loader = torch.utils.data.DataLoader(test_set, batch_size=batch_size, shuffle=False, **kwargs)
-
-    print("------------ Sample Size " + str(train_sample_size) + "...", flush=True)
-    print()
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, drop_last=True, shuffle=True, **kwargs)
+    validation_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size, drop_last=False, shuffle=False, **kwargs)
 
     return train_loader, validation_loader, train_sample_size, batch_size
 

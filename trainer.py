@@ -198,7 +198,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             lr_init = 0.001
         elif args.model == 'resnet':
             lr_init = 0.001
-        optimizer = optim.RMSprop(model_params, lr=lr_init)
+        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=args.weight_decay)
         scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
 
     epoch = 1
@@ -226,7 +226,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver, resnet_width, args.validation)
+                            perm_method, resnet_ver, resnet_width, args.validation,
+                            lr_init, args.lr_gamma, args.weight_decay)
 
     best_val_acc = 0
 
@@ -345,8 +346,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'train_acc': float(eval_train_acc),
                              'val_acc': float(eval_val_acc),
                              'hp_idx': hp_idx,
+                             'lr_init': lr_init,
                              'lr_gamma': args.lr_gamma,
-                             'curr_lr': lr
+                             'curr_lr': lr,
+                             'weight_decay': args.weight_decay
                              })
 
         epoch += 1

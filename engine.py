@@ -33,7 +33,7 @@ def setup_experiment(args):
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
-                  'train_acc', 'val_acc', 'hp_idx', 'lr_gamma', 'curr_lr']
+                  'train_acc', 'val_acc', 'hp_idx', 'lr_init', 'lr_gamma', 'curr_lr', 'weight_decay']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -168,6 +168,7 @@ if __name__ == '__main__':
     parser.add_argument('--validation', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--lr_init', type=float, default=None, help='Initial learning rate value')
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
+    parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay')
     parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
