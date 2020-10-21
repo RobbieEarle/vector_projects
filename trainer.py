@@ -88,7 +88,7 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
 
 # -------------------- Setting Up & Running Training Function
 def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, best_checkpoint_location,
-          actfun, curr_seed, outfile_path, fieldnames, train_loader, validation_loader, sample_size,
+          actfun, curr_seed, outfile_path, fieldnames, loaders, sample_size,
           batch_size, device, num_params, curr_k=2, curr_p=1, curr_g=1, perm_method='shuffle'):
     """
     Runs training session for a given randomized model
@@ -99,8 +99,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     :param curr_seed: seed being used by current job
     :param outfile_path: path to save outputs from training session
     :param fieldnames: column names for output file
-    :param train_loader: training data loader
-    :param validation_loader: validation data loader
+    :param loaders: the train / eval loaders
     :param sample_size: number of training samples used in this experiment
     :param batch_size: number of samples per batch
     :param device: reference to CUDA device for GPU support
@@ -253,18 +252,26 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         # ---- Training
         model.train()
-        for batch_idx, (x, targetx) in enumerate(train_loader):
+        total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+        for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
             # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             optimizer.zero_grad()
             with torch.cuda.amp.autocast():
                 output = model(x)
                 train_loss = criterion(output, targetx)
+            total_train_loss += train_loss
+            n += 1
             scaler.scale(train_loss).backward()
             scaler.step(optimizer)
             scaler.update()
             if args.optim == 'onecycle':
                 scheduler.step()
+            _, prediction = torch.max(output.data, 1)
+            num_correct += torch.sum(prediction == targetx.data)
+            num_total += len(prediction)
+        epoch_aug_train_loss = total_train_loss / n
+        epoch_aug_train_acc = num_correct * 1.0 / num_total
 
         alpha_primes = []
         alphas = []
@@ -278,21 +285,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         model.eval()
         with torch.no_grad():
-            total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
-            for batch_idx, (x, targetx) in enumerate(train_loader):
-                x, targetx = x.to(device), targetx.to(device)
-                output = model(x)
-                train_loss = criterion(output, targetx)
-                total_train_loss += train_loss
-                n += 1
-                _, prediction = torch.max(output.data, 1)
-                num_correct += torch.sum(prediction == targetx.data)
-                num_total += len(prediction)
-            eval_train_loss = total_train_loss / n
-            eval_train_acc = num_correct * 1.0 / num_total
-
             total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
-            for batch_idx2, (y, targety) in enumerate(validation_loader):
+            for batch_idx, (y, targety) in enumerate(loaders['aug_eval']):
                 y, targety = y.to(device), targety.to(device)
                 output = model(y)
                 val_loss = criterion(output, targety)
@@ -301,21 +295,64 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 _, prediction = torch.max(output.data, 1)
                 num_correct += torch.sum(prediction == targety.data)
                 num_total += len(prediction)
-            eval_val_loss = total_val_loss / n
-            eval_val_acc = num_correct * 1.0 / num_total
+            epoch_aug_val_loss = total_val_loss / n
+            epoch_aug_val_acc = num_correct * 1.0 / num_total
 
+            total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
+            for batch_idx, (y, targety) in enumerate(loaders['eval']):
+                y, targety = y.to(device), targety.to(device)
+                output = model(y)
+                val_loss = criterion(output, targety)
+                total_val_loss += val_loss
+                n += 1
+                _, prediction = torch.max(output.data, 1)
+                num_correct += torch.sum(prediction == targety.data)
+                num_total += len(prediction)
+            epoch_val_loss = total_val_loss / n
+            epoch_val_acc = num_correct * 1.0 / num_total
         lr = 0
         for param_group in optimizer.param_groups:
             lr = param_group['lr']
         print(
-            "    Epoch {}: LR {:1.5f}  |  train_acc {:1.5f}  |  val_acc {:1.5f}  |  train_loss {:1.5f}  |  val_loss {:1.5f}  |  time = {:1.5f}"
-                .format(epoch, lr, eval_train_acc, eval_val_acc, eval_train_loss, eval_val_loss, (time.time() - start_time)), flush=True
+            "    Epoch {}: LR {:1.4f} | aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} | train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} | time = {:1.4f}"
+                .format(epoch, lr, epoch_aug_train_acc, epoch_val_acc, epoch_aug_val_acc,
+                        epoch_train_loss, epoch_val_loss, epoch_aug_val_loss, (time.time() - start_time)), flush=True
         )
 
         if args.hp_idx is None:
             hp_idx = -1
         else:
             hp_idx = args.hp_idx
+
+        epoch_train_loss = 0
+        epoch_train_acc = 0
+        if epoch == num_epochs:
+            with torch.no_grad():
+                total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+                for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
+                    x, targetx = x.to(device), targetx.to(device)
+                    output = model(x)
+                    train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
+                    _, prediction = torch.max(output.data, 1)
+                    num_correct += torch.sum(prediction == targetx.data)
+                    num_total += len(prediction)
+                epoch_aug_train_loss = total_train_loss / n
+                epoch_aug_train_acc = num_correct * 1.0 / num_total
+
+                total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+                for batch_idx, (x, targetx) in enumerate(loaders['train']):
+                    x, targetx = x.to(device), targetx.to(device)
+                    output = model(x)
+                    train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
+                    _, prediction = torch.max(output.data, 1)
+                    num_correct += torch.sum(prediction == targetx.data)
+                    num_total += len(prediction)
+                epoch_train_loss = total_val_loss / n
+                epoch_train_acc = num_correct * 1.0 / num_total
 
         # Outputting data to CSV at end of epoch
         with open(outfile_path, mode='a') as out_file:
@@ -338,13 +375,18 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'p': curr_p,
                              'g': curr_g,
                              'perm_method': perm_method,
-                             'gen_gap': float(eval_val_loss - eval_train_loss),
+                             'gen_gap': float(epoch_val_loss - epoch_train_loss),
+                             'aug_gen_gap': float(epoch_aug_val_loss - epoch_aug_train_loss),
                              'resnet_ver': resnet_ver,
                              'resnet_width': resnet_width,
-                             'train_loss': float(eval_train_loss),
-                             'val_loss': float(eval_val_loss),
-                             'train_acc': float(eval_train_acc),
-                             'val_acc': float(eval_val_acc),
+                             'epoch_train_loss': float(epoch_train_loss),
+                             'epoch_train_acc': float(epoch_train_acc),
+                             'epoch_aug_train_loss': float(epoch_aug_train_loss),
+                             'epoch_aug_train_acc': float(epoch_aug_train_acc),
+                             'epoch_val_loss': float(epoch_val_loss),
+                             'epoch_val_acc': float(epoch_val_acc),
+                             'epoch_aug_val_loss': float(epoch_aug_val_loss),
+                             'epoch_aug_val_acc': float(epoch_aug_val_acc),
                              'hp_idx': hp_idx,
                              'lr_init': lr_init,
                              'lr_gamma': args.lr_gamma,
@@ -358,8 +400,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             scheduler.step()
 
         if args.checkpoints:
-            if eval_val_acc > best_val_acc:
-                best_val_acc = eval_val_acc
+            if epoch_val_acc > best_val_acc:
+                best_val_acc = epoch_val_acc
                 torch.save({'state_dict': model.state_dict(),
                             'optimizer': optimizer.state_dict(),
                             'scheduler': scheduler.state_dict(),

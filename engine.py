@@ -32,8 +32,10 @@ def setup_experiment(args):
     fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
                   'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                  'gen_gap', 'resnet_ver', 'resnet_width', 'train_loss', 'val_loss',
-                  'train_acc', 'val_acc', 'hp_idx', 'lr_init', 'lr_gamma', 'curr_lr', 'weight_decay']
+                  'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
+                  'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
+                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'lr_init',
+                  'lr_gamma', 'curr_lr', 'weight_decay']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -100,19 +102,24 @@ def setup_experiment(args):
                                                             batch_size=args.batch_size,
                                                             train_sample_size=curr_sample_size,
                                                             kwargs=kwargs)
-                                train_loader, validation_loader = dataset[0], dataset[1]
-                                sample_size = dataset[2]
-                                batch_size = dataset[3]
+                                loaders = {
+                                    'aug_train': dataset[0],
+                                    'train': dataset[1],
+                                    'aug_eval': dataset[2],
+                                    'eval': dataset[3],
+                                }
+                                sample_size = dataset[4]
+                                batch_size = dataset[5]
 
                                 filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
-                                                                                     args.dataset,
-                                                                                     model,
-                                                                                     actfun,
-                                                                                     curr_num_params,
-                                                                                     curr_sample_size,
-                                                                                     p, k, g, perm_method,
-                                                                                     args.label
-                                                                                     )
+                                                                                    args.dataset,
+                                                                                    model,
+                                                                                    actfun,
+                                                                                    curr_num_params,
+                                                                                    curr_sample_size,
+                                                                                    p, k, g, perm_method,
+                                                                                    args.label
+                                                                                    )
                                 final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
                                 best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
 
@@ -126,8 +133,7 @@ def setup_experiment(args):
                                               curr_seed,
                                               outfile_path,
                                               fieldnames,
-                                              train_loader,
-                                              validation_loader,
+                                              loaders,
                                               sample_size,
                                               batch_size,
                                               device,
@@ -187,6 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--bin_peff_redo', action='store_true', help='')
     parser.add_argument('--nparam_redo', action='store_true', help='')
     parser.add_argument('--verbose', action='store_true', help='')
+    parser.add_argument('--double_val', action='store_true', help='')
     parser.add_argument('--hp_idx', type=int, default=None, help='')
     args = parser.parse_args()
 

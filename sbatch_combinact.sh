@@ -7,18 +7,15 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0%1                         # array value
-#SBATCH --output=logs/rms2_resnet_grid1/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms2_resnet_grid1
+#SBATCH --array=55%1                         # array value
+#SBATCH --output=logs/rms3_resnet/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rms3_resnet
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-LR_INIT="$2"
-LR_GAMMA="$3"
-WD="$4"
-LABEL="$5"
+WD="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -41,4 +38,5 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar10 --actfun relu --num_epochs 300 --lr_init $LR_INIT --lr_gamma $LR_GAMMA --weight_decay $WD --validation --label $LABEL
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar10 --actfun relu --num_epochs 300 --lr_init 0.0001 --lr_gamma 0.99 --weight_decay $WD --validation --label _99_$WD
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar10 --actfun relu --num_epochs 300 --lr_init 0.0001 --lr_gamma 1 --weight_decay $WD --validation --label _100_$WD

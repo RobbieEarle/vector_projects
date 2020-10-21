@@ -485,43 +485,49 @@ def load_dataset(
     seed_all(seed)
 
     if dataset == 'mnist':
-        train_trans, test_trans = [], []
-        train_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
-        train_trans.append(transforms.ToTensor())
-        train_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
-        test_trans.append(transforms.ToTensor())
-        test_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        aug_trans, trans = [], []
+        aug_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
+        aug_trans.append(transforms.ToTensor())
+        aug_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
+        trans.append(transforms.ToTensor())
+        trans.append(transforms.Normalize((0.1307,), (0.3081,)))
 
-        train_trans_all = transforms.Compose(train_trans)
-        test_trans_all = transforms.Compose(test_trans)
-        train_set_full = datasets.MNIST(root='./data', train=True, download=True, transform=train_trans_all)
-        test_set_full = datasets.MNIST(root='./data', train=False, download=True, transform=test_trans_all)
+        aug_trans_all = transforms.Compose(aug_trans)
+        trans_all = transforms.Compose(trans)
+        aug_train_set = datasets.MNIST(root='./data', train=True, download=True, transform=aug_trans_all)
+        train_set = datasets.MNIST(root='./data', train=True, download=True, transform=trans_all)
+        aug_test_set = datasets.MNIST(root='./data', train=False, download=True, transform=aug_trans_all)
+        test_set = datasets.MNIST(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
             batch_size = 100
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
-        train_trans, test_trans = [], []
-        train_trans.append(transforms.RandomHorizontalFlip())
-        train_trans.append(CIFAR10Policy())
-        train_trans.append(transforms.ToTensor())
-        train_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
-        test_trans.append(transforms.ToTensor())
-        test_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        aug_trans, trans = [], []
+        aug_trans.append(transforms.RandomHorizontalFlip())
+        aug_trans.append(CIFAR10Policy())
+        aug_trans.append(transforms.ToTensor())
+        aug_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        trans.append(transforms.ToTensor())
+        trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
 
-        train_trans_all = transforms.Compose(train_trans)
-        test_trans_all = transforms.Compose(test_trans)
+        aug_trans_all = transforms.Compose(aug_trans)
+        trans_all = transforms.Compose(trans)
         if dataset == 'cifar10':
-            train_set_full = datasets.CIFAR10(root='./data', train=True, download=True, transform=train_trans_all)
-            test_set_full = datasets.CIFAR10(root='./data', train=False, download=True, transform=test_trans_all)
+            aug_train_set = datasets.CIFAR10(root='./data', train=True, download=True, transform=aug_trans_all)
+            train_set = datasets.CIFAR10(root='./data', train=True, download=True, transform=trans_all)
+            aug_test_set = datasets.CIFAR10(root='./data', train=False, download=True, transform=aug_trans_all)
+            test_set = datasets.CIFAR10(root='./data', train=False, download=True, transform=trans_all)
         elif dataset == 'cifar100':
-            train_set_full = datasets.CIFAR100(root='./data', train=True, download=True, transform=train_trans_all)
-            test_set_full = datasets.CIFAR100(root='./data', train=False, download=True, transform=test_trans_all)
+            aug_train_set = datasets.CIFAR100(root='./data', train=True, download=True, transform=aug_trans_all)
+            train_set = datasets.CIFAR100(root='./data', train=True, download=True, transform=trans_all)
+            aug_test_set = datasets.CIFAR100(root='./data', train=False, download=True, transform=aug_trans_all)
+            test_set = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
             batch_size = 64
 
-    train_sample_size = len(train_set_full) if train_sample_size is None else train_sample_size
+    train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:
         if dataset == 'mnist':
             train_idx = np.arange(50000)
@@ -529,27 +535,35 @@ def load_dataset(
             val_idx = np.arange(50000, 60000)
         else:
             train_sample_indices = np.arange(train_sample_size)
-            train_sample_lbls = train_set_full.targets[:train_sample_size]
-            train_sample_lbls = train_sample_lbls.numpy() if isinstance(train_set_full.data, torch.Tensor) else train_sample_lbls
+            train_sample_lbls = train_set.targets[:train_sample_size]
+            train_sample_lbls = train_sample_lbls.numpy() if isinstance(train_set.data, torch.Tensor) else train_sample_lbls
             train_idx, val_idx, _, _ = model_selection.train_test_split(train_sample_indices,
                                                                         train_sample_lbls,
                                                                         test_size=0.1,
                                                                         stratify=train_sample_lbls,
                                                                         random_state=0)
-        val_set_full = train_set_full
+        aug_eval_set = aug_train_set
+        eval_set = train_set
     else:
-        train_idx = np.random.choice(len(train_set_full), train_sample_size, replace=False)
-        val_idx = np.arange(len(test_set_full))
-        val_set_full = test_set_full
+        train_idx = np.random.choice(len(train_set), train_sample_size, replace=False)
+        val_idx = np.arange(len(test_set))
+
+        aug_eval_set = aug_test_set
+        eval_set = test_set
 
     train_sample_size = train_idx.shape[0]
-    train_set = torch.utils.data.Subset(train_set_full, train_idx)
-    val_set = torch.utils.data.Subset(val_set_full, val_idx)
 
+    aug_train_set = torch.utils.data.Subset(aug_train_set, train_idx)
+    train_set = torch.utils.data.Subset(train_set, train_idx)
+    aug_eval_set = torch.utils.data.Subset(aug_eval_set, val_idx)
+    eval_set = torch.utils.data.Subset(eval_set, val_idx)
+
+    aug_train_loader = torch.utils.data.DataLoader(aug_train_set, batch_size=batch_size, drop_last=True, shuffle=True, **kwargs)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, drop_last=True, shuffle=True, **kwargs)
-    validation_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size, drop_last=False, shuffle=False, **kwargs)
+    aug_eval_loader = torch.utils.data.DataLoader(aug_eval_set, batch_size=batch_size, drop_last=False, shuffle=False, **kwargs)
+    eval_loader = torch.utils.data.DataLoader(eval_set, batch_size=batch_size, drop_last=False, shuffle=False, **kwargs)
 
-    return train_loader, validation_loader, train_sample_size, batch_size
+    return aug_train_loader, train_loader, aug_eval_loader, eval_loader, train_sample_size, batch_size
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
