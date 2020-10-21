@@ -164,6 +164,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     hyper_params['adam_wd'] *= args.wd
 
     if args.optim == 'onecycle':
+        lr_init = 10 ** -6
         optimizer = optim.Adam(model_params,
                                lr=10 ** -6,
                                betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
