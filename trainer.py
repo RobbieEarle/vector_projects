@@ -315,8 +315,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         for param_group in optimizer.param_groups:
             lr = param_group['lr']
         print(
-            "    Epoch {}: LR {:1.4f} | aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
-            "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} | time = {:1.4f}"
+            "    Epoch {}: LR {:1.4f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
+            "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}"
                 .format(epoch, lr, epoch_aug_train_acc, epoch_val_acc, epoch_aug_val_acc,
                         epoch_aug_train_loss, epoch_val_loss, epoch_aug_val_loss, (time.time() - start_time)), flush=True
         )
