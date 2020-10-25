@@ -272,8 +272,8 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
-                       curr_g, perm_method, resnet_ver, resnet_width, validation,
-                       lr_init, lr_gamma, weight_decay):
+                       curr_g, perm_method, resnet_ver, resnet_width, optim,
+                       validation, lr_init, lr_gamma, weight_decay):
 
     print(
         "\n===================================================================\n\n"
@@ -289,12 +289,13 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Num Training Samples: {}\n"
+        "Optimizer: {}\n"
         "Validation: {}\n"
         "Initial LR: {}\n"
         "LR Gamma: {}\n"
         "Weight Decay: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
-                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, validation,
+                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, optim, validation,
                     lr_init, lr_gamma, weight_decay), flush=True
     )
 
@@ -564,6 +565,61 @@ def load_dataset(
     eval_loader = torch.utils.data.DataLoader(eval_set, batch_size=batch_size, drop_last=False, shuffle=False, **kwargs)
 
     return aug_train_loader, train_loader, aug_eval_loader, eval_loader, train_sample_size, batch_size
+
+
+def get_rms_hyperparams(grid_id):
+    grid_settings={
+        0: (1e-3, 0.95, 1e-3),
+        1: (1e-3, 0.95, 1e-4),
+        2: (1e-3, 0.95, 1e-5),
+        3: (1e-3, 0.95, 1e-6),
+        4: (1e-3, 0.97, 1e-3),
+        5: (1e-3, 0.97, 1e-4),
+        6: (1e-3, 0.97, 1e-5),
+        7: (1e-3, 0.97, 1e-6),
+        8: (1e-3, 0.99, 1e-3),
+        9: (1e-3, 0.99, 1e-4),
+        10: (1e-3, 0.99, 1e-5),
+        11: (1e-3, 0.99, 1e-6),
+        12: (1e-3, 1.00, 1e-3),
+        13: (1e-3, 1.00, 1e-4),
+        14: (1e-3, 1.00, 1e-5),
+        15: (1e-3, 1.00, 1e-6),
+        16: (1e-4, 0.95, 1e-3),
+        17: (1e-4, 0.95, 1e-4),
+        18: (1e-4, 0.95, 1e-5),
+        19: (1e-4, 0.95, 1e-6),
+        20: (1e-4, 0.97, 1e-3),
+        21: (1e-4, 0.97, 1e-4),
+        22: (1e-4, 0.97, 1e-5),
+        23: (1e-4, 0.97, 1e-6),
+        24: (1e-4, 0.99, 1e-3),
+        25: (1e-4, 0.99, 1e-4),
+        26: (1e-4, 0.99, 1e-5),
+        27: (1e-4, 0.99, 1e-6),
+        28: (1e-4, 1.00, 1e-3),
+        29: (1e-4, 1.00, 1e-4),
+        30: (1e-4, 1.00, 1e-5),
+        31: (1e-4, 1.00, 1e-6),
+        32: (1e-5, 0.95, 1e-3),
+        33: (1e-5, 0.95, 1e-4),
+        34: (1e-5, 0.95, 1e-5),
+        35: (1e-5, 0.95, 1e-6),
+        36: (1e-5, 0.97, 1e-3),
+        37: (1e-5, 0.97, 1e-4),
+        38: (1e-5, 0.97, 1e-5),
+        39: (1e-5, 0.97, 1e-6),
+        40: (1e-5, 0.99, 1e-3),
+        41: (1e-5, 0.99, 1e-4),
+        42: (1e-5, 0.99, 1e-5),
+        43: (1e-5, 0.99, 1e-6),
+        44: (1e-5, 1.00, 1e-3),
+        45: (1e-5, 1.00, 1e-4),
+        46: (1e-5, 1.00, 1e-5),
+        47: (1e-5, 1.00, 1e-6),
+    }
+
+    return grid_settings[grid_id]
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):

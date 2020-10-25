@@ -163,6 +163,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         hyper_params['cycle_peak'] = 0.35
     hyper_params['adam_wd'] *= args.wd
 
+    lr_gamma = args.lr_gamma
+    wd = args.weight_decay
     if args.optim == 'onecycle':
         lr_init = 10 ** -6
         optimizer = optim.Adam(model_params,
@@ -188,18 +190,22 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
                                  cycle_momentum=False
                                  )
-
     elif args.optim == 'rmsprop':
-        if args.lr_init is not None:
-            lr_init = args.lr_init
-        elif args.model == 'mlp':
-            lr_init = 0.01
-        elif args.model == 'cnn':
-            lr_init = 0.001
-        elif args.model == 'resnet':
-            lr_init = 0.001
-        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=args.weight_decay)
-        scheduler = ExponentialLR(optimizer, gamma=args.lr_gamma)
+        if args.grid_id is None:
+            if args.lr_init is not None:
+                lr_init = args.lr_init
+            elif args.model == 'mlp':
+                lr_init = 0.01
+            elif args.model == 'cnn':
+                lr_init = 0.001
+            elif args.model == 'resnet':
+                lr_init = 0.001
+        else:
+            lr_init, lr_gamma, wd = util.get_rms_hyperparams(args.grid_id)
+
+        print(lr_init, lr_gamma, wd)
+        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd)
+        scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
 
     epoch = 1
     if checkpoint is not None:
@@ -226,8 +232,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver, resnet_width, args.validation,
-                            lr_init, args.lr_gamma, args.weight_decay)
+                            perm_method, resnet_ver, resnet_width, args.optim, args.validation,
+                            lr_init, lr_gamma, wd)
 
     best_val_acc = 0
 
@@ -391,9 +397,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'epoch_aug_val_acc': float(epoch_aug_val_acc),
                              'hp_idx': hp_idx,
                              'lr_init': lr_init,
-                             'lr_gamma': args.lr_gamma,
+                             'lr_gamma': lr_gamma,
                              'curr_lr': lr,
-                             'weight_decay': args.weight_decay
+                             'weight_decay': wd
                              })
 
         epoch += 1

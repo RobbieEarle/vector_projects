@@ -195,6 +195,8 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='')
     parser.add_argument('--double_val', action='store_true', help='')
     parser.add_argument('--hp_idx', type=int, default=None, help='')
+    parser.add_argument('--grid_id', type=int, default=0, help='')
+
     args = parser.parse_args()
 
     setup_experiment(args)
