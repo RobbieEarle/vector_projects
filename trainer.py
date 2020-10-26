@@ -165,6 +165,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     lr_gamma = args.lr_gamma
     wd = args.weight_decay
+    rms_alpha = 0.99
+    rms_momentum = 0
     if args.optim == 'onecycle':
         lr_init = 10 ** -6
         optimizer = optim.Adam(model_params,
@@ -201,10 +203,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             elif args.model == 'resnet':
                 lr_init = 0.001
         else:
-            lr_init, lr_gamma, wd = util.get_rms_hyperparams(args.grid_id)
+            wd = 1e-4
+            lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args.grid_id)
 
-        print(lr_init, lr_gamma, wd)
-        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd)
+        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
         scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
 
     epoch = 1
@@ -233,7 +235,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                             util.get_model_params(model), sample_size, model.k, model.p, model.g,
                             perm_method, resnet_ver, resnet_width, args.optim, args.validation,
-                            lr_init, lr_gamma, wd)
+                            lr_init, lr_gamma, wd, rms_alpha, rms_momentum)
 
     best_val_acc = 0
 
@@ -399,7 +401,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'lr_init': lr_init,
                              'lr_gamma': lr_gamma,
                              'curr_lr': lr,
-                             'weight_decay': wd
+                             'weight_decay': wd,
+                             'alpha': rms_alpha,
+                             'momentum': rms_momentum,
+                             'grid_id': args.grid_id
                              })
 
         epoch += 1
