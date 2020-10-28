@@ -572,10 +572,11 @@ def load_dataset(
 
 def get_rms_hyperparams(grid_id):
     grid_settings = [(lr_init, lr_gamma, alpha, momentum)
-                     for lr_init in [1e-3, 1e-4]
-                     for lr_gamma in [0.97, 0.98, 0.99]
+                     for lr_init in [1e-4]
+                     for lr_gamma in [0.98, 0.99]
                      for alpha in [0.9, 0.99]
-                     for momentum in [0.9, 0.99]]
+                     for momentum in [0]]
+
     return grid_settings[grid_id]
 
 

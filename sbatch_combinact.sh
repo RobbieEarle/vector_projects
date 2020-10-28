@@ -7,9 +7,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-23%24                         # array value
-#SBATCH --output=logs/rms5_grid/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms5_grid
+#SBATCH --array=0-3%4                         # array value
+#SBATCH --output=logs/rms5_grid2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rms5_grid2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -39,4 +39,4 @@ echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar100 --actfun $ACTFUN --num_epochs 600 --grid_id $GRID_ID --validation --label $GRID_ID
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar100 --actfun $ACTFUN --num_epochs 500 --grid_id $GRID_ID --validation --label $GRID_ID
