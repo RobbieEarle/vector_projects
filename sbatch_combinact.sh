@@ -38,5 +38,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim rmsprop --model resnet --dataset cifar100 --actfun $ACTFUN --num_epochs 500 --grid_id $GRID_ID --validation --label $GRID_ID
