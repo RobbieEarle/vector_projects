@@ -570,14 +570,21 @@ def load_dataset(
     return aug_train_loader, train_loader, aug_eval_loader, eval_loader, train_sample_size, batch_size
 
 
-def get_rms_hyperparams(grid_id):
-    grid_settings = [(lr_init, lr_gamma, alpha, momentum)
-                     for lr_init in [1e-4]
-                     for lr_gamma in [0.98, 0.99]
-                     for alpha in [0.9, 0.99]
-                     for momentum in [0]]
+def get_rms_hyperparams(args):
+    if args.actfun == 'swish':
+        grid_settings = [(lr_init, lr_gamma, alpha, momentum)
+                         for lr_init in [1e-3, 1e-4, 1e-5]
+                         for lr_gamma in [0.98, 0.99]
+                         for alpha in [0.9, 0.99]
+                         for momentum in [0, 0.9]]
+    else:
+        grid_settings = [(lr_init, lr_gamma, alpha, momentum)
+                         for lr_init in [1e-4]
+                         for lr_gamma in [0.98, 0.99]
+                         for alpha in [0.9, 0.99]
+                         for momentum in [0]]
 
-    return grid_settings[grid_id]
+    return grid_settings[args.grid_id]
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):

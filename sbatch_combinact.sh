@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=30:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-3%4                         # array value
-#SBATCH --output=logs/rms5_grid2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rms5_grid2
+#SBATCH --output=logs/rms5_grid_swish/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rms5_grid_swish
 
 source ~/.bashrc
 source activate ~/venvs/combinact

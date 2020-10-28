@@ -204,7 +204,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 lr_init = 0.001
         else:
             wd = 1e-4
-            lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args.grid_id)
+            lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
 
         optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
         scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
