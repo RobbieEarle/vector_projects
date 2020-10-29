@@ -172,7 +172,7 @@ if __name__ == '__main__':
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
     parser.add_argument('--label', type=str, default='', help='Label to differentiate different jobs')
     parser.add_argument('--validation', action='store_true', help='When true, varies number of network parameters')
-    parser.add_argument('--lr_init', type=float, default=None, help='Initial learning rate value')
+    parser.add_argument('--lr_init', type=float, default=1e-4, help='Initial learning rate value')
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
     parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay')
     parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='')
     parser.add_argument('--double_val', action='store_true', help='')
     parser.add_argument('--hp_idx', type=int, default=None, help='')
-    parser.add_argument('--grid_id', type=int, default=0, help='')
+    parser.add_argument('--grid_id', type=int, default=5, help='')
 
     args = parser.parse_args()
 

@@ -167,11 +167,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     num_epochs = args.num_epochs
 
-    # lr_gamma = args.lr_gamma
-    # wd = args.weight_decay
-    # rms_alpha = 0.99
-    # rms_momentum = 0
-
     # if args.grid_id is None:
     #     if args.lr_init is not None:
     #         lr_init = args.lr_init
@@ -182,8 +177,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     #     elif args.model == 'resnet':
     #         lr_init = 0.001
     # else:
+    lr_init = args.lr_init
+    lr_gamma = args.lr_gamma
+    rms_alpha = 0.99
+    rms_momentum = 0
     wd = 1e-4
-    lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
+    # lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
 
     # # optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
     # optimizer = optim.RMSprop(model_params, lr=0.01, weight_decay=1e-3)
