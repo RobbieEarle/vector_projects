@@ -10,6 +10,7 @@ import activation_functions as actfuns
 from auto_augment import CIFAR10Policy
 from collections import namedtuple
 from sklearn import model_selection
+from sklearn.datasets import load_iris
 
 
 # -------------------- Training Utils
@@ -393,9 +394,11 @@ def get_pk_ratio(actfun, p, k, g):
         pk_ratio = (p * (2 + k)) / (3 * k)
     elif actfun == 'bin_all_full':
         pk_ratio = p * ((3 / k) + 1)
-    elif actfun == 'bin_all_nopass':
+    elif actfun == 'bin_all_max_min_sgm':
         pk_ratio = p * ((3 / k))
-    elif actfun == 'bin_all_nopass_sgm':
+    elif actfun == 'bin_all_max_min':
+        pk_ratio = p * ((2 / k))
+    elif actfun == 'bin_all_max_sgm':
         pk_ratio = p * ((2 / k))
     else:
         pk_ratio = (p / k)
@@ -487,6 +490,34 @@ def load_dataset(
         kwargs=None):
 
     seed_all(seed)
+
+    if dataset == 'iris':
+        features, labels = load_iris(return_X_y=True)
+        features_train, features_test, labels_train, labels_test = model_selection.train_test_split(features, labels,
+                                                                                                    random_state=0,
+                                                                                                    train_size=0.8,
+                                                                                                    stratify=labels,
+                                                                                                    shuffle=True)
+
+        train_dataset = torch.utils.data.TensorDataset(torch.Tensor(features_train),
+                                                       torch.tensor(labels_train, dtype=torch.long))
+        eval_dataset = torch.utils.data.TensorDataset(torch.Tensor(features_test),
+                                                      torch.tensor(labels_test, dtype=torch.long))
+        aug_train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=features_train.shape[0],
+                                                       drop_last=True,
+                                                       shuffle=True, **kwargs)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=features_train.shape[0], drop_last=True,
+                                                   shuffle=True,
+                                                   **kwargs)
+        aug_eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=features_train.shape[0],
+                                                      drop_last=False,
+                                                      shuffle=False, **kwargs)
+        eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=features_train.shape[0],
+                                                  drop_last=False,
+                                                  shuffle=False,
+                                                  **kwargs)
+
+        return aug_train_loader, train_loader, aug_eval_loader, eval_loader, features_train.shape[0], 1
 
     if dataset == 'mnist':
         aug_trans, trans = [], []

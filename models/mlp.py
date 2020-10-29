@@ -29,6 +29,7 @@ class MLP(nn.Module):
         self.alpha_dist = alpha_dist
         self.shuffle_maps = []
         self.reduce_actfuns = reduce_actfuns
+        self.iris = True if input_dim == 4 else False
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
 
@@ -53,6 +54,10 @@ class MLP(nn.Module):
             else:
                 post_acts.append(int(pre_acts[i] * pk_ratio))
 
+        if self.iris:
+            pre_acts = [4, 4]
+            post_acts = [int(4 * pk_ratio), int(4 * pk_ratio)]
+
         self.linear_layers = nn.ModuleDict()
         self.linear_layers['l1'] = nn.Linear(input_dim, pre_acts[0])
         self.linear_layers['l2'] = nn.ModuleList()
@@ -60,10 +65,11 @@ class MLP(nn.Module):
             self.linear_layers['l2'].append(nn.Linear(int(post_acts[0] / g), int(pre_acts[1] / g)))
         self.linear_layers['l3'] = nn.Linear(post_acts[1], output_dim)
 
-        self.batch_norms = nn.ModuleDict({
-            'l1': nn.BatchNorm1d(pre_acts[0]),
-            'l2': nn.BatchNorm1d(pre_acts[1])
-        })
+        if not self.iris:
+            self.batch_norms = nn.ModuleDict({
+                'l1': nn.BatchNorm1d(pre_acts[0]),
+                'l2': nn.BatchNorm1d(pre_acts[1])
+            })
 
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[0], self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, pre_acts[1], self.p)
@@ -79,13 +85,15 @@ class MLP(nn.Module):
                 for layer in range(2):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
+
     def forward(self, x):
 
         x = x.reshape(x.size(0), self.input_dim)
 
         x = self.linear_layers['l1'](x)
-        x = self.batch_norms['l1'](x)
+        x = self.batch_norms['l1'](x) if not self.iris else x
         x = self.activate(x, 0)
+        x = x.unsqueeze(0) if len(x.shape) == 1 else x
 
         all_outputs = None
         for group_idx, group_fc in enumerate(self.linear_layers['l2']):
@@ -98,8 +106,9 @@ class MLP(nn.Module):
             else:
                 all_outputs = torch.cat((all_outputs, curr_outputs), dim=1)
         x = all_outputs
-        x = self.batch_norms['l2'](x)
+        x = self.batch_norms['l2'](x) if not self.iris else x
         x = self.activate(x, 1)
+        x = x.unsqueeze(0) if len(x.shape) == 1 else x
 
         x = self.linear_layers['l3'](x)
 

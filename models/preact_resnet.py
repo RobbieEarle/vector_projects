@@ -30,12 +30,13 @@ class BottleneckBlock(nn.Module):
             conv2_in = int(c_out * width * pk_ratio)
             conv3_in = int(c_out * width * pk_ratio)
 
+        out = int(c_out * width)
         # -------- Defining layers in current block
         self.bn1 = nn.BatchNorm2d(c_in)
-        self.conv1 = nn.Conv2d(conv1_in, c_out * width, kernel_size=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(c_out * width)
-        self.conv2 = nn.Conv2d(conv2_in, c_out * width, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(c_out * width)
+        self.conv1 = nn.Conv2d(conv1_in, out, kernel_size=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out)
+        self.conv2 = nn.Conv2d(conv2_in, out, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(out)
         self.conv3 = nn.Conv2d(conv3_in, c_out * self.expansion, kernel_size=1, bias=False)
 
         self.proj = (c_in != self.expansion * c_out or stride > 1)

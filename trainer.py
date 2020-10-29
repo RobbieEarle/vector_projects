@@ -12,7 +12,7 @@ from models import mlp
 from models import cnn
 from models import preact_resnet
 import util
-import hyper_params as hp
+import hyper_params_new as hp
 
 import numpy as np
 import csv
@@ -38,6 +38,8 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
             input_dim = 3072
         elif dataset == 'cifar100':
             input_dim = 3072
+        elif dataset == 'iris':
+            input_dim, output_dim = 4, 3
         model = mlp.MLP(actfun=actfun,
                         input_dim=input_dim,
                         output_dim=output_dim,
@@ -115,6 +117,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         curr_k = 1
         resnet_ver = args.resnet_ver
         resnet_width = args.resnet_width
+    elif actfun == 'bin_all_max_min' or actfun == 'bin_all_max_sgm':
+        resnet_ver = args.resnet_ver
+        resnet_width = 2
+    elif actfun == 'bin_all_max_min_sgm':
+        resnet_ver = args.resnet_ver
+        resnet_width = 1.5625
     else:
         resnet_ver = args.resnet_ver
         resnet_width = args.resnet_width + math.ceil(curr_k/2)
@@ -155,18 +163,32 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     print("===================================================================")
 
     criterion = nn.CrossEntropyLoss()
-    hyper_params = hp.get_hyper_params(args, args.model, args.dataset, actfun, rng=rng, exp=args.hyper_params, p=curr_p)
+    hyper_params = hp.get_hyper_params(args.grid_id)
 
     num_epochs = args.num_epochs
-    if args.overfit:
-        num_epochs = 50
-        hyper_params['cycle_peak'] = 0.35
-    hyper_params['adam_wd'] *= args.wd
 
-    lr_gamma = args.lr_gamma
-    wd = args.weight_decay
-    rms_alpha = 0.99
-    rms_momentum = 0
+    # lr_gamma = args.lr_gamma
+    # wd = args.weight_decay
+    # rms_alpha = 0.99
+    # rms_momentum = 0
+
+    # if args.grid_id is None:
+    #     if args.lr_init is not None:
+    #         lr_init = args.lr_init
+    #     elif args.model == 'mlp':
+    #         lr_init = 0.01
+    #     elif args.model == 'cnn':
+    #         lr_init = 0.001
+    #     elif args.model == 'resnet':
+    #         lr_init = 0.001
+    # else:
+    wd = 1e-4
+    lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
+
+    # # optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
+    # optimizer = optim.RMSprop(model_params, lr=0.01, weight_decay=1e-3)
+    # scheduler = ExponentialLR(optimizer, gamma=0.99)
+
     if args.optim == 'onecycle':
         lr_init = 10 ** -6
         optimizer = optim.Adam(model_params,
@@ -192,22 +214,22 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
                                  cycle_momentum=False
                                  )
-    elif args.optim == 'rmsprop':
-        if args.grid_id is None:
-            if args.lr_init is not None:
-                lr_init = args.lr_init
-            elif args.model == 'mlp':
-                lr_init = 0.01
-            elif args.model == 'cnn':
-                lr_init = 0.001
-            elif args.model == 'resnet':
-                lr_init = 0.001
-        else:
-            wd = 1e-4
-            lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
-
-        optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
-        scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
+    # elif args.optim == 'rmsprop':
+    #     if args.grid_id is None:
+    #         if args.lr_init is not None:
+    #             lr_init = args.lr_init
+    #         elif args.model == 'mlp':
+    #             lr_init = 0.01
+    #         elif args.model == 'cnn':
+    #             lr_init = 0.001
+    #         elif args.model == 'resnet':
+    #             lr_init = 0.001
+    #     else:
+    #         wd = 1e-4
+    #         lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
+    #
+    #     optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
+    #     scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
 
     epoch = 1
     if checkpoint is not None:

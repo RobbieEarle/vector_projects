@@ -158,15 +158,15 @@ if __name__ == '__main__':
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
     parser.add_argument('--resnet_width', type=int, default=2, help='How wide to make our ResNet layers')
-    parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
-    parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='max')  # all
-    parser.add_argument('--optim', type=str, default='rmsprop')  # all
+    parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
+    parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
+    parser.add_argument('--actfun', type=str, default='bin_all_max_min')  # all
+    parser.add_argument('--optim', type=str, default='onecycle')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
-    parser.add_argument('--num_epochs', type=int, default=100, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=56, help='Number of training epochs')
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
