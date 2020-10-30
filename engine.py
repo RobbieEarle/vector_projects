@@ -34,7 +34,8 @@ def setup_experiment(args):
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
                   'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
-                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'grid_id']
+                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'grid_id',
+                  'max_lr']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -174,6 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr_init', type=float, default=1e-4, help='Initial learning rate value')
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
     parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay')
+    parser.add_argument('--max_lr', type=float, default=1e-5, help='Maximum LR during one cycle schedule')
     parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')

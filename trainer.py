@@ -188,7 +188,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         if actfun == 'relu' or actfun == 'max':
             max_lr = 5e-5
         else:
-            max_lr = 5e-5
+            max_lr = args.max_lr
 
         if args.optim == 'onecycle':
             optimizer = optim.Adam(model_params, lr=1e-7, weight_decay=1e-4)
@@ -392,7 +392,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'epoch_aug_val_acc': float(epoch_aug_val_acc),
                                  'hp_idx': hp_idx,
                                  'curr_lr': lr,
-                                 'grid_id': args.grid_id
+                                 'grid_id': args.grid_id,
+                                 'max_lr': max_lr
                                  })
 
             epoch += 1
