@@ -196,7 +196,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         print("Running learning rate finder")
         optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=1e-4)
         lr_finder = LRFinder(model, optimizer, criterion, device=device)
-        lr_finder.range_test(loaders['aug_train'], end_lr=3e-2, num_iter=200, diverge_th=3)
+        lr_finder.range_test(loaders['aug_train'], val_loader=loaders['eval'], end_lr=3e-2, num_iter=100, diverge_th=3)
         print("Plotting learning rate finder results")
         hf = plt.figure(figsize=(15, 9))
         ax = plt.axes()
@@ -205,7 +205,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         plt.tick_params(labelsize=14)
         ax.minorticks_on()
         ax.tick_params(direction="out")
-        ax.set_ylim([None, 4.65])
+        # ax.set_ylim([None, 4.65])
         # Save figure
         figpth = os.path.join(args.save_path, filename) + '_lrfinder.png'
         plt.savefig(figpth)
