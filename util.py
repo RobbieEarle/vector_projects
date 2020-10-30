@@ -274,8 +274,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        hyper_params, num_params, sample_size, curr_k, curr_p,
                        curr_g, perm_method, resnet_ver, resnet_width, optim,
-                       validation, lr_init, lr_gamma, weight_decay, rms_alpha,
-                       rms_momentum):
+                       validation):
 
     print(
         "\n===================================================================\n\n"
@@ -292,15 +291,9 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Num Params: {}\n"
         "Num Training Samples: {}\n"
         "Optimizer: {}\n"
-        "Validation: {}\n"
-        "Initial LR: {}\n"
-        "LR Gamma: {}\n"
-        "RMS Alpha: {}\n"
-        "RMS Momentum: {}\n"
-        "Weight Decay: {}\n\n"
+        "Validation: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
-                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, optim, validation,
-                    lr_init, lr_gamma, rms_alpha, rms_momentum, weight_decay), flush=True
+                    curr_k, curr_p, curr_g, perm_method, num_params, sample_size, optim, validation,), flush=True
     )
 
 

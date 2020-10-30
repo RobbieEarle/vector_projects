@@ -117,22 +117,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     :return:
     """
 
+    resnet_ver = args.resnet_ver
+    resnet_width = args.resnet_width
     if actfun == 'relu':
         curr_k = 1
-        resnet_ver = args.resnet_ver
-        resnet_width = args.resnet_width
-    elif actfun == 'bin_all_max_min' or actfun == 'bin_all_max_sgm':
-        resnet_ver = args.resnet_ver
-        resnet_width = 2
-    elif actfun == 'bin_all_max_min_sgm':
-        resnet_ver = args.resnet_ver
-        resnet_width = 1.5625
-    else:
-        resnet_ver = args.resnet_ver
-        resnet_width = args.resnet_width + math.ceil(curr_k/2)
-    if args.model != 'resnet':
-        resnet_ver = 0
-        resnet_width = 0
 
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
     if actfun in actfuns_1d:
@@ -143,7 +131,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                      resnet_width=resnet_width, verbose=args.verbose)
 
     util.seed_all(curr_seed)
-    rng = np.random.RandomState(curr_seed)
     model.apply(util.weights_init)
 
     print("=============================== Hyper params:")
@@ -171,27 +158,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     num_epochs = args.num_epochs
 
-    # if args.grid_id is None:
-    #     if args.lr_init is not None:
-    #         lr_init = args.lr_init
-    #     elif args.model == 'mlp':
-    #         lr_init = 0.01
-    #     elif args.model == 'cnn':
-    #         lr_init = 0.001
-    #     elif args.model == 'resnet':
-    #         lr_init = 0.001
-    # else:
-    lr_init = args.lr_init
-    lr_gamma = args.lr_gamma
-    rms_alpha = 0.99
-    rms_momentum = 0
-    wd = 1e-4
-    # lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
-
-    # # optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
-    # optimizer = optim.RMSprop(model_params, lr=0.01, weight_decay=1e-3)
-    # scheduler = ExponentialLR(optimizer, gamma=0.99)
-
     if args.lr_range:
         print("Running learning rate finder")
         optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=1e-4)
@@ -207,54 +173,23 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         plt.title(actfun)
         ax.minorticks_on()
         ax.tick_params(direction="out")
-        # ax.set_ylim([None, 4.65])
-        # Save figure
         figpth = os.path.join(args.save_path, filename) + '_lrfinder.png'
         plt.savefig(figpth)
         print("LR Finder results saved to {}".format(figpth))
 
     else:
+
+        if actfun == 'relu' or actfun == 'max':
+            max_lr = 5e-4
+
         if args.optim == 'onecycle':
-            lr_init = 10 ** -6
-            optimizer = optim.Adam(model_params,
-                                   lr=lr_init,
-                                   betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
-                                   eps=hyper_params['adam_eps'],
-                                   weight_decay=hyper_params['adam_wd']
+            optimizer = optim.Adam(model_params, lr=1e-7, weight_decay=1e-4)
+            scheduler = OneCycleLR(optimizer,
+                                   max_lr=max_lr,
+                                   epochs=num_epochs,
+                                   steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                                   cycle_momentum=False
                                    )
-            if args.model == 'resnet':
-                scheduler = OneCycleLR(optimizer,
-                                       max_lr=hyper_params['max_lr'],
-                                       epochs=num_epochs,
-                                       steps_per_epoch=int(math.ceil(sample_size / batch_size)),
-                                       pct_start=hyper_params['cycle_peak'],
-                                       cycle_momentum=False
-                                       )
-            else:
-                num_batches = (sample_size / batch_size) * num_epochs
-                scheduler = CyclicLR(optimizer,
-                                     base_lr=10 ** -8,
-                                     max_lr=hyper_params['max_lr'],
-                                     step_size_up=int(hyper_params['cycle_peak'] * num_batches),
-                                     step_size_down=int((1 - hyper_params['cycle_peak']) * num_batches),
-                                     cycle_momentum=False
-                                     )
-        # elif args.optim == 'rmsprop':
-        #     if args.grid_id is None:
-        #         if args.lr_init is not None:
-        #             lr_init = args.lr_init
-        #         elif args.model == 'mlp':
-        #             lr_init = 0.01
-        #         elif args.model == 'cnn':
-        #             lr_init = 0.001
-        #         elif args.model == 'resnet':
-        #             lr_init = 0.001
-        #     else:
-        #         wd = 1e-4
-        #         lr_init, lr_gamma, rms_alpha, rms_momentum = util.get_rms_hyperparams(args)
-        #
-        #     optimizer = optim.RMSprop(model_params, lr=lr_init, weight_decay=wd, alpha=rms_alpha, momentum=rms_momentum)
-        #     scheduler = ExponentialLR(optimizer, gamma=lr_gamma)
 
         epoch = 1
         if checkpoint is not None:
@@ -281,8 +216,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun, hyper_params,
                                 util.get_model_params(model), sample_size, model.k, model.p, model.g,
-                                perm_method, resnet_ver, resnet_width, args.optim, args.validation,
-                                lr_init, lr_gamma, wd, rms_alpha, rms_momentum)
+                                perm_method, resnet_ver, resnet_width, args.optim, args.validation)
 
         best_val_acc = 0
 
@@ -318,9 +252,13 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
                 n += 1
-                scaler.scale(train_loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
+                if args.mix_pre:
+                    scaler.scale(train_loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    train_loss.backward()
+                    optimizer.step()
                 if args.optim == 'onecycle':
                     scheduler.step()
                 _, prediction = torch.max(output.data, 1)
@@ -448,12 +386,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'epoch_aug_val_loss': float(epoch_aug_val_loss),
                                  'epoch_aug_val_acc': float(epoch_aug_val_acc),
                                  'hp_idx': hp_idx,
-                                 'lr_init': lr_init,
-                                 'lr_gamma': lr_gamma,
                                  'curr_lr': lr,
-                                 'weight_decay': wd,
-                                 'alpha': rms_alpha,
-                                 'momentum': rms_momentum,
                                  'grid_id': args.grid_id
                                  })
 

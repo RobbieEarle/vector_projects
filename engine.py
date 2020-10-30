@@ -34,8 +34,7 @@ def setup_experiment(args):
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
                   'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
-                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'lr_init',
-                  'lr_gamma', 'curr_lr', 'weight_decay', 'alpha', 'momentum', 'grid_id']
+                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'grid_id']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -198,6 +197,7 @@ if __name__ == '__main__':
     parser.add_argument('--hp_idx', type=int, default=None, help='')
     parser.add_argument('--grid_id', type=int, default=5, help='')
     parser.add_argument('--lr_range', action='store_true', help='')
+    parser.add_argument('--mix_pre', action='store_true', help='')
 
     args = parser.parse_args()
 
