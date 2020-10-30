@@ -186,9 +186,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     else:
 
         if actfun == 'relu' or actfun == 'max':
-            max_lr = 5e-4
+            max_lr = 5e-5
         else:
-            max_lr = 5e-4
+            max_lr = 5e-5
 
         if args.optim == 'onecycle':
             optimizer = optim.Adam(model_params, lr=1e-7, weight_decay=1e-4)
