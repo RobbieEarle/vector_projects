@@ -56,7 +56,7 @@ def activate(x, actfun, p=1, k=1, M=None,
         num_channels = M
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
-    bin_partition_actfuns = ['bin_partition_full', 'bin_partition_nopass']
+    bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm']
     bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm']
     if actfun == 'combinact':
         x = combinact(x,
@@ -285,12 +285,16 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
     bin_pass = None
     bin_xor = None
     if actfun in bin_partition_actfuns:
-        if actfun == 'bin_partition_full':
+        if actfun == 'bin_part_full':
             partition = math.floor(z.shape[1] / 3)
             bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
             bin_xor = sgm(z[:, partition: 2 * partition, ...])
             bin_pass = z[:, 2 * partition:, ...]
-        elif actfun == 'bin_partition_nopass':
+        elif actfun == 'bin_part_max_min_sgm':
+            partition = math.floor(z.shape[1] / 2)
+            bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
+            bin_xor = sgm(z[:, partition:, ...])
+        elif actfun == 'bin_part_max_sgm':
             partition = math.floor(z.shape[1] / 2)
             bin_and_or = torch.max(z[:, :partition, ...], dim=2).values
             bin_xor = sgm(z[:, partition:, ...])

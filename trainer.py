@@ -122,6 +122,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     if actfun == 'relu':
         curr_k = 1
 
+    sgm_actfuns = ['bin_all_max_min_sgm', 'bin_all_max_sgm', 'bin_part_max_sgm', 'bin_part_max_min_sgm']
+    if actfun in sgm_actfuns:
+        args.mix_pre = False
+    else:
+        args.mix_pre = True
+
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
     if actfun in actfuns_1d:
         curr_k = 1
@@ -170,7 +176,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
         plt.tick_params(labelsize=14)
         plt.ylim([min(lr_finder.history["loss"]), lr_finder.history["loss"][0]])
-        plt.title(actfun)
+        plt.title(args.dataset + " / " + "WRN-50-" + str(resnet_width) + " / " + actfun + " / " + "Seed = " + str(curr_seed))
         ax.minorticks_on()
         ax.tick_params(direction="out")
         figpth = os.path.join(args.save_path, filename) + '_lrfinder.png'
