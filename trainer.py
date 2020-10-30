@@ -264,9 +264,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 _, prediction = torch.max(output.data, 1)
                 num_correct += torch.sum(prediction == targetx.data)
                 num_total += len(prediction)
-                for param_group in optimizer.param_groups:
-                    lr_temp = param_group['lr']
-                print(lr_temp)
             epoch_aug_train_loss = total_train_loss / n
             epoch_aug_train_acc = num_correct * 1.0 / num_total
 
