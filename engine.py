@@ -132,6 +132,7 @@ def setup_experiment(args):
                                               actfun,
                                               curr_seed,
                                               outfile_path,
+                                              filename,
                                               fieldnames,
                                               loaders,
                                               sample_size,
@@ -196,6 +197,7 @@ if __name__ == '__main__':
     parser.add_argument('--double_val', action='store_true', help='')
     parser.add_argument('--hp_idx', type=int, default=None, help='')
     parser.add_argument('--grid_id', type=int, default=5, help='')
+    parser.add_argument('--lr_range', action='store_true', help='')
 
     args = parser.parse_args()
 

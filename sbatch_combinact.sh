@@ -7,14 +7,15 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-20%21                         # array value
-#SBATCH --output=logs/oc_max_sgm_search/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=oc_max_sgm_search
+#SBATCH --array=0%1                         # array value
+#SBATCH --output=logs/lr_range/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=lr_range
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
+ACTFUN="$2"
 GRID_ID="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -31,13 +32,12 @@ python -c "import torch; print('torch version = {}'.format(torch.__version__))"
 python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()))"
 python -c "import scipy; print('scipy version = {}'.format(scipy.__version__))"
 python -c "import sklearn; print('sklearn version = {}'.format(sklearn.__version__))"
+python -c "import torch-lr-finder; print('torch-lr-finder version = {}'.format(torch-lr-finder.__version__))"
+python -c "import matplotlib; print('matplotlib version = {}'.format(matplotlib.__version__))"
 echo ""
 
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed 0 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun bin_all_max_sgm --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
-python engine.py --seed 1 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun bin_all_max_sgm --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
-python engine.py --seed 2 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun bin_all_max_sgm --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
-python engine.py --seed 3 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun bin_all_max_sgm --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
-python engine.py --seed 4 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun bin_all_max_sgm --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
+python engine.py --seed 0 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --dataset cifar100 --actfun $ACTFUN --validation --lr_range
+
