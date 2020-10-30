@@ -203,6 +203,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         lr_finder.plot(skip_start=0, skip_end=1, log_lr=True, ax=ax)
         plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
         plt.tick_params(labelsize=14)
+        plt.ylim([lr_finder.history["loss"].min(), lr_finder.history["loss"][0]])
         ax.minorticks_on()
         ax.tick_params(direction="out")
         # ax.set_ylim([None, 4.65])
