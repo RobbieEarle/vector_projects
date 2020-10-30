@@ -32,7 +32,7 @@ python -c "import torch; print('torch version = {}'.format(torch.__version__))"
 python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()))"
 python -c "import scipy; print('scipy version = {}'.format(scipy.__version__))"
 python -c "import sklearn; print('sklearn version = {}'.format(sklearn.__version__))"
-python -c "import torch-lr-finder; print('torch-lr-finder version = {}'.format(torch-lr-finder.__version__))"
+python -c "import torch_lr_finder; print('torch_lr_finder version = {}'.format(torch_lr_finder.__version__))"
 python -c "import matplotlib; print('matplotlib version = {}'.format(matplotlib.__version__))"
 echo ""
 
