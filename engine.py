@@ -156,7 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
-    parser.add_argument('--resnet_width', type=int, default=2, help='How wide to make our ResNet layers')
+    parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
     parser.add_argument('--actfun', type=str, default='bin_all_max_min')  # all
