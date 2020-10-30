@@ -7,8 +7,8 @@ from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
-# from torch_lr_finder import LRFinder
-# import matplotlib.pyplot as plt
+from torch_lr_finder import LRFinder
+import matplotlib.pyplot as plt
 
 import math
 from models import mlp
@@ -176,7 +176,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
         plt.tick_params(labelsize=14)
         plt.ylim([min(lr_finder.history["loss"]), lr_finder.history["loss"][0]])
-        plt.title(args.dataset + " / " + "WRN-50-" + str(resnet_width) + " / " + actfun + " / " + "Seed = " + str(curr_seed))
+        plt.title(args.dataset + " / " + "WRN-50-" + str(resnet_width) + " / " + actfun + args.label + " / " + "Seed = " + str(curr_seed))
         ax.minorticks_on()
         ax.tick_params(direction="out")
         figpth = os.path.join(args.save_path, filename) + '_lrfinder.png'
