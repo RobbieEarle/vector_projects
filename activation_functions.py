@@ -112,7 +112,7 @@ _ACTFUNS = {
         lambda z: sgm(z),
     'swishk':
         lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
-    'swishk_p':
+    'swishy':
         lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
     'l1':
         lambda z: (torch.sum(z.abs(), dim=2)),
