@@ -110,12 +110,11 @@ def setup_experiment(args):
                                 sample_size = dataset[4]
                                 batch_size = dataset[5]
 
-                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
+                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
                                                                                     args.dataset,
                                                                                     model,
                                                                                     actfun,
-                                                                                    curr_num_params,
-                                                                                    curr_sample_size,
+                                                                                    sample_size,
                                                                                     p, k, g, perm_method,
                                                                                     args.label
                                                                                     )
