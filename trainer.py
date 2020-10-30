@@ -205,7 +205,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         plt.tick_params(labelsize=14)
         ax.minorticks_on()
         ax.tick_params(direction="out")
-        ax.set_ylim([None, 5])
+        ax.set_ylim([None, 4.65])
         # Save figure
         figpth = os.path.join(args.save_path, filename) + '_lrfinder.png'
         plt.savefig(figpth)
