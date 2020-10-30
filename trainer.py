@@ -7,8 +7,8 @@ from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
-from torch_lr_finder import LRFinder
-import matplotlib.pyplot as plt
+# from torch_lr_finder import LRFinder
+# import matplotlib.pyplot as plt
 
 import math
 from models import mlp
@@ -186,6 +186,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     else:
 
         if actfun == 'relu' or actfun == 'max':
+            max_lr = 5e-4
+        else:
             max_lr = 5e-4
 
         if args.optim == 'onecycle':
