@@ -34,7 +34,7 @@ def setup_experiment(args):
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
                   'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
-                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'curr_mom',
+                  'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr',
                   'grid_id', 'max_lr']
 
     if args.model == 'resnet':

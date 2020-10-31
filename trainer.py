@@ -337,9 +337,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             lr = 0
             for param_group in optimizer.param_groups:
                 lr = param_group['lr']
-            momentum = 0
-            for param_group in optimizer.param_groups:
-                momentum = param_group['momentum']
             print(
                 "    Epoch {}: LR {:1.4f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
                 "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}"
@@ -417,7 +414,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'epoch_aug_val_acc': float(epoch_aug_val_acc),
                                  'hp_idx': hp_idx,
                                  'curr_lr': lr,
-                                 'curr_mom': momentum,
                                  'grid_id': grid_id,
                                  'max_lr': max_lr
                                  })
