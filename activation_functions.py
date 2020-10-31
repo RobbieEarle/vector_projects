@@ -56,8 +56,11 @@ def activate(x, actfun, p=1, k=1, M=None,
         num_channels = M
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
-    bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm']
-    bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm']
+    bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm',
+                             'ail_part_full', 'ail_part_or_and', 'ail_part_or_and_xnor']
+    bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm',
+                       'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor']
+
     if actfun == 'combinact':
         x = combinact(x,
                       p=p,
@@ -94,6 +97,10 @@ def get_combinact_actfuns(reduce_actfuns=False):
 _ACTFUNS = {
     'ail_and':
         lambda z: logistic_and_approx(z),
+    'ail_or':
+        lambda z: logistic_or_approx(z),
+    'ail_xnor':
+        lambda z: logistic_xnor_approx(z),
     'combinact':
         lambda z: combinact(z),
     'relu':
@@ -304,43 +311,76 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
 
 def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
 
-    bin_pass = None
-    bin_or = None
+    bin_and = None
     bin_xor = None
+    bin_pass = None
     if actfun in bin_partition_actfuns:
         if actfun == 'bin_part_full':
             partition = math.floor(z.shape[1] / 4)
-            bin_and = torch.max(z[:, :partition, ...], dim=2).values
-            bin_or = torch.min(z[:, partition:2*partition, ...], dim=2).values
+            bin_or = torch.max(z[:, :partition, ...], dim=2).values
+            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
             bin_xor = sgm(z[:, 2*partition: 3*partition, ...])
             bin_pass = z[:, 3*partition:, ...]
         elif actfun == 'bin_part_max_min_sgm':
             partition = math.floor(z.shape[1] / 3)
-            bin_and = torch.max(z[:, :partition, ...], dim=2).values
-            bin_or = torch.max(z[:, partition:2*partition, ...], dim=2).values
+            bin_or = torch.max(z[:, :partition, ...], dim=2).values
+            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
             bin_xor = sgm(z[:, 2*partition:, ...])
         elif actfun == 'bin_part_max_sgm':
             partition = math.floor(z.shape[1] / 2)
-            bin_and = torch.max(z[:, :partition, ...], dim=2).values
+            bin_or = torch.max(z[:, :partition, ...], dim=2).values
             bin_xor = sgm(z[:, partition:, ...])
+        elif actfun == 'ail_part_full':
+            partition = math.floor(z.shape[1] / 4)
+            bin_or = logistic_or_approx(z[:, :partition, ...])
+            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
+            bin_xor = logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...])
+            bin_pass = z[:, 3 * partition:, ...]
+        elif actfun == 'ail_part_or_and_xnor':
+            partition = math.floor(z.shape[1] / 3)
+            bin_or = logistic_or_approx(z[:, :partition, ...])
+            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
+            bin_xor = logistic_xnor_approx(z[:, 2 * partition:, ...])
+        elif actfun == 'ail_part_or_xnor':
+            partition = math.floor(z.shape[1] / 2)
+            bin_or = logistic_or_approx(z[:, :partition, ...])
+            bin_xor = logistic_xnor_approx(z[:, partition:, ...])
     elif actfun in bin_all_actfuns:
-        bin_and = torch.max(z, dim=2).values
         if actfun == 'bin_all_max_sgm':
+            bin_or = torch.max(z, dim=2).values
             bin_xor = sgm(z)
         elif actfun == 'bin_all_max_min':
-            bin_or = torch.min(z, dim=2).values
+            bin_or = torch.max(z, dim=2).values
+            bin_and = torch.min(z, dim=2).values
         elif actfun == 'bin_all_max_min_sgm':
-            bin_or = torch.min(z, dim=2).values
+            bin_or = torch.max(z, dim=2).values
+            bin_and = torch.min(z, dim=2).values
             bin_xor = sgm(z)
         elif actfun == 'bin_all_full':
-            bin_or = torch.min(z, dim=2).values
+            bin_or = torch.max(z, dim=2).values
+            bin_and = torch.min(z, dim=2).values
             bin_xor = sgm(z)
             bin_pass = z
+        elif actfun == 'ail_all_or_xnor':
+            bin_or = logistic_or_approx(z)
+            bin_xor = logistic_xnor_approx(z)
+        elif actfun == 'ail_all_or_and':
+            bin_or = logistic_or_approx(z)
+            bin_and = logistic_and_approx(z)
+        elif actfun == 'ail_all_or_and_xnor':
+            bin_or = logistic_or_approx(z)
+            bin_and = logistic_and_approx(z)
+            bin_xor = logistic_xnor_approx(z)
+        elif actfun == 'ail_all_full':
+            bin_or = logistic_or_approx(z)
+            bin_and = logistic_and_approx(z)
+            bin_xor = logistic_xnor_approx(z)
+            bin_pass = z
 
-    z = bin_and
+    z = bin_or
 
-    if bin_or is not None:
-        z = torch.cat((z, bin_or), dim=1)
+    if bin_and is not None:
+        z = torch.cat((z, bin_and), dim=1)
     if bin_xor is not None:
         z = torch.cat((z, bin_xor), dim=1)
     if bin_pass is not None:

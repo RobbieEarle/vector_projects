@@ -206,6 +206,14 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
             elif actfun == 'relu':
                 max_lr, wd, cycle_peak = np.power(10., -3.564), np.power(10., -3.792), 0.23
+            else:
+                max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
+            # elif actfun == 'bin_all_max_min':
+            #     max_lr, wd, cycle_peak = np.power(10., -3.334), np.power(10., -3.874), 0.44
+            # elif actfun == 'bin_all_max_sgm':
+            #     max_lr, wd, cycle_peak =
+            # elif actfun == 'bin_all_max_min_sgm':
+            #     max_lr, wd, cycle_peak =
             optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=wd)
             scheduler = OneCycleLR(optimizer,
                                    max_lr=max_lr,
