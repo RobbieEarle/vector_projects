@@ -198,6 +198,19 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    steps_per_epoch=int(math.ceil(sample_size / batch_size)),
                                    cycle_momentum=args.cycle_mom
                                    )
+        elif args.optim == 'onecycle_sgd':
+            if actfun == 'max':
+                max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
+            elif actfun == 'relu':
+                max_lr, wd, cycle_peak = np.power(10., -3.564), np.power(10., -3.792), 0.23
+            optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=wd)
+            scheduler = OneCycleLR(optimizer,
+                                   max_lr=max_lr,
+                                   epochs=num_epochs,
+                                   steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                                   pct_start=cycle_peak,
+                                   cycle_momentum=args.cycle_mom
+                                   )
 
         epoch = 1
         if checkpoint is not None:
