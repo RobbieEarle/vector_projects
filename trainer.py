@@ -277,16 +277,20 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 # print(batch_idx)
                 x, targetx = x.to(device), targetx.to(device)
                 optimizer.zero_grad()
-                with torch.cuda.amp.autocast():
-                    output = model(x)
-                    train_loss = criterion(output, targetx)
-                total_train_loss += train_loss
-                n += 1
                 if args.mix_pre:
+                    with torch.cuda.amp.autocast():
+                        output = model(x)
+                        train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
                     scaler.scale(train_loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
                 else:
+                    output = model(x)
+                    train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
                     train_loss.backward()
                     optimizer.step()
                 if args.optim == 'onecycle' or args.optim == 'onecycle_sgd':
