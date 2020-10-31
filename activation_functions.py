@@ -92,6 +92,8 @@ def get_combinact_actfuns(reduce_actfuns=False):
 
 
 _ACTFUNS = {
+    'ail_and':
+        lambda z: logistic_and_approx(z),
     'combinact':
         lambda z: combinact(z),
     'relu':
@@ -142,6 +144,26 @@ _ACTFUNS = {
         lambda z: multi_relu(z),
 }
 _ln2 = 0.6931471805599453
+
+
+def logistic_and_approx(z):
+    return torch.where(
+        (z < 0).all(dim=2),
+        z.sum(dim=2),
+        torch.min(z, dim=2).values,
+    )
+
+
+def logistic_or_approx(z):
+    return torch.where(
+        (z > 0).all(dim=2),
+        z.sum(dim=2),
+        torch.max(z, dim=2).values,
+    )
+
+
+def logistic_xnor_approx(z):
+    return torch.sign(torch.prod(z, dim=2)) * torch.min(z.abs(), dim=2).values
 
 
 def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, reduce_actfuns=False):

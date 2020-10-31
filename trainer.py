@@ -196,7 +196,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    max_lr=max_lr,
                                    epochs=num_epochs,
                                    steps_per_epoch=int(math.ceil(sample_size / batch_size)),
-                                   cycle_momentum=False
+                                   cycle_momentum=args.cycle_mom
                                    )
 
         epoch = 1
