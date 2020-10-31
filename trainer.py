@@ -169,7 +169,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         if args.optim == 'onecycle':
             optimizer = optim.Adam(model.parameters(), lr=1e-7, weight_decay=1e-4)
         elif args.optim == 'onecycle_sgd':
-            optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=1e-4)
+            optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=1e-4, momentum=args.momentum)
         lr_finder = LRFinder(model, optimizer, criterion, device=device)
         lr_finder.range_test(loaders['aug_train'], val_loader=loaders['eval'], end_lr=3e-2, num_iter=100, diverge_th=3)
         print("Plotting learning rate finder results")
@@ -206,7 +206,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
             elif actfun == 'relu':
                 max_lr, wd, cycle_peak = np.power(10., -3.564), np.power(10., -3.792), 0.23
-            optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=wd)
+            optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=wd, momentum=args.momentum)
             scheduler = OneCycleLR(optimizer,
                                    max_lr=max_lr,
                                    epochs=num_epochs,

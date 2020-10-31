@@ -176,6 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
     parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay')
     parser.add_argument('--max_lr', type=float, default=1e-5, help='Maximum LR during one cycle schedule')
+    parser.add_argument('--momentum', type=float, default=0, help='Maximum LR during one cycle schedule')
     parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
