@@ -160,8 +160,8 @@ if __name__ == '__main__':
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='resnet', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='relu')  # all
-    parser.add_argument('--optim', type=str, default='onecycle_sgd')  # all
+    parser.add_argument('--actfun', type=str, default='ail_or')  # all
+    parser.add_argument('--optim', type=str, default='onecycle')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
