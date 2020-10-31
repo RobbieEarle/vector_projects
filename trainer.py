@@ -414,8 +414,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'epoch_aug_val_acc': float(epoch_aug_val_acc),
                                  'hp_idx': hp_idx,
                                  'curr_lr': lr,
-                                 'grid_id': grid_id,
-                                 'max_lr': max_lr
+                                 'grid_id': grid_id
                                  })
 
             epoch += 1
