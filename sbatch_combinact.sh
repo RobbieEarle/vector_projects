@@ -40,4 +40,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
+
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --num_epochs 56 --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --mix_pre --validation --max_lr $MAX_LR
