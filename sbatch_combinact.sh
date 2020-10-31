@@ -7,17 +7,18 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-20%21                        # array value
-#SBATCH --output=logs/oc_search/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=oc_search
+#SBATCH --array=20-39%5                        # array value
+#SBATCH --output=logs/test_max/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=test_max
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-ACTFUN="$2"
-RN_WIDTH="$3"
-GRID_ID="$SLURM_ARRAY_TASK_ID"
+DATASET="$2"
+ACTFUN="$3"
+RN_WIDTH="$4"
+SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
 CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
@@ -33,11 +34,10 @@ python -c "import torch; print('torch version = {}'.format(torch.__version__))"
 python -c "import torch.cuda; print('cuda = {}'.format(torch.cuda.is_available()))"
 python -c "import scipy; print('scipy version = {}'.format(scipy.__version__))"
 python -c "import sklearn; print('sklearn version = {}'.format(sklearn.__version__))"
+python -c "import matplotlib; print('matplotlib version = {}'.format(matplotlib.__version__))"
 echo ""
 
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed 0 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --p 2 --perm_method invert --label _inv --mix_pre
-python engine.py --seed 1 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --p 2 --perm_method invert --label _inv --mix_pre
-python engine.py --seed 2 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --p 2 --perm_method invert --label _inv --mix_pre
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 50 --model resnet --resnet_width $RN_WIDTH --dataset $DATASET --actfun $ACTFUN  --mix_pre
