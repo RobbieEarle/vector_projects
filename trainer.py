@@ -160,7 +160,11 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     print("===================================================================")
 
     criterion = nn.CrossEntropyLoss()
-    hyper_params = hp.get_hyper_params(args.grid_id)
+    grid_id = args.grid_id
+    if actfun == 'max':
+        grid_id = 6
+
+    hyper_params = hp.get_hyper_params(grid_id)
 
     num_epochs = args.num_epochs
 
@@ -188,19 +192,21 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     else:
 
-        if actfun == 'relu' or actfun == 'max':
-            max_lr = 5e-5
-        else:
-            max_lr = args.max_lr
-
         if args.optim == 'onecycle':
-            optimizer = optim.Adam(model_params, lr=1e-7, weight_decay=1e-4)
+            optimizer = optim.Adam(model_params,
+                                   lr=10 ** -6,
+                                   betas=(hyper_params['adam_beta_1'], hyper_params['adam_beta_2']),
+                                   eps=hyper_params['adam_eps'],
+                                   weight_decay=hyper_params['adam_wd']
+                                   )
             scheduler = OneCycleLR(optimizer,
-                                   max_lr=max_lr,
+                                   max_lr=hyper_params['max_lr'],
                                    epochs=num_epochs,
                                    steps_per_epoch=int(math.floor(sample_size / batch_size)),
-                                   cycle_momentum=args.cycle_mom
+                                   pct_start=hyper_params['cycle_peak'],
+                                   cycle_momentum=False
                                    )
+
         elif args.optim == 'onecycle_sgd':
             if actfun == 'max':
                 max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
@@ -412,7 +418,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'hp_idx': hp_idx,
                                  'curr_lr': lr,
                                  'curr_mom': momentum,
-                                 'grid_id': args.grid_id,
+                                 'grid_id': grid_id,
                                  'max_lr': max_lr
                                  })
 
