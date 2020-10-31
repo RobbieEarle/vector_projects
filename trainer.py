@@ -198,7 +198,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             scheduler = OneCycleLR(optimizer,
                                    max_lr=max_lr,
                                    epochs=num_epochs,
-                                   steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                                   steps_per_epoch=int(math.floor(sample_size / batch_size)),
                                    cycle_momentum=args.cycle_mom
                                    )
         elif args.optim == 'onecycle_sgd':
@@ -206,19 +206,11 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
             elif actfun == 'relu':
                 max_lr, wd, cycle_peak = np.power(10., -3.564), np.power(10., -3.792), 0.23
-            else:
-                max_lr, wd, cycle_peak = np.power(10., -3.22), np.power(10., -4.022), 0.4
-            # elif actfun == 'bin_all_max_min':
-            #     max_lr, wd, cycle_peak = np.power(10., -3.334), np.power(10., -3.874), 0.44
-            # elif actfun == 'bin_all_max_sgm':
-            #     max_lr, wd, cycle_peak =
-            # elif actfun == 'bin_all_max_min_sgm':
-            #     max_lr, wd, cycle_peak =
             optimizer = optim.SGD(model_params, lr=1e-7, weight_decay=wd)
             scheduler = OneCycleLR(optimizer,
                                    max_lr=max_lr,
                                    epochs=num_epochs,
-                                   steps_per_epoch=int(math.ceil(sample_size / batch_size)),
+                                   steps_per_epoch=int(math.floor(sample_size / batch_size)),
                                    pct_start=cycle_peak,
                                    cycle_momentum=args.cycle_mom
                                    )
@@ -291,7 +283,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 else:
                     train_loss.backward()
                     optimizer.step()
-                if args.optim == 'onecycle':
+                if args.optim == 'onecycle' or args.optim == 'onecycle_sgd':
                     scheduler.step()
                 _, prediction = torch.max(output.data, 1)
                 num_correct += torch.sum(prediction == targetx.data)
@@ -339,6 +331,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             lr = 0
             for param_group in optimizer.param_groups:
                 lr = param_group['lr']
+            momentum = 0
+            for param_group in optimizer.param_groups:
+                momentum = param_group['momentum']
             print(
                 "    Epoch {}: LR {:1.4f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
                 "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}"
@@ -416,6 +411,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                  'epoch_aug_val_acc': float(epoch_aug_val_acc),
                                  'hp_idx': hp_idx,
                                  'curr_lr': lr,
+                                 'curr_mom': momentum,
                                  'grid_id': args.grid_id,
                                  'max_lr': max_lr
                                  })
