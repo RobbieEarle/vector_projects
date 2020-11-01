@@ -15,7 +15,8 @@ from models import mlp
 from models import cnn
 from models import preact_resnet
 import util
-import hyper_params_new as hp
+import hyper_params as hp
+import hyper_params_new as hp2
 
 import numpy as np
 import csv
@@ -170,7 +171,11 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         else:
             grid_id = 13
 
-    hyper_params = hp.get_hyper_params(grid_id)
+    rng = np.random.RandomState(curr_seed)
+    if args.model == 'resnet':
+        hyper_params = hp2.get_hyper_params(grid_id)
+    else:
+        hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng)
 
     num_epochs = args.num_epochs
 

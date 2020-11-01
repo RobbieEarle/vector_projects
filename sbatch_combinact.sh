@@ -7,17 +7,15 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=20-39%10                        # array value
-#SBATCH --output=logs/test_swish_inv/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=test_swish_inv
+#SBATCH --array=0-99%25                        # array value
+#SBATCH --output=logs/rs1_ail/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rs1_ail
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-DATASET="$2"
-ACTFUN="$3"
-RN_WIDTH="$4"
+MODEL="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -40,4 +38,10 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 50 --model resnet --resnet_width $RN_WIDTH --dataset $DATASET --actfun $ACTFUN  --mix_pre --p 2 --perm_method invert --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_or
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_and
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_and_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_part_or_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_part_or_and_xnor

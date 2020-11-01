@@ -383,6 +383,55 @@ def nn_mnist(rng):
             "max_lr": np.power(10., -2.731),
             "cycle_peak": 0.26,
         },
+        "ail_or": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                     "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                     "adam_eps": np.exp(rng.uniform(-22, -15)),
+                     "adam_wd": np.exp(rng.uniform(-15, -8)),
+                     "max_lr": np.exp(rng.uniform(-8, -2)),
+                     "cycle_peak": rng.uniform(0.1, 0.5)
+                     },
+        "ail_all_or_and": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                           "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                           "adam_eps": np.exp(rng.uniform(-22, -15)),
+                           "adam_wd": np.exp(rng.uniform(-15, -8)),
+                           "max_lr": np.exp(rng.uniform(-8, -2)),
+                           "cycle_peak": rng.uniform(0.1, 0.5)
+                           },
+        "ail_all_or_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                            "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                            "adam_eps": np.exp(rng.uniform(-22, -15)),
+                            "adam_wd": np.exp(rng.uniform(-15, -8)),
+                            "max_lr": np.exp(rng.uniform(-8, -2)),
+                            "cycle_peak": rng.uniform(0.1, 0.5)
+                            },
+        "ail_all_or_and_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                                "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                                "adam_eps": np.exp(rng.uniform(-22, -15)),
+                                "adam_wd": np.exp(rng.uniform(-15, -8)),
+                                "max_lr": np.exp(rng.uniform(-8, -2)),
+                                "cycle_peak": rng.uniform(0.1, 0.5)
+                                },
+        "ail_part_or_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                             "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                             "adam_eps": np.exp(rng.uniform(-22, -15)),
+                             "adam_wd": np.exp(rng.uniform(-15, -8)),
+                             "max_lr": np.exp(rng.uniform(-8, -2)),
+                             "cycle_peak": rng.uniform(0.1, 0.5)
+                             },
+        "ail_part_or_and_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                                 "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                                 "adam_eps": np.exp(rng.uniform(-22, -15)),
+                                 "adam_wd": np.exp(rng.uniform(-15, -8)),
+                                 "max_lr": np.exp(rng.uniform(-8, -2)),
+                                 "cycle_peak": rng.uniform(0.1, 0.5)
+                                 },
 
     }
 
@@ -1301,6 +1350,55 @@ def cnn_mnist(rng):
             "max_lr": np.power(10., -2.909),
             "cycle_peak": 0.27,
         },
+        "ail_or": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_all_or_and": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_all_or_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_all_or_and_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_part_or_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
+        "ail_part_or_and_xnor": {"adam_beta_1": np.exp(rng.uniform(-5, 0)),
+                   "adam_beta_2": np.exp(rng.uniform(-12, -4)),
+                   "adam_eps": np.exp(rng.uniform(-22, -15)),
+                   "adam_wd": np.exp(rng.uniform(-15, -8)),
+                   "max_lr": np.exp(rng.uniform(-8, -2)),
+                   "cycle_peak": rng.uniform(0.1, 0.5)
+                   },
     }
 
 
