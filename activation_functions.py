@@ -57,7 +57,7 @@ def activate(x, actfun, p=1, k=1, M=None,
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
     bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm',
-                             'ail_part_full', 'ail_part_or_xnor', 'ail_part_or_and_xnor']
+                             'ail_part_full', 'ail_part_or_and_xnor', 'ail_part_or_xnor']
     bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm',
                        'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor']
 

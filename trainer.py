@@ -160,10 +160,15 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     elif actfun == 'relu' or actfun == 'swish':
         grid_id = 16
     elif actfun == 'swishk':
-        grid_id = 10
+        if args.perm_method == 'invert':
+            grid_id = 16
+        else:
+            grid_id = 10
     elif actfun == 'swishy':
-        grid_id = 13
-
+        if args.perm_method == 'invert':
+            grid_id = 16
+        else:
+            grid_id = 13
 
     hyper_params = hp.get_hyper_params(grid_id)
 
