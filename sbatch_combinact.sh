@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-20%21                        # array value
-#SBATCH --output=logs/oc_search_mixpre/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=oc_search_mixpre
+#SBATCH --output=logs/oc_search_nomixpre/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=oc_search_nomixpre
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -38,6 +38,6 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed 0 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label _inv$GRID_ID --mix_pre --p 2 --perm_method invert
-python engine.py --seed 1 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label _inv$GRID_ID --mix_pre --p 2 --perm_method invert
-python engine.py --seed 2 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label _inv$GRID_ID --mix_pre --p 2 --perm_method invert
+python engine.py --seed 0 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
+python engine.py --seed 1 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID
+python engine.py --seed 2 --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --model resnet --resnet_width $RN_WIDTH --dataset cifar100 --actfun $ACTFUN --num_epochs 56 --grid_id $GRID_ID --validation --label $GRID_ID

@@ -122,12 +122,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     if actfun == 'relu':
         curr_k = 1
 
-    sgm_actfuns = ['bin_all_max_min_sgm', 'bin_all_max_sgm', 'bin_part_max_sgm', 'bin_part_max_min_sgm']
-    if actfun in sgm_actfuns:
-        args.mix_pre = False
-    else:
-        args.mix_pre = True
-
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
     if actfun in actfuns_1d:
         curr_k = 1
