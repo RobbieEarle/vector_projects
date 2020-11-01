@@ -351,7 +351,7 @@ def nn_mnist(rng):
             "max_lr": np.power(10., -2.696),
             "cycle_peak": 0.28,
         },
-        "swishk_p": {
+        "swishy": {
             "adam_beta_1": np.power(10., -0.218),
             "adam_beta_2": np.power(10., -1.168),
             "adam_eps": np.power(10., -8.476),
@@ -1325,7 +1325,7 @@ def cnn_mnist(rng):
             "max_lr": np.power(10., -2.8742),
             "cycle_peak": 0.43,
         },
-        "swishk_p": {
+        "swishy": {
             "adam_beta_1": np.power(10., -0.643),
             "adam_beta_2": np.power(10., -0.837),
             "adam_eps": np.power(10., -9.221),
