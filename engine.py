@@ -181,6 +181,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--var_n_params', action='store_true', help='When true, varies number of network parameters')
     parser.add_argument('--var_n_params_log', action='store_true', help='Varies number of network params on log scale')
+    parser.add_argument('--var_n_params_log_mlp', action='store_true', help='')
+    parser.add_argument('--var_n_params_log_cnn', action='store_true', help='')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')
     parser.add_argument('--reduce_actfuns', action='store_true', help='When true, does not use extra actfuns')
     parser.add_argument('--var_p', action='store_true', help='When true, varies p hyper-param')

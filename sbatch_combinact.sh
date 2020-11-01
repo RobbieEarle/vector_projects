@@ -42,7 +42,7 @@ python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --m
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swishk --p 2 --perm_method invert --var_n_params_log_mlp --label _inv
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --p 2 --perm_method invert --var_n_params_log_mlp --label _inv
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --var_n_params_log_mlp
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swish --var_n_params_log_mlp
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishk --p 2 --perm_method invert --var_n_params_log_mlp --label _inv
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --p 2 --perm_method invert --var_n_params_log_mlp --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --var_n_params_log_cnn
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swish --var_n_params_log_cnn
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishk --p 2 --perm_method invert --var_n_params_log_cnn --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --p 2 --perm_method invert --var_n_params_log_cnn --label _inv
