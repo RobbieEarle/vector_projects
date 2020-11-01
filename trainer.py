@@ -175,7 +175,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     if args.model == 'resnet':
         hyper_params = hp2.get_hyper_params(grid_id)
     else:
-        hyper_params = hp.get_hyper_params(args.model, args.dataset, actfun, rng=rng)
+        hyper_params = hp.get_hyper_params(args, args.model, args.dataset, actfun, rng=rng)
 
     num_epochs = args.num_epochs
 
