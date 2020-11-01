@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=20-39%10                        # array value
-#SBATCH --output=logs/test_relu/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=test_relu
+#SBATCH --output=logs/test_swish/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=test_swish
 
 source ~/.bashrc
 source activate ~/venvs/combinact
