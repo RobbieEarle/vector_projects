@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from torch_lr_finder import LRFinder
 import matplotlib.pyplot as plt
-from ~/vector_projects/apex.apex.amp import amp
+from apex import amp
 
 import math
 from models import mlp
