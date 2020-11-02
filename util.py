@@ -63,11 +63,6 @@ def get_num_params(args, actfun):
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
-        elif args.var_n_params_log_cnn:
-            num_params = [10, 12]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-
         elif args.var_n_params_log_mlp:
             num_params = [14]
             for i, param in enumerate(num_params):
@@ -91,8 +86,11 @@ def get_num_params(args, actfun):
         elif args.var_n_params_log:
             if actfun == 'combinact':
                 num_params = [14, 18, 22]
-            else:
-                num_params = [14, 18, 22]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
+
+        elif args.var_n_params_log_cnn:
+            num_params = [10, 12]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
 
