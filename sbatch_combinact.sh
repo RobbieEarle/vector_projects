@@ -7,9 +7,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=50-99%50                        # array value
-#SBATCH --output=logs/rs3b_ail/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rs3b_ail
+#SBATCH --array=0-99%100                        # array value
+#SBATCH --output=logs/rs4_ail/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rs4_ail
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -38,10 +38,10 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_or
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_xnor
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_and
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_xnor
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_all_or_and_xnor
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_part_or_xnor
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --actfun ail_part_or_and_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_or
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_all_or_and
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_all_or_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_all_or_and_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_part_or_xnor
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 10 --model $MODEL --dataset mnist --mix_pre_apex --actfun ail_part_or_and_xnor
