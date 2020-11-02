@@ -7,14 +7,17 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-39%40                     # array value
-#SBATCH --output=logs/e11_swish_nparam6/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=e11_swish_nparam6
+#SBATCH --array=20-39%10                     # array value
+#SBATCH --output=logs/test_max_min/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=test_max_min
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
+DATASET="$2"
+ACTFUN="$3"
+RN_WIDTH="$4"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -37,12 +40,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --var_n_params swish
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swish --var_n_params swish
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swishk --p 2 --perm_method invert --var_n_params swish --label _inv
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --p 2 --perm_method invert --var_n_params swish --label _inv
-
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --var_n_params swish
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swish --var_n_params swish
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishk --p 2 --perm_method invert --var_n_params swish --label _inv
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset mnist --actfun swishy --p 2 --perm_method invert --var_n_params swish --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --optim onecycle --num_epochs 50 --model resnet --resnet_width $RN_WIDTH --dataset $DATASET --actfun $ACTFUN  --mix_pre

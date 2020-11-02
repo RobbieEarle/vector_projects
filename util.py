@@ -614,6 +614,8 @@ def get_grid_id(actfun, args):
             return 16
         else:
             return 13
+    elif actfun == 'bin_all_max_min':
+        return 9
     elif actfun == 'ail_or' or actfun == 'ail_xnor':
         return 0
     elif actfun == 'ail_all_or_and':
