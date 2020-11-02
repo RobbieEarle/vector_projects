@@ -519,7 +519,8 @@ def load_dataset(
 
     if dataset == 'mnist':
         aug_trans, trans = [], []
-        aug_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
+        if model == 'resnet':
+            aug_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
         aug_trans.append(transforms.ToTensor())
         aug_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
         trans.append(transforms.ToTensor())
@@ -537,8 +538,9 @@ def load_dataset(
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
         aug_trans, trans = [], []
-        aug_trans.append(transforms.RandomHorizontalFlip())
-        aug_trans.append(CIFAR10Policy())
+        if model == 'resnet':
+            aug_trans.append(transforms.RandomHorizontalFlip())
+            aug_trans.append(CIFAR10Policy())
         aug_trans.append(transforms.ToTensor())
         aug_trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         trans.append(transforms.ToTensor())
