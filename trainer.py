@@ -9,6 +9,7 @@ import torch.nn.functional as F
 
 from torch_lr_finder import LRFinder
 import matplotlib.pyplot as plt
+from ~/vector_projects/apex.apex.amp import amp
 
 import math
 from models import mlp
@@ -17,7 +18,6 @@ from models import preact_resnet
 import util
 import hyper_params as hp
 import hyper_params_new as hp2
-from apex.apex.amp import amp
 
 import numpy as np
 import csv
