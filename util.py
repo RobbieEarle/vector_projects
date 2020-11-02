@@ -616,6 +616,38 @@ def get_rms_hyperparams(args):
     return grid_settings[args.grid_id]
 
 
+def get_grid_id(actfun, args):
+    if actfun == 'max':
+        return 6
+    elif actfun == 'relu' or actfun == 'swish':
+        return 16
+    elif actfun == 'swishk':
+        if args.perm_method == 'invert':
+            return 16
+        else:
+            return 10
+    elif actfun == 'swishy':
+        if args.perm_method == 'invert':
+            return 16
+        else:
+            return 13
+    elif actfun == 'ail_or' or actfun == 'ail_xnor':
+        return 0
+    elif actfun == 'ail_all_or_and':
+        return 3
+    elif actfun == 'ail_all_or_xnor':
+        return 19
+    elif actfun == 'ail_all_or_and_xnor':
+        return 2
+    elif actfun == 'ail_part_or_xnor':
+        return 14
+    elif actfun == 'ail_part_or_and_xnor':
+        return 5
+
+    else:
+        return args.grid_id
+
+
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
 
     def __call__(self, t):

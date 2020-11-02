@@ -154,21 +154,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     print("===================================================================")
 
     criterion = nn.CrossEntropyLoss()
-    grid_id = args.grid_id
-    if actfun == 'max':
-        grid_id = 6
-    elif actfun == 'relu' or actfun == 'swish':
-        grid_id = 16
-    elif actfun == 'swishk':
-        if args.perm_method == 'invert':
-            grid_id = 16
-        else:
-            grid_id = 10
-    elif actfun == 'swishy':
-        if args.perm_method == 'invert':
-            grid_id = 16
-        else:
-            grid_id = 13
+    grid_id = util.get_grid_id(actfun, args)
 
     rng = np.random.RandomState(curr_seed)
     if args.model == 'resnet':
