@@ -301,6 +301,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     scaler.step(optimizer)
                     scaler.update()
                 elif args.mix_pre_apex:
+                    if batch_idx == 0:
+                        "w-==-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
                     output = model(x)
                     train_loss = criterion(output, targetx)
                     total_train_loss += train_loss
