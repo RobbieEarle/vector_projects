@@ -17,7 +17,7 @@ from models import preact_resnet
 import util
 import hyper_params as hp
 import hyper_params_new as hp2
-import main_amp as amp
+from apex.apex.amp import amp
 
 import numpy as np
 import csv
