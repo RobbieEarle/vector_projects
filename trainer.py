@@ -288,7 +288,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             model.train()
             total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
             for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
-                print(batch_idx)
+                # print(batch_idx)
                 x, targetx = x.to(device), targetx.to(device)
                 optimizer.zero_grad()
                 if args.mix_pre:
@@ -301,7 +301,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     scaler.step(optimizer)
                     scaler.update()
                 elif args.mix_pre_apex:
-                    print("w-==-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
                     output = model(x)
                     train_loss = criterion(output, targetx)
                     total_train_loss += train_loss
@@ -321,7 +320,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 _, prediction = torch.max(output.data, 1)
                 num_correct += torch.sum(prediction == targetx.data)
                 num_total += len(prediction)
-                print("1234"+1324)
             epoch_aug_train_loss = total_train_loss / n
             epoch_aug_train_acc = num_correct * 1.0 / num_total
 
