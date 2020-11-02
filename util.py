@@ -59,6 +59,10 @@ def get_num_params(args, actfun):
             num_params = [14, 16, 18, 20, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
+        elif args.var_n_params == 'swish':
+            num_params = [20]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
         elif args.num_params == 0:
             num_params = [1000000]
 
@@ -68,6 +72,10 @@ def get_num_params(args, actfun):
     elif args.model == 'cnn' or args.model == 'resnet' or args.model == 'dawnnet':
         if args.var_n_params == 'ail':
             num_params = [10, 12, 14, 15, 16, 17, 18, 20, 22]
+            for i, param in enumerate(num_params):
+                num_params[i] = 2 ** param
+        elif args.var_n_params == 'swish':
+            num_params = [15, 16, 17, 20]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         elif args.num_params == 0:
