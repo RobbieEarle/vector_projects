@@ -261,7 +261,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         best_val_acc = 0
 
         if args.mix_pre_apex:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
 
         # ---- Start Training
         while epoch <= num_epochs:
