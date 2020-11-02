@@ -202,6 +202,7 @@ if __name__ == '__main__':
     parser.add_argument('--grid_id', type=int, default=5, help='')
     parser.add_argument('--lr_range', action='store_true', help='')
     parser.add_argument('--mix_pre', action='store_true', help='')
+    parser.add_argument('--mix_pre_apex', action='store_true', help='')
     parser.add_argument('--cycle_mom', action='store_true', help='')
 
     args = parser.parse_args()

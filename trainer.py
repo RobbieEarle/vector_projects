@@ -17,6 +17,7 @@ from models import preact_resnet
 import util
 import hyper_params as hp
 import hyper_params_new as hp2
+import main_amp as amp
 
 import numpy as np
 import csv
@@ -259,6 +260,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         best_val_acc = 0
 
+        if args.mix_pre_apex:
+            model, optimizer = amp.initialize(model, optimizer)
+
         # ---- Start Training
         while epoch <= num_epochs:
 
@@ -277,7 +281,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
             util.seed_all((curr_seed * args.num_epochs) + epoch)
             start_time = time.time()
-            scaler = torch.cuda.amp.GradScaler()
+            if args.mix_pre:
+                scaler = torch.cuda.amp.GradScaler()
 
             # ---- Training
             model.train()
@@ -295,6 +300,14 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     scaler.scale(train_loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
+                elif args.mix_pre_apex:
+                    output = model(x)
+                    train_loss = criterion(output, targetx)
+                    total_train_loss += train_loss
+                    n += 1
+                    with amp.scale_loss(train_loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                    optimizer.step()
                 else:
                     output = model(x)
                     train_loss = criterion(output, targetx)
