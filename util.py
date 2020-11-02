@@ -55,19 +55,10 @@ def get_actfuns(actfun):
 
 def get_num_params(args, actfun):
     if args.model == 'nn' or args.model == 'mlp':
-        if args.var_n_params:
-            num_params = [1_000_000, 800_000, 600_000, 400_000, 200_000]
-
-        elif args.nparam_redo:
-            num_params = [14, 22, 24]
+        if args.var_n_params == 'ail':
+            num_params = [14, 16, 18, 20, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
-
-        elif args.var_n_params_log_mlp:
-            num_params = [14]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-
         elif args.num_params == 0:
             num_params = [1000000]
 
@@ -75,28 +66,12 @@ def get_num_params(args, actfun):
             num_params = [args.num_params]
 
     elif args.model == 'cnn' or args.model == 'resnet' or args.model == 'dawnnet':
-        if args.var_n_params:
-            num_params = [3_000_000, 2_500_000, 2_000_000, 1_500_000, 1_000_000, 500_000]
-
-        elif args.bin_redo:
-            num_params = [12, 14, 22, 24, 26]
+        if args.var_n_params == 'ail':
+            num_params = [10, 12, 14, 15, 16, 17, 18, 20, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
-
-        elif args.var_n_params_log:
-            if actfun == 'combinact':
-                num_params = [14, 18, 22]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-
-        elif args.var_n_params_log_cnn:
-            num_params = [10, 12]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-
         elif args.num_params == 0:
             num_params = [3000000]
-
         else:
             num_params = [args.num_params]
 
