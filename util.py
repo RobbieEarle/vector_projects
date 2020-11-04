@@ -74,8 +74,8 @@ def get_num_params(args, actfun):
             num_params = [10, 12, 14, 15, 16, 17, 18, 20, 22]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
-        if args.var_n_params == 'ail2':
-            num_params = [10]
+        elif args.var_n_params == 'ail2':
+            num_params = [11]
             for i, param in enumerate(num_params):
                 num_params[i] = 2 ** param
         elif args.var_n_params == 'swish':
