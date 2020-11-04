@@ -85,7 +85,6 @@ class MLP(nn.Module):
                 for layer in range(2):
                     self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
-
     def forward(self, x):
 
         x = x.reshape(x.size(0), self.input_dim)
