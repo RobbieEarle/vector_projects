@@ -11,9 +11,12 @@ from auto_augment import CIFAR10Policy
 from collections import namedtuple
 from sklearn import model_selection
 from sklearn.datasets import load_iris
-from torch_lr_finder import LRFinder
-import matplotlib.pyplot as plt
-from apex import amp
+try:
+    from torch_lr_finder import LRFinder
+    import matplotlib.pyplot as plt
+    from apex import amp
+except ImportError:
+    print("Unable to load amp, LR finder, and pyplot")
 
 
 # -------------------- Training Utils
@@ -520,7 +523,7 @@ def load_dataset(
         test_set = datasets.MNIST(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 100
+            batch_size = 50
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
         aug_trans, trans = [], []
@@ -546,7 +549,7 @@ def load_dataset(
             test_set = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 64
+            batch_size = 50
 
     train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:
