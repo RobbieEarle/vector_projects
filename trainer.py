@@ -136,7 +136,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                      train_sample_size=curr_sample_size,
                                      kwargs=kwargs)
 
+    start_time = time.time()
     lr = util.run_lr_finder(
+        args,
         model_temp,
         dataset_temp[0],
         torch.optim.Adam(model_temp.parameters()),
@@ -145,7 +147,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         show=False,
         device=device,
     )
-    print("Found learning rate: {:3e}".format(lr))
+    print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
 
     criterion = nn.CrossEntropyLoss()
     num_epochs = args.num_epochs
