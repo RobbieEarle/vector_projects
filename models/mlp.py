@@ -33,8 +33,8 @@ class MLP(nn.Module):
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
 
-        a = 1.25 * (pk_ratio / self.g)
-        b = (1.25 * input_dim) + ((pk_ratio / self.g) * output_dim) + 2.25
+        a = pk_ratio / self.g
+        b = input_dim + ((pk_ratio / self.g) * output_dim) + 2.25
         c = output_dim - num_params
 
         n2a = (-b + np.sqrt((b ** 2) - (4 * a * c))) / (2 * a)

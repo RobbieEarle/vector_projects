@@ -26,27 +26,26 @@ def setup_experiment(args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     # =========================== Creating new output file
     fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
-                  'sample_size', 'hyper_params', 'model', 'batch_size', 'alpha_primes', 'alphas',
+                  'sample_size', 'model', 'batch_size', 'alpha_primes', 'alphas',
                   'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
                   'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
                   'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr',
-                  'grid_id']
+                  'found_lr']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
     else:
         model = args.model
     filename = '{}-{}-{}-{}-{}{}'.format(datetime.date.today(),
-                                             args.seed,
-                                             args.dataset,
-                                             model,
-                                             args.actfun,
-                                             args.label)
+                                         args.seed,
+                                         args.dataset,
+                                         model,
+                                         args.actfun,
+                                         args.label)
 
     outfile_path = os.path.join(args.save_path, filename) + '.csv'
     mid_checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
@@ -91,34 +90,13 @@ def setup_experiment(args):
 
                             for perm_method in perm_methods:
 
-                                util.seed_all(curr_seed)
-                                # ---- Loading Dataset
-                                print()
-
-                                dataset = util.load_dataset(args.model,
-                                                            args.dataset,
-                                                            seed=curr_seed,
-                                                            validation=args.validation,
-                                                            batch_size=args.batch_size,
-                                                            train_sample_size=curr_sample_size,
-                                                            kwargs=kwargs)
-                                loaders = {
-                                    'aug_train': dataset[0],
-                                    'train': dataset[1],
-                                    'aug_eval': dataset[2],
-                                    'eval': dataset[3],
-                                }
-                                sample_size = dataset[4]
-                                batch_size = dataset[5]
-
-                                filename = '{}-{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
-                                                                                    args.dataset,
-                                                                                    model,
-                                                                                    actfun,
-                                                                                    sample_size,
-                                                                                    p, k, g, perm_method,
-                                                                                    args.label
-                                                                                    )
+                                filename = '{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
+                                                                              args.dataset,
+                                                                              model,
+                                                                              actfun,
+                                                                              p, k, g, perm_method,
+                                                                              args.label
+                                                                              )
                                 final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
                                 best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
 
@@ -133,9 +111,7 @@ def setup_experiment(args):
                                               outfile_path,
                                               filename,
                                               fieldnames,
-                                              loaders,
-                                              sample_size,
-                                              batch_size,
+                                              curr_sample_size,
                                               device,
                                               num_params=curr_num_params,
                                               curr_p=p,
@@ -158,9 +134,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
-    parser.add_argument('--model', type=str, default='cnn', help='cnn, mlp, resnet')  # cnn
+    parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='swishy')  # all
+    parser.add_argument('--actfun', type=str, default='relu')  # all
     parser.add_argument('--optim', type=str, default='onecycle')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
@@ -171,7 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
     parser.add_argument('--label', type=str, default='', help='Label to differentiate different jobs')
-    parser.add_argument('--validation', action='store_true', help='When true, varies number of network parameters')
+    parser.add_argument('--validation', action='store_true', help='When true, uses validation set instead of test set')
     parser.add_argument('--lr_init', type=float, default=1e-4, help='Initial learning rate value')
     parser.add_argument('--lr_gamma', type=float, default=0.95, help='Weight decay multiplier')
     parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay')

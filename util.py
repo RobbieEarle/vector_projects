@@ -11,6 +11,8 @@ from auto_augment import CIFAR10Policy
 from collections import namedtuple
 from sklearn import model_selection
 from sklearn.datasets import load_iris
+from torch_lr_finder import LRFinder
+import matplotlib.pyplot as plt
 
 
 # -------------------- Training Utils
@@ -136,7 +138,6 @@ def get_pkg_vals(args):
 
 def weights_init(m):
     """
-    Randomly initialize weights for model. Always uses seed 0 so weights initialize to same value across experiments
     :param m: model
     :return:
     """
@@ -262,7 +263,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 
 
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
-                       hyper_params, num_params, sample_size, curr_k, curr_p,
+                       num_params, sample_size, curr_k, curr_p,
                        curr_g, perm_method, resnet_ver, resnet_width, optim,
                        validation):
 
@@ -275,14 +276,13 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "ResNet Version: {}\n"
         "ResNet Width: {}\n"
         "Activation Function: {} \n"
-        "Hyper-params: {} \n"
         "k: {}, p: {}, g: {}\n"
         "Permutation Type: {}\n"
         "Num Params: {}\n"
         "Num Training Samples: {}\n"
         "Optimizer: {}\n"
         "Validation: {}\n\n"
-            .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun, hyper_params,
+            .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun,
                     curr_k, curr_p, curr_g, perm_method, num_params, sample_size, optim, validation,), flush=True
     )
 
@@ -635,6 +635,107 @@ def get_grid_id(actfun, args):
 
     else:
         return args.grid_id
+
+
+def print_model_params(model):
+    print("=============================== Hyper params:")
+    i = 0
+    for name, param in model.named_parameters():
+        # print(name, param.shape)
+        if len(param.shape) == 4:
+            print(param[:2, :2, :4, :4])
+            break
+        elif len(param.shape) == 3:
+            print(param[:2, :2, :2])
+        elif len(param.shape) == 2:
+            print(param[:4, :4])
+            break
+        elif len(param.shape) == 1:
+            print(param[:3])
+        print()
+        i += 1
+        if i == 4:
+            break
+    print("===================================================================")
+
+
+def run_lr_finder(
+        model,
+        train_loader,
+        optimizer,
+        criterion,
+        val_loader=None,
+        verbose=True,
+        show=True,
+        device=None,
+):
+    if verbose:
+        print("Running learning rate finder")
+    lr_finder = LRFinder(model, optimizer, criterion, device=device)
+    lr_finder.range_test(
+        train_loader,
+        val_loader=val_loader,
+        start_lr=1e-6,
+        end_lr=100,
+        num_iter=100,
+        diverge_th=3,
+    )
+    min_index = np.argmin(lr_finder.history["loss"])
+    lr_at_min = lr_finder.history["lr"][min_index]
+    min_loss = lr_finder.history["loss"][min_index]
+    max_loss = np.max(lr_finder.history["loss"][:min_index])
+    if verbose:
+        print("Plotting learning rate finder results")
+    hf = plt.figure(figsize=(15, 9))
+    ax = plt.axes()
+    _, lr_steepest = lr_finder.plot(skip_start=0, skip_end=3, log_lr=True, ax=ax)
+    ylim = np.array([min_loss, max_loss])
+    ylim += 0.1 * np.diff(ylim) * np.array([-1, 1])
+    plt.ylim(ylim)
+    plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
+    plt.tick_params(labelsize=14)
+    ax.minorticks_on()
+    ax.tick_params(direction="out")
+    # Save figure
+    # figpth = os.path.join("models", dataset_name, log_name, "lrfinder.png")
+    # os.makedirs(os.path.dirname(figpth), exist_ok=True)
+    # plt.savefig(figpth)
+    # print("LR Finder results saved to {}".format(figpth))
+
+    init_loss = lr_finder.history["loss"][0]
+
+    loss_12 = min_loss + 0.5 * (max_loss - min_loss)
+    index_12 = np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_12)
+    )
+    lr_12 = lr_finder.history["lr"][index_12]
+
+    loss_13 = min_loss + 2 / 3 * (init_loss - min_loss)
+    index_13 = np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_13)
+    )
+    lr_13 = lr_finder.history["lr"][index_13]
+
+    loss_14 = min_loss + 0.75 * (init_loss - min_loss)
+    index_14 = np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_14)
+    )
+    lr_14 = lr_finder.history["lr"][index_14]
+
+    if verbose:
+        print("LR at steepest grad: {:.3e}  (red)".format(lr_steepest))
+        print("LR at minimum loss : {:.3e}".format(lr_at_min))
+        print("LR a tenth of min  : {:.3e}  (green)".format(lr_at_min / 10))
+        print("LR when 1/2 down   : {:.3e}  (blue)".format(lr_12))
+        print("LR when 1/3 down   : {:.3e}  (cyan)".format(lr_13))
+        print("LR when 1/4 down   : {:.3e}".format(lr_14))
+        ax.axvline(x=lr_steepest, color="red")
+        ax.axvline(x=lr_at_min / 10, color="green")
+        ax.axvline(x=lr_12, color="blue")
+        ax.axvline(x=lr_13, color="cyan")
+        if show:
+            plt.show()
+    return np.min([lr_at_min / 10, lr_12])
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
