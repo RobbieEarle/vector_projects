@@ -131,13 +131,15 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     util.seed_all(curr_seed)
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
-    dataset_temp = util.load_dataset(args.model,
-                                     args.dataset,
-                                     seed=curr_seed,
-                                     validation=True,
-                                     batch_size=args.batch_size,
-                                     train_sample_size=curr_sample_size,
-                                     kwargs=kwargs)
+    dataset_temp = util.load_dataset(
+        args,
+        args.model,
+        args.dataset,
+        seed=curr_seed,
+        validation=True,
+        batch_size=args.batch_size,
+        train_sample_size=curr_sample_size,
+        kwargs=kwargs)
 
     start_time = time.time()
     lr = util.run_lr_finder(

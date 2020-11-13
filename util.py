@@ -468,6 +468,7 @@ def permute(x, method, layer_type, k, offset, num_groups=2, shuffle_map=None):
 
 
 def load_dataset(
+        args,
         model,
         dataset,
         seed=0,
@@ -508,7 +509,7 @@ def load_dataset(
 
     if dataset == 'mnist':
         aug_trans, trans = [], []
-        if model == 'resnet':
+        if args.aug:
             aug_trans.append(transforms.RandomAffine(degrees=10, scale=(0.8, 1.2), translate=(0.08, 0.08), shear=0.3))
         aug_trans.append(transforms.ToTensor())
         aug_trans.append(transforms.Normalize((0.1307,), (0.3081,)))
@@ -527,7 +528,7 @@ def load_dataset(
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
         aug_trans, trans = [], []
-        if model == 'resnet':
+        if args.aug:
             aug_trans.append(transforms.RandomHorizontalFlip())
             aug_trans.append(CIFAR10Policy())
         aug_trans.append(transforms.ToTensor())

@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                        # array value
-#SBATCH --output=logs/th1_epoch/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=th1_epoch
+#SBATCH --output=logs/th1_epoch_aug/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=th1_epoch_aug
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -40,4 +40,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset $DATASET --actfun relu --num_params 300_000_000 --validation --mix_pre_apex --label $NUM_EPOCHS
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset $DATASET --actfun relu --num_params 300_000_000 --validation --mix_pre_apex --label $NUM_EPOCHS --aug
