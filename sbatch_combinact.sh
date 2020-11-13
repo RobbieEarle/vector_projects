@@ -39,6 +39,6 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset mnist --actfun relu --num_params 1_000_000_000 --validation --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar10 --actfun relu --num_params 1_000_000_000 --validation --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar100 --actfun relu --num_params 1_000_000_000 --validation --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset mnist --actfun relu --num_params 100_000_000 --validation --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar10 --actfun relu --num_params 100_000_000 --validation --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar100 --actfun relu --num_params 100_000_000 --validation --mix_pre_apex
