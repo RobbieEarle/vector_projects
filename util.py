@@ -523,7 +523,7 @@ def load_dataset(
         test_set = datasets.MNIST(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 50
+            batch_size = 100
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
         aug_trans, trans = [], []
@@ -549,7 +549,7 @@ def load_dataset(
             test_set = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 50
+            batch_size = 64
 
     train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:
