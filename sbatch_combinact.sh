@@ -16,7 +16,8 @@ source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
 MODEL="$2"
-NUM_EPOCHS="$3"
+DATASET="$3"
+NUM_EPOCHS="$4"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -39,6 +40,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset mnist --actfun relu --num_params 300_000_000 --validation --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar10 --actfun relu --num_params 300_000_000 --validation --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset cifar100 --actfun relu --num_params 300_000_000 --validation --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs $NUM_EPOCHS --dataset $DATASET --actfun relu --num_params 300_000_000 --validation --mix_pre_apex --label $NUM_EPOCHS
