@@ -68,9 +68,12 @@ class CNN(nn.Module):
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, int(pre_acts[3]), self.p)
 
         self.batch_norms = nn.ModuleList([
-            nn.BatchNorm2d(int(pre_acts[0])),
-            nn.BatchNorm2d(int(pre_acts[2])),
-            nn.BatchNorm2d(int(pre_acts[3])),
+            nn.ModuleList([nn.BatchNorm2d(int(pre_acts[0])),
+                           nn.BatchNorm2d(int(pre_acts[1]))]),
+            nn.ModuleList([nn.BatchNorm2d(int(pre_acts[2])),
+                           nn.BatchNorm2d(int(pre_acts[2]))]),
+            nn.ModuleList([nn.BatchNorm2d(int(pre_acts[3])),
+                           nn.BatchNorm2d(int(pre_acts[3]))]),
         ])
 
         self.pooling = nn.ModuleList([
@@ -120,7 +123,7 @@ class CNN(nn.Module):
 
         for block in range(3):
             x = self.conv_layers[block][0](x)
-            x = self.batch_norms[block](x)
+            x = self.batch_norms[block][0](x)
             if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[block * 2]
             else:
@@ -134,6 +137,7 @@ class CNN(nn.Module):
                                  alpha_dist=self.alpha_dist,
                                  reduce_actfuns=self.reduce_actfuns)
             x = self.conv_layers[block][1](x)
+            x = self.batch_norms[block][1](x)
             if actfun == 'combinact':
                 alpha_primes = self.all_alpha_primes[(block * 2) + 1]
             else:
