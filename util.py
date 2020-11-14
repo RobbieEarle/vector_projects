@@ -683,13 +683,14 @@ def run_lr_finder(
     lr_finder.range_test(
         train_loader,
         val_loader=val_loader,
-        start_lr=1e-6,
+        start_lr=1e-7,
         end_lr=100,
         num_iter=100,
         diverge_th=3,
     )
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
+    print(lr_finder.history["loss"])
     min_loss = lr_finder.history["loss"][min_index]
     max_loss = np.max(lr_finder.history["loss"][:min_index])
     if verbose:
