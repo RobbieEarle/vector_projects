@@ -165,13 +165,15 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     model.apply(util.weights_init)
 
     util.seed_all(curr_seed)
-    dataset = util.load_dataset(args.model,
-                                args.dataset,
-                                seed=curr_seed,
-                                validation=args.validation,
-                                batch_size=args.batch_size,
-                                train_sample_size=curr_sample_size,
-                                kwargs=kwargs)
+    dataset = util.load_dataset(
+        args,
+        args.model,
+        args.dataset,
+        seed=curr_seed,
+        validation=args.validation,
+        batch_size=args.batch_size,
+        train_sample_size=curr_sample_size,
+        kwargs=kwargs)
     loaders = {
         'aug_train': dataset[0],
         'train': dataset[1],
