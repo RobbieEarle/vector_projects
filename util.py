@@ -690,7 +690,6 @@ def run_lr_finder(
     )
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
-    print(lr_finder.history["loss"])
     min_loss = lr_finder.history["loss"][min_index]
     max_loss = np.max(lr_finder.history["loss"][:min_index])
     if verbose:
