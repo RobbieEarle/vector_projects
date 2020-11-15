@@ -39,5 +39,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new --perm_method invert --p 2 --label _inv
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new --perm_method invert --p 2 --label _inv
