@@ -59,39 +59,9 @@ def get_actfuns(actfun):
     return all_actfuns
 
 
-def get_num_params(args, actfun):
-    if args.model == 'nn' or args.model == 'mlp':
-        if args.var_n_params == 'ail':
-            num_params = [14, 16, 18, 20, 22]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-        elif args.var_n_params == 'swish':
-            num_params = [20]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-        elif args.num_params == 0:
-            num_params = [1000000]
-
-        else:
-            num_params = [args.num_params]
-
-    elif args.model == 'cnn' or args.model == 'resnet' or args.model == 'dawnnet':
-        if args.var_n_params == 'ail':
-            num_params = [10, 12, 14, 15, 16, 17, 18, 20, 22]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-        elif args.var_n_params == 'ail2':
-            num_params = [12, 14, 15, 16, 17, 18, 20, 22]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-        elif args.var_n_params == 'swish':
-            num_params = [15, 16, 17, 20]
-            for i, param in enumerate(num_params):
-                num_params[i] = 2 ** param
-        elif args.num_params == 0:
-            num_params = [3000000]
-        else:
-            num_params = [args.num_params]
+def get_num_params(args):
+    if args.var_n_params == 'new':
+        num_params = [1e4, 1e5, 1e6, 1e7, 1e8, 3e8]
 
     return num_params
 
@@ -690,7 +660,6 @@ def run_lr_finder(
     )
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
-    print(lr_finder.history["loss"])
     min_loss = lr_finder.history["loss"][min_index]
     max_loss = np.max(lr_finder.history["loss"][:min_index])
     if verbose:
