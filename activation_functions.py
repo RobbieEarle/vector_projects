@@ -105,6 +105,8 @@ _ACTFUNS = {
         lambda z: combinact(z),
     'relu':
         lambda z: F.relu_(z),
+    'tanh':
+        lambda z: F.tanh(z),
     'leaky_relu':
         lambda z: F.leaky_relu_(z),
     'abs':

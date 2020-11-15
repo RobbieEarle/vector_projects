@@ -120,7 +120,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     resnet_ver = args.resnet_ver
     resnet_width = args.resnet_width
 
-    actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu']
+    actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu', 'tanh']
     if actfun in actfuns_1d:
         curr_k = 1
 
