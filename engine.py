@@ -64,7 +64,7 @@ def setup_experiment(args):
     # =========================== Training
     for actfun in all_actfuns:
 
-        num_params = util.get_num_params(args, actfun)
+        num_params = util.get_num_params(args)
         train_samples = util.get_train_samples(args)
         p_vals, k_vals, g_vals = util.get_pkg_vals(args)
         perm_methods = util.get_perm_methods(args)
