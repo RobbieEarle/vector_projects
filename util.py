@@ -62,6 +62,10 @@ def get_actfuns(actfun):
 def get_num_params(args):
     if args.var_n_params == 'new':
         num_params = [1e4, 1e5, 1e6, 1e7, 1e8]
+    elif args.num_params == 0:
+        num_params = [1e7]
+    else:
+        num_params = [args.num_params]
 
     return num_params
 
@@ -635,7 +639,6 @@ def print_model_params(model):
 
 
 def run_lr_finder(
-        args,
         model,
         train_loader,
         optimizer,
@@ -647,71 +650,71 @@ def run_lr_finder(
 ):
     if verbose:
         print("Running learning rate finder")
-    if args.mix_pre_apex:
-        model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
     lr_finder = LRFinder(model, optimizer, criterion, device=device)
     lr_finder.range_test(
         train_loader,
         val_loader=val_loader,
         start_lr=1e-7,
-        end_lr=100,
-        num_iter=100,
+        end_lr=10,
+        num_iter=200,
         diverge_th=3,
     )
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
     min_loss = lr_finder.history["loss"][min_index]
-    max_loss = np.max(lr_finder.history["loss"][:min_index])
-    if verbose:
-        print("Plotting learning rate finder results")
-    hf = plt.figure(figsize=(15, 9))
-    ax = plt.axes()
-    _, lr_steepest = lr_finder.plot(skip_start=0, skip_end=3, log_lr=True, ax=ax)
-    ylim = np.array([min_loss, max_loss])
-    ylim += 0.1 * np.diff(ylim) * np.array([-1, 1])
-    plt.ylim(ylim)
-    plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
-    plt.tick_params(labelsize=14)
-    ax.minorticks_on()
-    ax.tick_params(direction="out")
-    # Save figure
-    # figpth = os.path.join("models", dataset_name, log_name, "lrfinder.png")
-    # os.makedirs(os.path.dirname(figpth), exist_ok=True)
-    # plt.savefig(figpth)
-    # print("LR Finder results saved to {}".format(figpth))
-
+    max_index = np.argmax(lr_finder.history["loss"][:min_index])
+    lr_at_max = lr_finder.history["lr"][max_index]
+    max_loss = lr_finder.history["loss"][max_index]
+    if not show:
+        lr_steepest = None
+    else:
+        if verbose:
+            print("Plotting learning rate finder results")
+        hf = plt.figure(figsize=(15, 9))
+        ax = plt.axes()
+        _, lr_steepest = lr_finder.plot(skip_start=0, skip_end=3, log_lr=True, ax=ax)
+        ylim = np.array([min_loss, max_loss])
+        ylim += 0.1 * np.diff(ylim) * np.array([-1, 1])
+        plt.ylim(ylim)
+        plt.tick_params(reset=True, color=(0.2, 0.2, 0.2))
+        plt.tick_params(labelsize=14)
+        ax.minorticks_on()
+        ax.tick_params(direction="out")
+        # Save figure
+        # figpth = os.path.join("models", dataset_name, log_name, "lrfinder.png")
+        # os.makedirs(os.path.dirname(figpth), exist_ok=True)
+        # plt.savefig(figpth)
+        # print("LR Finder results saved to {}".format(figpth))
     init_loss = lr_finder.history["loss"][0]
-
     loss_12 = min_loss + 0.5 * (max_loss - min_loss)
-    index_12 = np.argmin(
-        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_12)
+    index_12 = max_index + np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_12)
     )
     lr_12 = lr_finder.history["lr"][index_12]
-
-    loss_13 = min_loss + 2 / 3 * (init_loss - min_loss)
-    index_13 = np.argmin(
-        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_13)
+    loss_13 = min_loss + 2 / 3 * (max_loss - min_loss)
+    index_13 = max_index + np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_13)
     )
     lr_13 = lr_finder.history["lr"][index_13]
-
-    loss_14 = min_loss + 0.75 * (init_loss - min_loss)
-    index_14 = np.argmin(
-        np.abs(np.array(lr_finder.history["loss"][:min_index]) - loss_14)
+    loss_14 = min_loss + 0.75 * (max_loss - min_loss)
+    index_14 = max_index + np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_14)
     )
     lr_14 = lr_finder.history["lr"][index_14]
-
     if verbose:
-        print("LR at steepest grad: {:.3e}  (red)".format(lr_steepest))
+        if lr_steepest is not None:
+            print("LR at steepest grad: {:.3e}  (red)".format(lr_steepest))
+            if show:
+                ax.axvline(x=lr_steepest, color="red")
         print("LR at minimum loss : {:.3e}".format(lr_at_min))
         print("LR a tenth of min  : {:.3e}  (green)".format(lr_at_min / 10))
         print("LR when 1/2 down   : {:.3e}  (blue)".format(lr_12))
         print("LR when 1/3 down   : {:.3e}  (cyan)".format(lr_13))
         print("LR when 1/4 down   : {:.3e}".format(lr_14))
-        ax.axvline(x=lr_steepest, color="red")
-        ax.axvline(x=lr_at_min / 10, color="green")
-        ax.axvline(x=lr_12, color="blue")
-        ax.axvline(x=lr_13, color="cyan")
         if show:
+            ax.axvline(x=lr_at_min / 10, color="green")
+            ax.axvline(x=lr_12, color="blue")
+            ax.axvline(x=lr_13, color="cyan")
             plt.show()
     return np.min([lr_at_min / 10, lr_12])
 
