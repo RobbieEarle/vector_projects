@@ -215,7 +215,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                          checkpoint['perm_method']))
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
-                            util.get_model_params(model), sample_size, model.k, model.p, model.g,
+                            util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
                             perm_method, resnet_ver, resnet_width, args.optim, args.validation)
 
     best_val_acc = 0
