@@ -639,6 +639,7 @@ def print_model_params(model):
 
 
 def run_lr_finder(
+        args,
         model,
         train_loader,
         optimizer,
@@ -650,6 +651,8 @@ def run_lr_finder(
 ):
     if verbose:
         print("Running learning rate finder")
+    if args.mix_pre_apex:
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
     lr_finder = LRFinder(model, optimizer, criterion, device=device)
     lr_finder.range_test(
         train_loader,
