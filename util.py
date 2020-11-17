@@ -11,6 +11,7 @@ from auto_augment import CIFAR10Policy
 from collections import namedtuple
 from sklearn import model_selection
 from sklearn.datasets import load_iris
+import os
 try:
     from torch_lr_finder import LRFinder
     import matplotlib.pyplot as plt
@@ -500,7 +501,7 @@ def load_dataset(
         test_set = datasets.MNIST(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 100
+            batch_size = 256
 
     elif dataset == 'cifar10' or dataset == 'cifar100':
         aug_trans, trans = [], []
@@ -526,7 +527,7 @@ def load_dataset(
             test_set = datasets.CIFAR100(root='./data', train=False, download=True, transform=trans_all)
 
         if batch_size is None:
-            batch_size = 64
+            batch_size = 256
 
     train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:
@@ -649,7 +650,9 @@ def run_lr_finder(
         val_loader=None,
         verbose=True,
         show=True,
+        figpth=None,
         device=None,
+        recommender="logmean14",
 ):
     if verbose:
         print("Running learning rate finder")
@@ -670,7 +673,7 @@ def run_lr_finder(
     max_index = np.argmax(lr_finder.history["loss"][:min_index])
     lr_at_max = lr_finder.history["lr"][max_index]
     max_loss = lr_finder.history["loss"][max_index]
-    if not show:
+    if not show and not figpth:
         lr_steepest = None
     else:
         if verbose:
@@ -685,43 +688,68 @@ def run_lr_finder(
         plt.tick_params(labelsize=14)
         ax.minorticks_on()
         ax.tick_params(direction="out")
-        # Save figure
-        # figpth = os.path.join("models", dataset_name, log_name, "lrfinder.png")
-        # os.makedirs(os.path.dirname(figpth), exist_ok=True)
-        # plt.savefig(figpth)
-        # print("LR Finder results saved to {}".format(figpth))
     init_loss = lr_finder.history["loss"][0]
     loss_12 = min_loss + 0.5 * (max_loss - min_loss)
     index_12 = max_index + np.argmin(
         np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_12)
     )
     lr_12 = lr_finder.history["lr"][index_12]
-    loss_13 = min_loss + 2 / 3 * (max_loss - min_loss)
+    loss_13 = min_loss + 1 / 3 * (max_loss - min_loss)
     index_13 = max_index + np.argmin(
         np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_13)
     )
     lr_13 = lr_finder.history["lr"][index_13]
-    loss_14 = min_loss + 0.75 * (max_loss - min_loss)
+    loss_23 = min_loss + 2 / 3 * (max_loss - min_loss)
+    index_23 = max_index + np.argmin(
+        np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_23)
+    )
+    lr_23 = lr_finder.history["lr"][index_23]
+    loss_14 = min_loss + 1 / 4 * (max_loss - min_loss)
     index_14 = max_index + np.argmin(
         np.abs(np.array(lr_finder.history["loss"][max_index:min_index]) - loss_14)
     )
     lr_14 = lr_finder.history["lr"][index_14]
+    if recommender == "div10":
+        lr_recomend = np.exp(np.mean([np.log(lr_at_min / 10), np.log(lr_12)]))
+    elif recommender == "min12":
+        lr_recomend = np.min([lr_at_min / 10, lr_12])
+    elif recommender == "min13":
+        lr_recomend = np.min([lr_at_min / 10, lr_13])
+    elif recommender == "min14":
+        lr_recomend = np.min([lr_at_min / 10, lr_14])
+    elif recommender == "logmean12":
+        lr_recomend = np.exp(np.mean([np.log(lr_at_min / 10), np.log(lr_12)]))
+    elif recommender == "logmean13":
+        lr_recomend = np.exp(np.mean([np.log(lr_at_min / 10), np.log(lr_13)]))
+    elif recommender == "logmean14":
+        lr_recomend = np.exp(np.mean([np.log(lr_at_min / 10), np.log(lr_14)]))
     if verbose:
         if lr_steepest is not None:
             print("LR at steepest grad: {:.3e}  (red)".format(lr_steepest))
-            if show:
-                ax.axvline(x=lr_steepest, color="red")
         print("LR at minimum loss : {:.3e}".format(lr_at_min))
-        print("LR a tenth of min  : {:.3e}  (green)".format(lr_at_min / 10))
-        print("LR when 1/2 down   : {:.3e}  (blue)".format(lr_12))
-        print("LR when 1/3 down   : {:.3e}  (cyan)".format(lr_13))
-        print("LR when 1/4 down   : {:.3e}".format(lr_14))
-        if show:
-            ax.axvline(x=lr_at_min / 10, color="green")
-            ax.axvline(x=lr_12, color="blue")
-            ax.axvline(x=lr_13, color="cyan")
-            plt.show()
-    return np.min([lr_at_min / 10, lr_12])
+        print("LR a tenth of min  : {:.3e}  (orange)".format(lr_at_min / 10))
+        print("LR when 1/4 up     : {:.3e}  (yellow)".format(lr_14))
+        print("LR when 1/3 up     : {:.3e}  (blue)".format(lr_13))
+        print("LR when 1/2 up     : {:.3e}  (cyan)".format(lr_12))
+        print("LR when 2/3 up     : {:.3e}  (green)".format(lr_23))
+        print("LR recommended     : {:.3e}  (black)".format(lr_recomend))
+    if show or figpth:
+        ax.axvline(x=lr_steepest, color="red")
+        ax.axvline(x=lr_at_min / 10, color="orange")
+        ax.axvline(x=lr_14, color="yellow")
+        ax.axvline(x=lr_13, color="blue")
+        ax.axvline(x=lr_12, color="cyan")
+        ax.axvline(x=lr_23, color="green")
+        ax.axvline(x=lr_recomend, color="black", ls=":")
+    if figpth:
+        # Save figure
+        os.makedirs(os.path.dirname(figpth), exist_ok=True)
+        plt.savefig(figpth)
+        if verbose:
+            print("LR Finder results saved to {}".format(figpth))
+    if show:
+        plt.show()
+    return lr_recomend
 
 
 class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):

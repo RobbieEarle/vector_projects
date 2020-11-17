@@ -7,15 +7,16 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0%1                      # array value
-#SBATCH --output=logs/th1_batch/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=th1_batch
+#SBATCH --array=0-19%3                      # array value
+#SBATCH --output=logs/th1_nparam2/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=th1_nparam2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-BATCH_SIZE="$2"
+DATASET="$2"
+ACTFUN="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -38,5 +39,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 2 --num_params 100000000 --dataset cifar100 --actfun max --mix_pre_apex --aug --batch_size $BATCH_SIZE
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 2 --num_params 100000000 --dataset cifar100 --actfun max --mix_pre_apex --aug --batch_size $BATCH_SIZE
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 100 --dataset $DATASET --actfun $ACTFUN --mix_pre_apex --aug --var_n_params new
