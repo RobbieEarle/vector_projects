@@ -62,7 +62,7 @@ def get_actfuns(actfun):
 
 def get_num_params(args):
     if args.var_n_params == 'new':
-        num_params = [1e4, 1e5, 1e6, 1e7, 1e8]
+        num_params = [3e4, 1e5, 1e6, 1e7, 1e8]
     elif args.num_params == 0:
         num_params = [1e7]
     else:
