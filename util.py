@@ -659,10 +659,12 @@ def run_lr_finder(
     if args.mix_pre_apex:
         model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
     lr_finder = LRFinder(model, optimizer, criterion, device=device)
+    bigstart_actfuns = ['l2', 'linf']
+    start_lr = 1e-6 if args.actfun in bigstart_actfuns else 1e-7
     lr_finder.range_test(
         train_loader,
         val_loader=val_loader,
-        start_lr=1e-7,
+        start_lr=start_lr,
         end_lr=10,
         num_iter=200,
         diverge_th=3,
