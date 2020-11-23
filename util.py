@@ -659,7 +659,7 @@ def run_lr_finder(
     if args.mix_pre_apex:
         model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
     lr_finder = LRFinder(model, optimizer, criterion, device=device)
-    min_lr = 1e-7 if args.model == 'mlp' else 1e-9
+    min_lr = 1e-7 if args.model == 'mlp' else 1e-10
     lr_finder.range_test(
         train_loader,
         val_loader=val_loader,
