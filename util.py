@@ -668,6 +668,8 @@ def run_lr_finder(
         num_iter=200,
         diverge_th=3,
     )
+    print(lr_finder.history["lr"])
+    print(lr_finder.history["loss"])
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
     min_loss = lr_finder.history["loss"][min_index]
