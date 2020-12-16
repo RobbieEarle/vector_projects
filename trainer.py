@@ -17,6 +17,7 @@ from models import mlp
 from models import cnn
 from models import preact_resnet
 import util
+import hparams
 import hyper_params as hp
 import hyper_params_new as hp2
 
@@ -123,6 +124,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu', 'tanh']
     if actfun in actfuns_1d:
         curr_k = 1
+    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 
     if args.one_shot:
         util.seed_all(curr_seed)
@@ -131,7 +133,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    resnet_width=resnet_width, verbose=args.verbose)
 
         util.seed_all(curr_seed)
-        kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
         dataset_temp = util.load_dataset(
             args,
             args.model,
@@ -153,10 +154,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             show=False,
             device=device,
         )
+        curr_hparams = {}
         print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
 
     else:
-        lr = 0.01
+        curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed)
+        lr = curr_hparams['max_lr']
 
     criterion = nn.CrossEntropyLoss()
     num_epochs = args.num_epochs
@@ -187,13 +190,27 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     sample_size = dataset[4]
     batch_size = dataset[5]
 
-    optimizer = optim.Adam(model_params)
-    scheduler = OneCycleLR(optimizer,
-                           max_lr=lr,
-                           epochs=num_epochs,
-                           steps_per_epoch=int(math.floor(sample_size / batch_size)),
-                           cycle_momentum=False
-                           )
+    if args.one_shot:
+        optimizer = optim.Adam(model_params)
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=lr,
+                               epochs=num_epochs,
+                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
+                               cycle_momentum=False
+                               )
+    else:
+        optimizer = optim.Adam(model_params,
+                               betas=(curr_hparams['beta1'], curr_hparams['beta2']),
+                               eps=curr_hparams['eps'],
+                               weight_decay=curr_hparams['wd']
+                               )
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=curr_hparams['max_lr'],
+                               epochs=num_epochs,
+                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
+                               pct_start=curr_hparams['cycle_peak'],
+                               cycle_momentum=False
+                               )
 
     epoch = 1
     if checkpoint is not None:
@@ -328,7 +345,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         for param_group in optimizer.param_groups:
             lr_curr = param_group['lr']
         print(
-            "    Epoch {}: LR {:1.4f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
+            "    Epoch {}: LR {:1.5f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
             "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}"
                 .format(epoch, lr_curr, epoch_aug_train_acc, epoch_val_acc, epoch_aug_val_acc,
                         epoch_aug_train_loss, epoch_val_loss, epoch_aug_val_loss, (time.time() - start_time)), flush=True
@@ -403,7 +420,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'epoch_aug_val_acc': float(epoch_aug_val_acc),
                              'hp_idx': hp_idx,
                              'curr_lr': lr_curr,
-                             'found_lr':lr
+                             'found_lr': lr,
+                             'hparams': curr_hparams
                              })
 
         epoch += 1

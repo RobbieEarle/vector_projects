@@ -7,9 +7,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-19%5                      # array value
-#SBATCH --output=logs_new/hparam_oneshot1/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=hparam_oneshot1
+#SBATCH --array=0-119%15                      # array value
+#SBATCH --output=logs_new/hparam_rs1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=hparam_rs1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -39,5 +39,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --one_shot --label _$EPOCHS
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --one_shot --label _$EPOCHS
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --label _$EPOCHS
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --label _$EPOCHS

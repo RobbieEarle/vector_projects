@@ -34,7 +34,7 @@ def setup_experiment(args):
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
                   'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
                   'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr',
-                  'found_lr']
+                  'found_lr', 'hparams']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -135,8 +135,8 @@ if __name__ == '__main__':
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
-    parser.add_argument('--dataset', type=str, default='mnist', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='relu')  # all
+    parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
+    parser.add_argument('--actfun', type=str, default='max')  # all
     parser.add_argument('--optim', type=str, default='onecycle')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
