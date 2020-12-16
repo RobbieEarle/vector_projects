@@ -124,35 +124,39 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     if actfun in actfuns_1d:
         curr_k = 1
 
-    util.seed_all(curr_seed)
-    model_temp, _ = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
-                               perm_method=perm_method, device=device, resnet_ver=resnet_ver,
-                               resnet_width=resnet_width, verbose=args.verbose)
+    if args.one_shot:
+        util.seed_all(curr_seed)
+        model_temp, _ = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
+                                   perm_method=perm_method, device=device, resnet_ver=resnet_ver,
+                                   resnet_width=resnet_width, verbose=args.verbose)
 
-    util.seed_all(curr_seed)
-    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
-    dataset_temp = util.load_dataset(
-        args,
-        args.model,
-        args.dataset,
-        seed=curr_seed,
-        validation=True,
-        batch_size=args.batch_size,
-        train_sample_size=curr_sample_size,
-        kwargs=kwargs)
+        util.seed_all(curr_seed)
+        kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
+        dataset_temp = util.load_dataset(
+            args,
+            args.model,
+            args.dataset,
+            seed=curr_seed,
+            validation=True,
+            batch_size=args.batch_size,
+            train_sample_size=curr_sample_size,
+            kwargs=kwargs)
 
-    start_time = time.time()
-    lr = util.run_lr_finder(
-        args,
-        model_temp,
-        dataset_temp[0],
-        torch.optim.Adam(model_temp.parameters()),
-        nn.CrossEntropyLoss(),
-        val_loader=dataset_temp[3],
-        show=False,
-        device=device,
-    )
-    print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
+        start_time = time.time()
+        lr = util.run_lr_finder(
+            args,
+            model_temp,
+            dataset_temp[0],
+            torch.optim.Adam(model_temp.parameters()),
+            nn.CrossEntropyLoss(),
+            val_loader=dataset_temp[3],
+            show=False,
+            device=device,
+        )
+        print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
+
+    else:
+        lr = 0.01
 
     criterion = nn.CrossEntropyLoss()
     num_epochs = args.num_epochs
