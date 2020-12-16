@@ -237,7 +237,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
                             util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
-                            perm_method, resnet_ver, resnet_width, args.optim, args.validation)
+                            perm_method, resnet_ver, resnet_width, args.optim, args.validation, hparams)
 
     best_val_acc = 0
 

@@ -244,7 +244,7 @@ def seed_all(seed=None, only_current_gpu=False, mirror_gpus=False):
 def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
                        num_params, sample_size, batch_size, curr_k, curr_p,
                        curr_g, perm_method, resnet_ver, resnet_width, optim,
-                       validation):
+                       validation, hparams):
 
     print(
         "\n===================================================================\n\n"
@@ -261,10 +261,11 @@ def print_exp_settings(seed, dataset, outfile_path, curr_model, curr_actfun,
         "Num Training Samples: {}\n"
         "Batch Size: {}\n"
         "Optimizer: {}\n"
-        "Validation: {}\n\n"
+        "Validation: {}\n"
+        "Hyper-Parameters: {}\n\n"
             .format(seed, dataset, outfile_path, curr_model, resnet_ver, resnet_width, curr_actfun,
                     curr_k, curr_p, curr_g, perm_method, num_params, sample_size, batch_size,
-                    optim, validation,), flush=True
+                    optim, validation, hparams), flush=True
     )
 
 
