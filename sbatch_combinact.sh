@@ -7,9 +7,9 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-119%40                     # array value
-#SBATCH --output=logs_new/hparam_rs3/100e/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=hparam_rs3
+#SBATCH --array=0-119%10                     # array value
+#SBATCH --output=logs_new/hparam_rs4/10e/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=hparam_rs4
 
 source ~/.bashrc
 source activate ~/venvs/combinact
