@@ -120,6 +120,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     resnet_ver = args.resnet_ver
     resnet_width = args.resnet_width
+    num_epochs = args.num_epochs
 
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu', 'tanh']
     if actfun in actfuns_1d:
@@ -158,12 +159,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
 
     else:
-        curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed)
+        curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed, num_epochs)
         lr = curr_hparams['max_lr']
 
     criterion = nn.CrossEntropyLoss()
-    num_epochs = args.num_epochs
-
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
                                perm_method=perm_method, device=device, resnet_ver=resnet_ver,
                                resnet_width=resnet_width, verbose=args.verbose)
@@ -421,7 +420,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'hp_idx': hp_idx,
                              'curr_lr': lr_curr,
                              'found_lr': lr,
-                             'hparams': curr_hparams
+                             'hparams': curr_hparams,
+                             'epochs': num_epochs
                              })
 
         epoch += 1
