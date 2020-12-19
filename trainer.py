@@ -159,7 +159,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         print("Time to find LR: {}\n LR found: {:3e}".format(time.time() - start_time, lr))
 
     else:
-        curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed, num_epochs)
+        curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed,
+                                           num_epochs, args.search, args.hp_idx)
         lr = curr_hparams['max_lr']
 
     criterion = nn.CrossEntropyLoss()

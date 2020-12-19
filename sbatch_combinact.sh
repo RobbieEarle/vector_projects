@@ -7,16 +7,16 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-119%40                     # array value
-#SBATCH --output=logs_new/hparam_rs4/100e/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=hparam_rs4
+#SBATCH --array=0-20%10                     # array value
+#SBATCH --output=logs_new/hparam_rs_final/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=hparam_rs_final
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-EPOCHS="$2"
-ACTFUN="$3"
+ACTFUN="$2"
+HP_IDX="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -39,5 +39,11 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --label _$EPOCHS
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs $EPOCHS --dataset cifar100 --actfun $ACTFUN --aug --validation --label _$EPOCHS
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _10_$HP_IDX --search --hp_idx $HP_IDX
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _10_$HP_IDX --search --hp_idx $HP_IDX
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 50 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _50_$HP_IDX --search --hp_idx $HP_IDX
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 50 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _50_$HP_IDX --search --hp_idx $HP_IDX
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _50_$HP_IDX --search --hp_idx $HP_IDX
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _50_$HP_IDX --search --hp_idx $HP_IDX
