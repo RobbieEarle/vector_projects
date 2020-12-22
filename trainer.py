@@ -18,8 +18,6 @@ from models import cnn
 from models import preact_resnet
 import util
 import hparams
-import hyper_params as hp
-import hyper_params_new as hp2
 
 import numpy as np
 import csv
