@@ -7,16 +7,14 @@
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-20%5                     # array value
-#SBATCH --output=logs_new/hparam_rs_final2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=hparam_rs_final2
+#SBATCH --array=0-119%60                    # array value
+#SBATCH --output=logs_new/rs1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=rs1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
 SAVE_PATH="$1"
-ACTFUN="$2"
-HP_IDX="$3"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 touch /checkpoint/robearle/${SLURM_JOB_ID}
@@ -39,5 +37,41 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _100_$HP_IDX --search --hp_idx $HP_IDX
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --label _100_$HP_IDX --search --hp_idx $HP_IDX
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun max --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun max --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun relu --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun relu --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun bin_all_max_min --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun bin_all_max_min --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun bin_all_max_min --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_xnor --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_or --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_or --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_or --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_all_or_and --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_all_or_and --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_all_or_and --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_all_or_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_all_or_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_all_or_xnor --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_all_or_and_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_all_or_and_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_all_or_and_xnor --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_part_or_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_part_or_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_part_or_xnor --aug --validation --search
+
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model mlp --optim onecycle --num_epochs 10 --dataset mnist --actfun ail_part_or_and_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar10 --actfun ail_part_or_and_xnor --aug --validation --search
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model cnn --optim onecycle --num_epochs 10 --dataset cifar100 --actfun ail_part_or_and_xnor --aug --validation --search
+

@@ -142,7 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
     parser.add_argument('--sample_size', type=int, default=None, help='Training sample size')
     parser.add_argument('--batch_size', type=int, default=None, help='Batch size during training')
-    parser.add_argument('--num_epochs', type=int, default=56, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of training epochs')
     parser.add_argument('--wd', type=float, default=1, help='Weight decay multiplier')
     parser.add_argument('--hyper_params', type=str, default='', help='Which hyper param settings to use')
     parser.add_argument('--perm_method', type=str, default='shuffle', help='Which permuation method to use')  # shuffle
