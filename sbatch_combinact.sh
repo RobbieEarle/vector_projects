@@ -9,7 +9,7 @@
 #SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-119%60                    # array value
 #SBATCH --output=logs_new/rs2/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=rs2
+#SBATCH --job-name=rs3
 
 source ~/.bashrc
 source activate ~/venvs/combinact
