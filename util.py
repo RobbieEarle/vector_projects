@@ -12,6 +12,7 @@ from collections import namedtuple
 from sklearn import model_selection
 from sklearn.datasets import load_iris
 import os
+import csv
 try:
     from torch_lr_finder import LRFinder
     import matplotlib.pyplot as plt
@@ -654,6 +655,9 @@ def run_lr_finder(
         figpth=None,
         device=None,
         recommender="logmean14",
+        fieldnames=None,
+        outfile_path=None,
+        hparams=None,
 ):
     if verbose:
         print("Running learning rate finder")
@@ -669,14 +673,23 @@ def run_lr_finder(
         num_iter=200,
         diverge_th=3,
     )
-    # print(lr_finder.history["lr"])
-    # print(lr_finder.history["loss"])
     min_index = np.argmin(lr_finder.history["loss"])
     lr_at_min = lr_finder.history["lr"][min_index]
     min_loss = lr_finder.history["loss"][min_index]
     max_index = np.argmax(lr_finder.history["loss"][:min_index])
     lr_at_max = lr_finder.history["lr"][max_index]
     max_loss = lr_finder.history["loss"][max_index]
+
+    # Outputting data to CSV at end of epoch
+    if fieldnames and outfile_path:
+        with open(outfile_path, mode='a') as out_file:
+            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+            writer.writerow({'hyperparam_set': hparams,
+                             'seed': args.seed,
+                             'lr': lr_finder.history["lr"],
+                             'loss': lr_finder.history["loss"]
+                             })
+
     if not show and not figpth:
         lr_steepest = None
     else:
