@@ -29,7 +29,7 @@ def setup_experiment(args):
 
     # =========================== Creating new output file
     if args.one_shot and args.search:
-        fieldnames = ['hyperparam_set', 'seed', 'lr', 'loss']
+        fieldnames = ['hp_idx', 'hyperparam_set', 'seed', 'lr', 'loss']
     else:
         fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
                       'sample_size', 'model', 'batch_size', 'alpha_primes', 'alphas',

@@ -684,7 +684,8 @@ def run_lr_finder(
     if fieldnames and outfile_path:
         with open(outfile_path, mode='a') as out_file:
             writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writerow({'hyperparam_set': hparams,
+            writer.writerow({'hp_idx': args.hp_idx,
+                             'hyperparam_set': hparams,
                              'seed': args.seed,
                              'lr': lr_finder.history["lr"],
                              'loss': lr_finder.history["loss"]
