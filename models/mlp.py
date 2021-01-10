@@ -9,6 +9,8 @@ import numpy as np
 
 class MLP(nn.Module):
 
+    layers = []
+
     def __init__(self, actfun,
                  input_dim=784,
                  output_dim=10,
@@ -88,13 +90,17 @@ class MLP(nn.Module):
     def forward(self, x):
 
         x = x.reshape(x.size(0), self.input_dim)
-
+        self.layers.append({'inputs': x})
         x = self.linear_layers['l1'](x)
+        self.layers[0]['pre_act'] = x
         x = self.batch_norms['l1'](x) if not self.iris else x
+        self.layers[0]['pre_act_bn'] = x
         x = self.activate(x, 0)
         x = x.unsqueeze(0) if len(x.shape) == 1 else x
+        self.layers[0]['activations'] = x
 
         all_outputs = None
+        self.layers.append({'inputs': x})
         for group_idx, group_fc in enumerate(self.linear_layers['l2']):
             group_idx_start = group_idx * int(x.shape[1] / self.g)
             group_idx_end = (group_idx + 1) * int(x.shape[1] / self.g)
@@ -105,11 +111,16 @@ class MLP(nn.Module):
             else:
                 all_outputs = torch.cat((all_outputs, curr_outputs), dim=1)
         x = all_outputs
+        self.layers[1]['pre_act'] = x
         x = self.batch_norms['l2'](x) if not self.iris else x
+        self.layers[1]['pre_act_bn'] = x
         x = self.activate(x, 1)
         x = x.unsqueeze(0) if len(x.shape) == 1 else x
+        self.layers[1]['activations'] = x
 
+        self.layers.append({'inputs': x})
         x = self.linear_layers['l3'](x)
+        self.layers[2]['outputs'] = x
 
         return x
 
