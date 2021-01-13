@@ -127,7 +127,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     if args.one_shot:
         util.seed_all(curr_seed)
-        model_temp, _ = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
+        model, _ = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
                                    perm_method=perm_method, device=device, resnet_ver=resnet_ver,
                                    resnet_width=resnet_width, verbose=args.verbose)
 
@@ -144,7 +144,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         curr_hparams = hparams.get_hparams(args.model, args.dataset, actfun, curr_seed,
                                            num_epochs, args.search, args.hp_idx, args.one_shot)
-        optimizer = optim.Adam(model_temp.parameters(),
+        optimizer = optim.Adam(model.parameters(),
                                betas=(curr_hparams['beta1'], curr_hparams['beta2']),
                                eps=curr_hparams['eps'],
                                weight_decay=curr_hparams['wd']
@@ -155,7 +155,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         oneshot_outfile_path = outfile_path if args.search else None
         lr = util.run_lr_finder(
             args,
-            model_temp,
+            model,
             dataset_temp[0],
             optimizer,
             nn.CrossEntropyLoss(),
