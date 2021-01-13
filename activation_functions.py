@@ -437,6 +437,8 @@ _ACTFUNS = {
         combinact,
     'relu':
         F.relu_,
+    'nrelu':
+        lambda z: F.relu_(z).mul_(1.414213562),
     'tanh':
         F.tanh,
     'leaky_relu':
@@ -445,6 +447,8 @@ _ACTFUNS = {
         torch.abs_,
     'swish':
         lambda z: z * torch.sigmoid(z),
+    'nswish':
+        lambda z: z.mul_(torch.sigmoid(z)).mul_(1.676531339),
     'prod':
         lambda z: torch.prod(z, dim=2),
     'max':

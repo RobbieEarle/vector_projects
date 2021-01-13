@@ -590,7 +590,7 @@ def get_rms_hyperparams(args):
 def get_grid_id(actfun, args):
     if actfun == 'max':
         return 6
-    elif actfun == 'relu' or actfun == 'swish':
+    elif 'relu' in actfun or actfun == 'swish' or actfun == 'nswish':
         return 16
     elif actfun == 'swishk':
         if args.perm_method == 'invert':
