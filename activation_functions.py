@@ -252,88 +252,109 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
 
 def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
 
-    bin_and = None
-    bin_xor = None
     bin_pass = None
+
     if actfun in bin_partition_actfuns:
         if actfun == 'bin_part_full':
             partition = math.floor(z.shape[1] / 4)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
-            bin_xor = sgm(z[:, 2*partition: 3*partition, ...])
-            bin_pass = z[:, 3*partition:, ...]
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                torch.min(z[:, partition:2 * partition, ...], dim=2).values,
+                sgm(z[:, 2 * partition: 3 * partition, ...]),
+            ]
+            bin_pass = z[:, 3 * partition:, ...]
         elif actfun == 'bin_part_max_min_sgm':
             partition = math.floor(z.shape[1] / 3)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
-            bin_xor = sgm(z[:, 2*partition:, ...])
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                torch.min(z[:, partition:2 * partition, ...], dim=2).values,
+                sgm(z[:, 2 * partition:, ...]),
+            ]
         elif actfun == 'bin_part_max_sgm':
             partition = math.floor(z.shape[1] / 2)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_xor = sgm(z[:, partition:, ...])
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                sgm(z[:, partition:, ...]),
+            ]
         elif actfun == 'ail_part_full':
             partition = math.floor(z.shape[1] / 4)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_and_approx(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...]),
+            ]
+            bin_pass = z[:, 3 * partition:, ...]
             bin_pass = z[:, 3 * partition:, ...]
         elif actfun == 'ail_part_or_and_xnor':
             partition = math.floor(z.shape[1] / 3)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, 2 * partition:, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_and_approx(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx(z[:, 2 * partition:, ...]),
+            ]
         elif actfun == 'ail_part_or_xnor':
             partition = math.floor(z.shape[1] / 2)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, partition:, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_xnor_approx(z[:, partition:, ...]),
+            ]
     elif actfun in bin_all_actfuns:
         if actfun == 'bin_all_max_sgm':
-            bin_or = torch.max(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                sgm(z),
+            ]
         elif actfun == 'bin_all_max_min':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+            ]
         elif actfun == 'bin_all_max_min_sgm':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+                sgm(z),
+            ]
         elif actfun == 'bin_all_full':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+                sgm(z),
+            ]
             bin_pass = z
         elif actfun == 'ail_all_or_xnor':
-            bin_or = logistic_or_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_xnor_approx(z),
+            ]
         elif actfun == 'ail_all_or_and':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+            ]
         elif actfun == 'ail_all_or_and_xnor':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+                logistic_xnor_approx(z),
+            ]
         elif actfun == 'ail_all_full':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+                logistic_xnor_approx(z),
+            ]
             bin_pass = z
 
-    z = bin_or
-
-    if bin_and is not None:
-        z = torch.cat((z, bin_and), dim=1)
-    if bin_xor is not None:
-        z = torch.cat((z, bin_xor), dim=1)
     if bin_pass is not None:
         if layer_type == 'conv':
             bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2],
                                         bin_pass.shape[3], bin_pass.shape[4])
         elif layer_type == 'linear':
             bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2])
+        zs.append(bin_pass)
 
-        z = torch.cat((z, bin_pass), dim=1)
-
-    return z
+    return torch.cat(zs, dim=1)
 
 
 sgm = SignedGeomean.apply
