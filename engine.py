@@ -158,6 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--momentum', type=float, default=0, help='Maximum LR during one cycle schedule')
     parser.add_argument('--checkpoints', action='store_true', help='When true, stores permanent checkpoints')
     parser.add_argument('--aug', action='store_true', help='When true, uses training set augmentations')
+    parser.add_argument('--weight_init_method', type=str, default='', help='Weight init method')
 
     parser.add_argument('--var_n_params', type=str, default='', help='varies number of network parameters')
     parser.add_argument('--var_n_samples', action='store_true', help='When true, varies number of training samples')

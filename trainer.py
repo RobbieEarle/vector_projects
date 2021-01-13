@@ -132,6 +132,13 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    resnet_width=resnet_width, verbose=args.verbose)
 
         util.seed_all(curr_seed)
+        if args.weight_init_method == "orthogonal":
+            print("Using orthogonal weight initialization")
+            model.apply(util.init_weight_orthogonal)
+        elif args.weight_init_method:
+            raise ValueError("Unsupported weight init method: {}".format(args.weight_init_method))
+
+        util.seed_all(curr_seed)
         dataset_temp = util.load_dataset(
             args,
             args.model,
@@ -180,7 +187,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    resnet_width=resnet_width, verbose=args.verbose)
 
         util.seed_all(curr_seed)
-        model.apply(util.weights_init)
+        if args.weight_init_method == "orthogonal":
+            print("Using orthogonal weight initialization")
+            model.apply(util.init_weight_orthogonal)
+        elif args.weight_init_method:
+            print("Using old weight initialization")
+            model.apply(util.weights_init)
 
         util.seed_all(curr_seed)
         dataset = util.load_dataset(
