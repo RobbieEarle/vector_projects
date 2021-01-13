@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.utils.data
 import torch.nn as nn
@@ -125,6 +127,72 @@ def weights_init(m):
     if type(m) == nn.Linear:
         m.weight.data.uniform_(-1 * irange, irange)
         m.bias.data.fill_(0)
+
+
+
+def block_orthogonal_(tensor, gain=1, block_size="equal"):
+    r"""Fills the input `Tensor` with a (semi) orthogonal matrix, as
+    described in `Exact solutions to the nonlinear dynamics of learning in deep
+    linear neural networks` - Saxe, A. et al. (2013). The input tensor must have
+    at least 2 dimensions, and for tensors with more than 2 dimensions the
+    trailing dimensions are flattened. If the input tensor has more rows than
+    columns, the rows are split into blocks within which the vectors are
+    orthogonal.
+
+    Args:
+        tensor: an n-dimensional `torch.Tensor`, where :math:`n \geq 2`
+        gain: optional scaling factor
+
+    Examples:
+        >>> w = torch.empty(3, 5)
+        >>> nn.init.orthogonal_(w)
+
+    See also:
+        torch.nn.orthogonal_
+    """
+    if tensor.ndimension() < 2:
+        raise ValueError("Only tensors with 2 or more dimensions are supported")
+
+    rows = tensor.size(0)
+    cols = tensor.numel() // rows
+    flattened = tensor.new(rows, cols)
+
+    n_block = math.ceil(rows / cols)
+    if block_size == "max":
+        n_per_block = cols
+    elif block_size == "equal":
+        n_per_block = rows / n_block
+    else:
+        raise ValueError("Unsupported block_size value: {}".format(block_size))
+
+    with torch.no_grad():
+        for i_block in range(n_block):
+            i = int(round(i_block * n_per_block))
+            j = int(round((i_block + 1) * n_per_block))
+            if i_block == n_block - 1:
+                j = rows + 1
+            nn.init.orthogonal_(flattened[i : j, :])
+
+        tensor.view_as(flattened).copy_(flattened)
+        tensor.mul_(gain)
+
+    return tensor
+
+
+def init_weight_orthogonal(m):
+    """Orthogonal weight initializations.
+
+    Args:
+        m (nn.Module): module to init
+        n (str): module name
+    """
+    if isinstance(m, nn.BatchNorm2d):
+        m.weight.data.fill_(1.0)
+        m.bias.data.zero_()
+    elif isinstance(m, (nn.Conv2d, nn.Linear)):
+        block_orthogonal_(m.weight.data)
+        if m.bias is not None:
+            m.bias.data.zero_()
 
 
 def get_model_params(model):
