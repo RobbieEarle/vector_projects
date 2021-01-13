@@ -94,67 +94,6 @@ def get_combinact_actfuns(reduce_actfuns=False):
         return _COMBINACT_ACTFUNS
 
 
-_ACTFUNS = {
-    'ail_and':
-        lambda z: logistic_and_approx(z),
-    'ail_or':
-        lambda z: logistic_or_approx(z),
-    'ail_xnor':
-        lambda z: logistic_xnor_approx(z),
-    'combinact':
-        lambda z: combinact(z),
-    'relu':
-        lambda z: F.relu_(z),
-    'tanh':
-        lambda z: F.tanh(z),
-    'leaky_relu':
-        lambda z: F.leaky_relu_(z),
-    'abs':
-        lambda z: torch.abs_(z),
-    'swish':
-        lambda z: z * torch.sigmoid(z),
-    'prod':
-        lambda z: torch.prod(z, dim=2),
-    'max':
-        lambda z: torch.max(z, dim=2).values,
-    'min':
-        lambda z: torch.min(z, dim=2).values,
-    'signed_geomean':
-        lambda z: sgm(z),
-    'swishk':
-        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
-    'swishy':
-        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
-    'l1':
-        lambda z: (torch.sum(z.abs(), dim=2)),
-    'l2':
-        lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
-    'l3-signed':
-        lambda z: signed_l3(z),
-    'linf':
-        lambda z: torch.max(z.abs(), dim=2).values,
-    'lse':
-        lambda z: torch.logsumexp(z, dim=2),
-    'lae':
-        lambda z: logavgexp(z, dim=2),
-    'nlsen':
-        lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
-    'nlaen':
-        lambda z: -1 * logavgexp(-1 * z, dim=2),
-    'lse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'lae-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'nlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'nlaen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'multi_relu':
-        lambda z: multi_relu(z),
-}
-_ln2 = 0.6931471805599453
-
-
 def logistic_and_approx(z):
     return torch.where(
         (z < 0).all(dim=2),
@@ -398,3 +337,64 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
 
 
 sgm = SignedGeomean.apply
+
+
+_ln2 = 0.6931471805599453
+_ACTFUNS = {
+    'ail_and':
+        lambda z: logistic_and_approx(z),
+    'ail_or':
+        lambda z: logistic_or_approx(z),
+    'ail_xnor':
+        lambda z: logistic_xnor_approx(z),
+    'combinact':
+        lambda z: combinact(z),
+    'relu':
+        lambda z: F.relu_(z),
+    'tanh':
+        lambda z: F.tanh(z),
+    'leaky_relu':
+        lambda z: F.leaky_relu_(z),
+    'abs':
+        lambda z: torch.abs_(z),
+    'swish':
+        lambda z: z * torch.sigmoid(z),
+    'prod':
+        lambda z: torch.prod(z, dim=2),
+    'max':
+        lambda z: torch.max(z, dim=2).values,
+    'min':
+        lambda z: torch.min(z, dim=2).values,
+    'signed_geomean':
+        lambda z: sgm(z),
+    'swishk':
+        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
+    'swishy':
+        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
+    'l1':
+        lambda z: (torch.sum(z.abs(), dim=2)),
+    'l2':
+        lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
+    'l3-signed':
+        lambda z: signed_l3(z),
+    'linf':
+        lambda z: torch.max(z.abs(), dim=2).values,
+    'lse':
+        lambda z: torch.logsumexp(z, dim=2),
+    'lae':
+        lambda z: logavgexp(z, dim=2),
+    'nlsen':
+        lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
+    'nlaen':
+        lambda z: -1 * logavgexp(-1 * z, dim=2),
+    'lse-approx':
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'lae-approx':
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'nlsen-approx':
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'nlaen-approx':
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'multi_relu':
+        lambda z: multi_relu(z),
+}
