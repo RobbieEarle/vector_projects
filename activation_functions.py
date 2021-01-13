@@ -363,21 +363,21 @@ sgm = SignedGeomean.apply
 _ln2 = 0.6931471805599453
 _ACTFUNS = {
     'ail_and':
-        lambda z: logistic_and_approx(z),
+        logistic_and_approx,
     'ail_or':
-        lambda z: logistic_or_approx(z),
+        logistic_or_approx,
     'ail_xnor':
-        lambda z: logistic_xnor_approx(z),
+        logistic_xnor_approx,
     'combinact':
-        lambda z: combinact(z),
+        combinact,
     'relu':
-        lambda z: F.relu_(z),
+        F.relu_,
     'tanh':
-        lambda z: F.tanh(z),
+        F.tanh,
     'leaky_relu':
-        lambda z: F.leaky_relu_(z),
+        F.leaky_relu_,
     'abs':
-        lambda z: torch.abs_(z),
+        torch.abs_,
     'swish':
         lambda z: z * torch.sigmoid(z),
     'prod':
@@ -387,7 +387,7 @@ _ACTFUNS = {
     'min':
         lambda z: torch.min(z, dim=2).values,
     'signed_geomean':
-        lambda z: sgm(z),
+        sgm,
     'swishk':
         lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
     'swishy':
@@ -397,7 +397,7 @@ _ACTFUNS = {
     'l2':
         lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
     'l3-signed':
-        lambda z: signed_l3(z),
+        signed_l3,
     'linf':
         lambda z: torch.max(z.abs(), dim=2).values,
     'lse':
@@ -417,5 +417,5 @@ _ACTFUNS = {
     'nlaen-approx':
         lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
     'multi_relu':
-        lambda z: multi_relu(z),
+        multi_relu,
 }
