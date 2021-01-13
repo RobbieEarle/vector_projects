@@ -57,9 +57,11 @@ def activate(x, actfun, p=1, k=1, M=None,
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
     bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm',
-                             'ail_part_full', 'ail_part_or_and_xnor', 'ail_part_or_xnor']
+                             'ail_part_full', 'ail_part_or_and_xnor', 'ail_part_or_xnor',
+                             'nail_part_full', 'nail_part_or_and_xnor', 'nail_part_or_xnor']
     bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm',
-                       'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor']
+                       'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor',
+                       'nail_all_full', 'nail_all_or_and', 'nail_all_or_xnor', 'nail_all_or_and_xnor']
 
     if actfun == 'combinact':
         x = combinact(x,
@@ -113,6 +115,20 @@ def logistic_or_approx(z):
 def logistic_xnor_approx(z):
     return torch.sign(torch.prod(z, dim=2)) * torch.min(z.abs(), dim=2).values
 
+
+def logistic_and_approx_normalized(z):
+    # divide by math.sqrt((1 + 2.5 * np.pi) / (2 * math.pi))
+    return logistic_and_approx(z).mul_(0.8424043984960415)
+
+
+def logistic_or_approx_normalized(z):
+    # divide by math.sqrt((1 + 2.5 * np.pi) / (2 * math.pi))
+    return logistic_or_approx(z).mul_(0.8424043984960415)
+
+
+def logistic_xnor_approx_normalized(z):
+    # divide by math.sqrt(1 - 2 / math.pi)
+    return logistic_xnor_approx(z).mul_(1.658896739970306)
 
 def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, reduce_actfuns=False):
 
@@ -284,6 +300,13 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
                 logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...]),
             ]
             bin_pass = z[:, 3 * partition:, ...]
+        elif actfun == 'nail_part_full':
+            partition = math.floor(z.shape[1] / 4)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_and_approx_normalized(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx_normalized(z[:, 2 * partition: 3 * partition, ...]),
+            ]
             bin_pass = z[:, 3 * partition:, ...]
         elif actfun == 'ail_part_or_and_xnor':
             partition = math.floor(z.shape[1] / 3)
@@ -292,11 +315,24 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
                 logistic_and_approx(z[:, partition:2 * partition, ...]),
                 logistic_xnor_approx(z[:, 2 * partition:, ...]),
             ]
+        elif actfun == 'nail_part_or_and_xnor':
+            partition = math.floor(z.shape[1] / 3)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_and_approx_normalized(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx_normalized(z[:, 2 * partition:, ...]),
+            ]
         elif actfun == 'ail_part_or_xnor':
             partition = math.floor(z.shape[1] / 2)
             zs = [
                 logistic_or_approx(z[:, :partition, ...]),
                 logistic_xnor_approx(z[:, partition:, ...]),
+            ]
+        elif actfun == 'nail_part_or_xnor':
+            partition = math.floor(z.shape[1] / 2)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_xnor_approx_normalized(z[:, partition:, ...]),
             ]
     elif actfun in bin_all_actfuns:
         if actfun == 'bin_all_max_sgm':
@@ -327,10 +363,20 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
                 logistic_or_approx(z),
                 logistic_xnor_approx(z),
             ]
+        elif actfun == 'nail_all_or_xnor':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
+            ]
         elif actfun == 'ail_all_or_and':
             zs = [
                 logistic_or_approx(z),
                 logistic_and_approx(z),
+            ]
+        elif actfun == 'nail_all_or_and':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
             ]
         elif actfun == 'ail_all_or_and_xnor':
             zs = [
@@ -338,11 +384,24 @@ def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
                 logistic_and_approx(z),
                 logistic_xnor_approx(z),
             ]
+        elif actfun == 'nail_all_or_and_xnor':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
+            ]
         elif actfun == 'ail_all_full':
             zs = [
                 logistic_or_approx(z),
                 logistic_and_approx(z),
                 logistic_xnor_approx(z),
+            ]
+            bin_pass = z
+        elif actfun == 'nail_all_full':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
             ]
             bin_pass = z
 
@@ -368,6 +427,12 @@ _ACTFUNS = {
         logistic_or_approx,
     'ail_xnor':
         logistic_xnor_approx,
+    'nail_and':
+        logistic_and_approx_normalized,
+    'nail_or':
+        logistic_or_approx_normalized,
+    'nail_xnor':
+        logistic_xnor_approx_normalized,
     'combinact':
         combinact,
     'relu':
