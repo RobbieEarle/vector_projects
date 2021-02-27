@@ -6,21 +6,20 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
-#SBATCH --array=0-19%20                    # array value
-#SBATCH --output=logs_new/p1_mlp_cnn_10/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=p1_mlp_cnn_10
+#SBATCH --array=0-99%5                    # array value
+#SBATCH --output=logs_new/wrn_50_rs1/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=wrn_50_rs1
 
 source ~/.bashrc
 source activate ~/venvs/combinact
 
-SAVE_PATH="$1"
-MODEL="$2"
-DATASET="$3"
+ACTFUN="$1"
+RN_WIDTH="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
-touch /checkpoint/robearle/${SLURM_JOB_ID}
-CHECK_DIR=/checkpoint/robearle/${SLURM_JOB_ID}
+SAVE_PATH=~/vector_projects/outputs/wrn_50_rs1
+CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
+touch $CHECK_PATH
 
 # Debugging outputs
 pwd
@@ -39,13 +38,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun max --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun relu --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun bin_all_max_min --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_xnor --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_or --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_all_or_and --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_all_or_xnor --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_all_or_and_xnor --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_part_or_xnor --aug
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model $MODEL --optim onecycle --num_epochs 10 --dataset $DATASET --actfun ail_part_or_and_xnor --aug
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar10 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
