@@ -6,7 +6,8 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --array=0-99%10                    # array value
+#SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
+#SBATCH --array=0-99%5                    # array value
 #SBATCH --output=logs_new/wrn_50_rs1/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=wrn_50_rs1
 
