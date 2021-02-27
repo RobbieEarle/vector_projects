@@ -38,5 +38,5 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar10 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_DIR --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar10 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
