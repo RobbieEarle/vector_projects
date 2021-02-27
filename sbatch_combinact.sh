@@ -6,7 +6,7 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --array=0-99%5                    # array value
+#SBATCH --array=0-99%2                    # array value
 #SBATCH --output=logs_new/wrn_50_rs1/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=wrn_50_rs1
 
