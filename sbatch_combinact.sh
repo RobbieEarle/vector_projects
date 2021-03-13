@@ -6,7 +6,7 @@
 #SBATCH --qos=normal
 #SBATCH -c 4                                # number of CPU cores
 #SBATCH --mem=8G                            # memory per node
-#SBATCH --time=40:00:00                     # max walltime, hh:mm:ss
+#SBATCH --time=100:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-99%5                    # array value
 #SBATCH --output=logs_new/wrn_50_rs1/%a-%N-%j    # %N for node name, %j for jobID
 #SBATCH --job-name=wrn_50_rs1
@@ -14,8 +14,7 @@
 source ~/.bashrc
 source activate ~/venvs/combinact
 
-ACTFUN="$1"
-RN_WIDTH="$2"
+MODEL="$1"
 SEED="$SLURM_ARRAY_TASK_ID"
 
 SAVE_PATH=~/vector_projects/outputs/wrn_50_rs1
@@ -39,5 +38,14 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar10 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --resnet_width $RN_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --actfun $ACTFUN --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_xnor --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun relu --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun max --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun swish --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun bin_all_max_min --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_or --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_all_or_and --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_all_or_xnor --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_all_or_and_xnor --resnet_width 1.5625 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_part_or_xnor --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_part_or_and_xnor --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $MODEL --aug --validation --search --mix_pre_apex
