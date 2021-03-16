@@ -43,30 +43,22 @@ def setup_experiment(args):
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
     else:
         model = args.model
-    filename = '{}-{}-{}-{}-{}{}'.format(datetime.date.today(),
-                                         args.seed,
-                                         args.dataset,
-                                         model,
-                                         args.actfun,
-                                         args.label)
+    filename = '{}{}'.format(args.seed, args.label)
 
     outfile_path = os.path.join(args.save_path, filename) + '.csv'
     mid_checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
     checkpoint = None
-
-    if not os.path.exists(outfile_path):
-        with open(outfile_path, mode='w') as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-            writer.writeheader()
-
-    all_actfuns = util.get_actfuns(args.actfun)
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
-        all_actfuns = retrieve_checkpoint(checkpoint['actfun'], all_actfuns)
+    actfun = args.actfun
 
-    # =========================== Training
-    for actfun in all_actfuns:
+    if checkpoint['actfun'] == actfun:
+        if not os.path.exists(outfile_path):
+            with open(outfile_path, mode='w') as out_file:
+                writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                writer.writeheader()
 
+        # =========================== Training
         num_params = util.get_num_params(args)
         train_samples = util.get_train_samples(args)
         p_vals, k_vals, g_vals = util.get_pkg_vals(args)
