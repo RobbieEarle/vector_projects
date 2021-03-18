@@ -224,11 +224,13 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                    )
 
         epoch = 1
+        seen_actfuns = set()
         if checkpoint is not None:
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
             epoch = checkpoint['epoch']
+            seen_actfuns = checkpoint['seen_actfuns']
             model.to(device)
             print("*** LOADED CHECKPOINT ***"
                   "\n{}"
@@ -245,6 +247,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                              checkpoint['num_params'], checkpoint['sample_size'],
                                              checkpoint['p'], checkpoint['k'], checkpoint['g'],
                                              checkpoint['perm_method']))
+        seen_actfuns.add(actfun)
 
         util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
                                 util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
@@ -268,7 +271,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                             'num_params': num_params,
                             'sample_size': sample_size,
                             'p': curr_p, 'k': curr_k, 'g': curr_g,
-                            'perm_method': perm_method
+                            'perm_method': perm_method,
+                            'seen_actfuns': seen_actfuns
                             }, mid_checkpoint_location)
 
             util.seed_all((curr_seed * args.num_epochs) + epoch)
