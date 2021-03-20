@@ -51,7 +51,7 @@ def setup_experiment(args):
     checkpoint = None
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
-    if actfun not in checkpoint['seen_actfuns']:
+    if checkpoint is not None and actfun not in checkpoint['seen_actfuns']:
         checkpoint = None
 
     if checkpoint is None or checkpoint['actfun'] == actfun:
