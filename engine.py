@@ -26,6 +26,7 @@ def setup_experiment(args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
+    actfun = args.actfun
 
     # =========================== Creating new output file
     if args.one_shot and args.search:
@@ -50,9 +51,10 @@ def setup_experiment(args):
     checkpoint = None
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
-    actfun = args.actfun
+    if actfun not in checkpoint['seen_actfuns']:
+        checkpoint = None
 
-    if checkpoint is None or checkpoint['actfun'] == actfun or actfun not in checkpoint['seen_actfuns']:
+    if checkpoint is None or checkpoint['actfun'] == actfun:
         if not os.path.exists(outfile_path):
             with open(outfile_path, mode='w') as out_file:
                 writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
