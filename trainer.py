@@ -7,10 +7,7 @@ from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
 
-try:
-    from apex import amp
-except ImportError:
-    print("Unable to load amp")
+from apex import amp
 
 import math
 from models import mlp
