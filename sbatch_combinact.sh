@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=700:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=50-99%50                    # array value
-#SBATCH --output=logs_new/wrn_50_rs2b/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=wrn_50_rs2b
+#SBATCH --output=logs_new/wrn_50_rs2c/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=wrn_50_rs2c
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -18,7 +18,7 @@ DATASET="$1"
 LABEL="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/vector_projects/outputs/wrn_50_rs2b
+SAVE_PATH=~/vector_projects/outputs/wrn_50_rs2c
 CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 touch $CHECK_PATH
 
