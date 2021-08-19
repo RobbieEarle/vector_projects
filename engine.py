@@ -52,7 +52,7 @@ def setup_experiment(args):
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
 
-    if checkpoint is None or checkpoint['actfun'] == actfun:
+    if checkpoint is None or actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns']:
         if not os.path.exists(outfile_path):
             with open(outfile_path, mode='w') as out_file:
                 writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
