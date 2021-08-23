@@ -223,27 +223,30 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         epoch = 1
         seen_actfuns = set()
         if checkpoint is not None:
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            scheduler.load_state_dict(checkpoint['scheduler'])
-            epoch = checkpoint['epoch']
-            seen_actfuns = checkpoint['seen_actfuns']
-            model.to(device)
-            print("*** LOADED CHECKPOINT ***"
-                  "\n{}"
-                  "\nSeed: {}"
-                  "\nEpoch: {}"
-                  "\nActfun: {}"
-                  "\nNum Params: {}"
-                  "\nSample Size: {}"
-                  "\np: {}"
-                  "\nk: {}"
-                  "\ng: {}"
-                  "\nperm_method: {}".format(mid_checkpoint_location, checkpoint['curr_seed'],
-                                             checkpoint['epoch'], checkpoint['actfun'],
-                                             checkpoint['num_params'], checkpoint['sample_size'],
-                                             checkpoint['p'], checkpoint['k'], checkpoint['g'],
-                                             checkpoint['perm_method']))
+            if actfun not in checkpoint['seen_actfuns']:
+                seen_actfuns = checkpoint['seen_actfuns']
+            else:
+                model.load_state_dict(checkpoint['state_dict'])
+                optimizer.load_state_dict(checkpoint['optimizer'])
+                scheduler.load_state_dict(checkpoint['scheduler'])
+                epoch = checkpoint['epoch']
+                seen_actfuns = checkpoint['seen_actfuns']
+                model.to(device)
+                print("*** LOADED CHECKPOINT ***"
+                      "\n{}"
+                      "\nSeed: {}"
+                      "\nEpoch: {}"
+                      "\nActfun: {}"
+                      "\nNum Params: {}"
+                      "\nSample Size: {}"
+                      "\np: {}"
+                      "\nk: {}"
+                      "\ng: {}"
+                      "\nperm_method: {}".format(mid_checkpoint_location, checkpoint['curr_seed'],
+                                                 checkpoint['epoch'], checkpoint['actfun'],
+                                                 checkpoint['num_params'], checkpoint['sample_size'],
+                                                 checkpoint['p'], checkpoint['k'], checkpoint['g'],
+                                                 checkpoint['perm_method']))
         seen_actfuns.add(actfun)
 
         util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
