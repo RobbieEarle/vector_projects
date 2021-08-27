@@ -8,8 +8,8 @@
 #SBATCH --mem=8G                            # memory per node
 #SBATCH --time=700:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-99%100                    # array value
-#SBATCH --output=logs_new/wrn_50_rs2d/%a-%N-%j    # %N for node name, %j for jobID
-#SBATCH --job-name=wrn_50_rs2d
+#SBATCH --output=logs_new/wrn_50_rs3/%a-%N-%j    # %N for node name, %j for jobID
+#SBATCH --job-name=wrn_50_rs3
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -18,7 +18,7 @@ DATASET="$1"
 LABEL="$2"
 SEED="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/vector_projects/outputs/wrn_50_rs2d
+SAVE_PATH=~/vector_projects/outputs/wrn_50_rs3
 CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 touch $CHECK_PATH
 
@@ -39,8 +39,8 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-# python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun max --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
-# python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun relu --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun max --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun relu --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun swish --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun bin_all_max_min --resnet_width 2 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
 python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun ail_or --resnet_width 3 --optim onecycle --num_epochs 100 --dataset $DATASET --aug --validation --search --mix_pre_apex --label $LABEL
