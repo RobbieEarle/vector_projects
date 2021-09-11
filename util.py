@@ -66,7 +66,7 @@ def get_num_params(args):
         if args.var_n_params == 'resnet':
             num_params = [80, 25, 8, 3]
         elif args.num_params == 0:
-            num_params = [1]
+            num_params = [64]
         else:
             num_params = [args.num_params]
     else:

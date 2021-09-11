@@ -1060,41 +1060,50 @@ _TEST_BOUNDS = {
 
 def get_hparams(model, dataset, actfun, seed, epochs, search=False, hp_idx=None, oneshot=False):
 
-    util.seed_all(seed)
-    rng = np.random.RandomState(seed)
-    if epochs == 10:
-        if oneshot:
-            b = _TEST_BOUNDS[model][dataset][actfun]
-        else:
-            b = _BOUNDS10[model][dataset][actfun]
-    elif epochs == 50:
-        b = _BOUNDS50[model][dataset][actfun]
-    elif epochs == 100:
-        b = _BOUNDS100[model][dataset][actfun]
-
-    if search:
-        hparams = {"beta1": 1 - np.power(10., rng.uniform(b['beta1'][0], b['beta1'][1])),
-                   "beta2": 1 - np.power(10., rng.uniform(b['beta2'][0], b['beta2'][1])),
-                   "eps": np.power(10., rng.uniform(b['eps'][0], b['eps'][1])),
-                   "wd": np.power(10., rng.uniform(b['wd'][0], b['wd'][1])),
-                   "max_lr": np.power(10., rng.uniform(b['max_lr'][0], b['max_lr'][1])),
-                   "cycle_peak": rng.uniform(b['cycle_peak'][0], b['cycle_peak'][1])
+    if model == 'efficientnet':
+        hparams = {"beta1": 0.9,
+                   "beta2": 0.999,
+                   "eps": 1e-8,
+                   "wd": 1e-4,
+                   "max_lr": 0.1,
+                   "cycle_peak": 0.2,
                    }
-        if hp_idx is not None:
-            hparams = {"beta1": 1 - np.power(10., b['beta1'][hp_idx]),
-                       "beta2": 1 - np.power(10., b['beta2'][hp_idx]),
-                       "eps": np.power(10., b['eps'][hp_idx]),
-                       "wd": np.power(10., b['wd'][hp_idx]),
-                       "max_lr": np.power(10., b['max_lr'][hp_idx]),
-                       "cycle_peak": b['cycle_peak'][hp_idx],
-                       }
     else:
-        hparams = {"beta1": 1 - np.power(10., b['beta1']),
-                   "beta2": 1 - np.power(10., b['beta2']),
-                   "eps": np.power(10., b['eps']),
-                   "wd": np.power(10., b['wd']),
-                   "max_lr": np.power(10., b['max_lr']),
-                   "cycle_peak": b['cycle_peak'],
-                   }
+        util.seed_all(seed)
+        rng = np.random.RandomState(seed)
+        if epochs == 10:
+            if oneshot:
+                b = _TEST_BOUNDS[model][dataset][actfun]
+            else:
+                b = _BOUNDS10[model][dataset][actfun]
+        elif epochs == 50:
+            b = _BOUNDS50[model][dataset][actfun]
+        elif epochs == 100:
+            b = _BOUNDS100[model][dataset][actfun]
+
+        if search:
+            hparams = {"beta1": 1 - np.power(10., rng.uniform(b['beta1'][0], b['beta1'][1])),
+                       "beta2": 1 - np.power(10., rng.uniform(b['beta2'][0], b['beta2'][1])),
+                       "eps": np.power(10., rng.uniform(b['eps'][0], b['eps'][1])),
+                       "wd": np.power(10., rng.uniform(b['wd'][0], b['wd'][1])),
+                       "max_lr": np.power(10., rng.uniform(b['max_lr'][0], b['max_lr'][1])),
+                       "cycle_peak": rng.uniform(b['cycle_peak'][0], b['cycle_peak'][1])
+                       }
+            if hp_idx is not None:
+                hparams = {"beta1": 1 - np.power(10., b['beta1'][hp_idx]),
+                           "beta2": 1 - np.power(10., b['beta2'][hp_idx]),
+                           "eps": np.power(10., b['eps'][hp_idx]),
+                           "wd": np.power(10., b['wd'][hp_idx]),
+                           "max_lr": np.power(10., b['max_lr'][hp_idx]),
+                           "cycle_peak": b['cycle_peak'][hp_idx],
+                           }
+        else:
+            hparams = {"beta1": 1 - np.power(10., b['beta1']),
+                       "beta2": 1 - np.power(10., b['beta2']),
+                       "eps": np.power(10., b['eps']),
+                       "wd": np.power(10., b['wd']),
+                       "max_lr": np.power(10., b['max_lr']),
+                       "cycle_peak": b['cycle_peak'],
+                       }
 
     return hparams

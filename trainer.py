@@ -158,29 +158,18 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     sample_size = dataset[4]
     batch_size = dataset[5]
 
-    if args.model == 'efficientnet':
-        optimizer = optim.Adam(model_params,
-                               weight_decay=1e-4,
-                               momentum=0.9)
-        scheduler = OneCycleLR(optimizer,
-                               max_lr=0.1,
-                               epochs=num_epochs,
-                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
-                               cycle_momentum=False
-                               )
-    else:
-        optimizer = optim.Adam(model_params,
-                               betas=(curr_hparams['beta1'], curr_hparams['beta2']),
-                               eps=curr_hparams['eps'],
-                               weight_decay=curr_hparams['wd']
-                               )
-        scheduler = OneCycleLR(optimizer,
-                               max_lr=curr_hparams['max_lr'],
-                               epochs=num_epochs,
-                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
-                               pct_start=curr_hparams['cycle_peak'],
-                               cycle_momentum=False
-                               )
+    optimizer = optim.Adam(model_params,
+                           betas=(curr_hparams['beta1'], curr_hparams['beta2']),
+                           eps=curr_hparams['eps'],
+                           weight_decay=curr_hparams['wd']
+                           )
+    scheduler = OneCycleLR(optimizer,
+                           max_lr=curr_hparams['max_lr'],
+                           epochs=num_epochs,
+                           steps_per_epoch=int(math.floor(sample_size / batch_size)),
+                           pct_start=curr_hparams['cycle_peak'],
+                           cycle_momentum=False
+                           )
 
     epoch = 1
     seen_actfuns = set()
