@@ -37,4 +37,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model efficientnet --batch_size 128 --num_epochs 200 --dataset cifar100 --aug --mix_pre_apex
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model efficientnet --batch_size 128 --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex

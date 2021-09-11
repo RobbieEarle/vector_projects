@@ -1065,7 +1065,7 @@ def get_hparams(model, dataset, actfun, seed, epochs, search=False, hp_idx=None,
                    "beta2": 0.999,
                    "eps": 1e-8,
                    "wd": 1e-4,
-                   "max_lr": 0.1,
+                   "max_lr": 0.01,
                    "cycle_peak": 0.2,
                    }
     else:
