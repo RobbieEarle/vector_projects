@@ -53,10 +53,10 @@ def setup_experiment(args):
         checkpoint = torch.load(mid_checkpoint_path)
 
     if checkpoint is None or actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns']:
-        # if not os.path.exists(outfile_path):
-        #     with open(outfile_path, mode='w') as out_file:
-        #         writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-        #         writer.writeheader()
+        if not os.path.exists(outfile_path):
+            with open(outfile_path, mode='w') as out_file:
+                writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                writer.writeheader()
 
         # =========================== Training
         num_params = util.get_num_params(args)
@@ -65,14 +65,14 @@ def setup_experiment(args):
         perm_methods = util.get_perm_methods(args)
         curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
             g_vals) * len(perm_methods))
-        # if checkpoint is not None:
-        #     num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
-        #     if train_samples[0] is not None:
-        #         train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
-        #     p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
-        #     k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
-        #     perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
-        #     curr_seed = checkpoint['curr_seed']
+        if checkpoint is not None:
+            num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
+            if train_samples[0] is not None:
+                train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
+            p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
+            k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
+            perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
+            curr_seed = checkpoint['curr_seed']
 
         for curr_num_params in num_params:
             for curr_sample_size in train_samples:
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     parser.add_argument('--p', type=int, default=1, help='Default p value for model')
     parser.add_argument('--k', type=int, default=2, help='Default k value for model')
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
-    parser.add_argument('--num_params', type=float, default=0, help='Adjust number of model params')
+    parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
