@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -p t4v2
+#SBATCH -p p100,t4v2
 #SBATCH --exclude=gpu102
 #SBATCH --exclude=gpu115
 #SBATCH --gres=gpu:1                        # request GPU(s)
 #SBATCH --qos=normal
-#SBATCH -c 4                                # number of CPU cores
-#SBATCH --mem=8G                            # memory per node
+#SBATCH -c 8                                # number of CPU cores
+#SBATCH --mem=32G                            # memory per node
 #SBATCH --time=700:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0%1                    # array value
 #SBATCH --output=logs_new/effnet_test/%a-%N-%j    # %N for node name, %j for jobID
