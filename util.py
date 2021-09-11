@@ -62,12 +62,20 @@ def get_actfuns(actfun):
 
 
 def get_num_params(args):
-    if args.var_n_params == 'new':
-        num_params = [3e4, 1e5, 1e6, 1e7]
-    elif args.num_params == 0:
-        num_params = [1e7]
+    if args.model == 'resnet' or args.model == 'efficientnet':
+        if args.var_n_params == 'new':
+            num_params = [0.1, 0.01, 0.001]
+        elif args.num_params == 0:
+            num_params = [1]
+        else:
+            num_params = [args.num_params]
     else:
-        num_params = [args.num_params]
+        if args.var_n_params == 'new':
+            num_params = [3e4, 1e5, 1e6, 1e7]
+        elif args.num_params == 0:
+            num_params = [1e7]
+        else:
+            num_params = [args.num_params]
 
     return num_params
 
