@@ -63,7 +63,7 @@ def get_actfuns(actfun):
 
 def get_num_params(args):
     if args.var_n_params == 'new':
-        num_params = [3e4, 1e5, 1e6, 1e7, 1e8]
+        num_params = [3e4, 1e5, 1e6, 1e7]
     elif args.num_params == 0:
         num_params = [1e7]
     else:
@@ -74,7 +74,7 @@ def get_num_params(args):
 
 def get_train_samples(args):
     if args.var_n_samples:
-        train_samples = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000]
+        train_samples = [50000, 40000, 30000, 20000, 10000]
     elif args.overfit:
         train_samples = [2500]
     else:
