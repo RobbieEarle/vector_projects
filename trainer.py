@@ -83,8 +83,9 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
                                            k=k,
                                            p=p,
                                            g=g,
+                                           c=num_params,
                                            permute_type=perm_method,
-                                           width=resnet_width * num_params,
+                                           width=resnet_width,
                                            verbose=verbose).to(device)
         model_params = model.parameters()
 
