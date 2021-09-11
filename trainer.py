@@ -200,14 +200,11 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                              checkpoint['perm_method']))
     seen_actfuns.add(actfun)
 
-    if args.model != 'efficientnet':
-        util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
-                                util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
-                                perm_method, resnet_ver, resnet_width, args.optim, args.validation, curr_hparams)
-    else:
-        util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
-                                util.get_model_params(model), sample_size, batch_size, 0, 0, 0,
-                                perm_method, resnet_ver, resnet_width, args.optim, args.validation, curr_hparams)
+    if args.model == 'efficientnet':
+        model.k , model.p, model.g, model.actfun = 0, 0, 0, "none"
+    util.print_exp_settings(curr_seed, args.dataset, outfile_path, args.model, actfun,
+                            util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
+                            perm_method, resnet_ver, resnet_width, args.optim, args.validation, curr_hparams)
 
     best_val_acc = 0
 
