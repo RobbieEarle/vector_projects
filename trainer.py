@@ -89,9 +89,16 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
                                            verbose=verbose).to(device)
         model_params = model.parameters()
 
-    elif model == 'efficientnet':
-        model = EfficientNet.from_name('efficientnet-b0').to(device)
-        model_params = model.parameters()
+    # elif model == 'efficientnet':
+    #     pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
+    #     model = EfficientNet.from_name('efficientnet-b0',
+    #                                    in_channels=input_channels,
+    #                                    actfun=actfun,
+    #                                    p=p,
+    #                                    k=k,
+    #                                    g=g,
+    #                                    pk_ratio=pk_ratio).to(device)
+    #     model_params = model.parameters()
 
     return model, model_params
 
@@ -99,7 +106,7 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
 # -------------------- Setting Up & Running Training Function
 def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, best_checkpoint_location,
           actfun, curr_seed, outfile_path, filename, fieldnames, curr_sample_size, device, num_params,
-          curr_k=2, curr_p=1, curr_g=1, perm_method='shuffle'):
+          curr_k=2, curr_p=1, curr_g=1, perm_method='shuffle', resnet_width=0):
     """
     Runs training session for a given randomized model
     :param args: arguments for this job
@@ -119,7 +126,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     """
 
     resnet_ver = args.resnet_ver
-    resnet_width = args.resnet_width
     num_epochs = args.num_epochs
 
     actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu', 'tanh']

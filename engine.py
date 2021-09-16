@@ -32,8 +32,15 @@ def setup_experiment(args):
                        'ail_all_or_and_xnor', 'ail_part_or_xnor',
                        'ail_part_or_and_xnor']
         actfun = all_actfuns[args.actfun_idx]
+        if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
+            resnet_width = 2
+        elif actfun in ['ail_all_or_and_xnor']:
+            resnet_width = 1.5625
+        else:
+            resnet_width = 3
     else:
         actfun = args.actfun
+        resnet_width = args.resnet_width
 
     # =========================== Creating new output file
     if args.one_shot and args.search:
@@ -119,7 +126,8 @@ def setup_experiment(args):
                                               curr_p=p,
                                               curr_k=k,
                                               curr_g=g,
-                                              perm_method=perm_method)
+                                              perm_method=perm_method,
+                                              resnet_width=resnet_width)
                                 print()
 
                                 checkpoint = None

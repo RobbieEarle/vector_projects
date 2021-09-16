@@ -13,7 +13,6 @@ source ~/.bashrc
 source activate ~/venvs/combinact
 
 SEED="$1"
-RESNET_WIDTH="$2"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
 SAVE_PATH=~/vector_projects/outputs/wrn_50_nparam2
@@ -37,7 +36,7 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --resnet_width $RESNET_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 80
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --resnet_width $RESNET_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 25
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --resnet_width $RESNET_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 8
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --resnet_width $RESNET_WIDTH --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 3
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 80
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 25
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 8
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --c 3
