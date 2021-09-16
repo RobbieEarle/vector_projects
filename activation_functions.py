@@ -51,7 +51,7 @@ def activate(x, actfun, p=1, k=1, M=None,
         num_channels = x.shape[2]
         height = x.shape[3]
         width = x.shape[4]
-        print(x.shape)
+        # print(x.shape)
         x = x.reshape(batch_size, int(num_channels * p / k), k, height, width)
     elif layer_type == 'linear':
         num_channels = M

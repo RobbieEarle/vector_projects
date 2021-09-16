@@ -20,7 +20,7 @@ class BottleneckBlock(nn.Module):
         self.g = hyper_params['g'] if 'g' in hyper_params else 1
         width = hyper_params['width'] if 'width' in hyper_params else 1
 
-        print("c_in = {}, c_out = {}".format(c_in, c_out))
+        # print("c_in = {}, c_out = {}".format(c_in, c_out))
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
         if self.actfun == 'bin_partition_full':
@@ -131,7 +131,7 @@ class PreActResNet(nn.Module):
         for i, curr_num_params in enumerate(c):
             c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
         self.inplanes = c[0]
-        print("c = {}".format(c))
+        # print("c = {}".format(c))
 
         # -------- Defining layers in network
         in_channels = kwargs['in_channels'] if 'in_channels' in kwargs else 3
