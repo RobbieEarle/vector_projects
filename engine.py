@@ -26,7 +26,14 @@ def setup_experiment(args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    actfun = args.actfun
+    if args.actfun_idx is not None:
+        all_actfuns = ['max', 'relu', 'swish', 'bin_all_max_min', 'ail_or',
+                       'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
+                       'ail_all_or_and_xnor', 'ail_part_or_xnor',
+                       'ail_part_or_and_xnor']
+        actfun = all_actfuns[args.actfun_idx]
+    else:
+        actfun = args.actfun
 
     # =========================== Creating new output file
     if args.one_shot and args.search:
@@ -126,12 +133,14 @@ if __name__ == '__main__':
     parser.add_argument('--p', type=int, default=1, help='Default p value for model')
     parser.add_argument('--k', type=int, default=2, help='Default k value for model')
     parser.add_argument('--g', type=int, default=1, help='Default g value for model')
+    parser.add_argument('--c', type=int, default=None, help='Default c value for model')
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
-    parser.add_argument('--actfun', type=str, default='max')  # all
+    parser.add_argument('--actfun', type=str, default='max')
+    parser.add_argument('--actfun_idx', type=int, default=None)
     parser.add_argument('--optim', type=str, default='onecycle')  # all
     parser.add_argument('--save_path', type=str, default='', help='Where to save results')
     parser.add_argument('--check_path', type=str, default='', help='Where to save checkpoints')
