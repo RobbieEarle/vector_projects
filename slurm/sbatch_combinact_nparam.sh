@@ -15,7 +15,7 @@ source activate ~/venvs/combinact
 SEED="$1"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/vector_projects/outputs/wrn_50_nparam2
+SAVE_PATH=~/vector_projects/outputs/wrn_50_nparam4
 CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 touch $CHECK_PATH
 
