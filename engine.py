@@ -65,6 +65,8 @@ def setup_experiment(args):
     checkpoint = None
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
+        if checkpoint['num_params'] != args.num_params:
+            checkpoint = None
 
     if checkpoint is None or actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns']:
         if not os.path.exists(outfile_path):
@@ -192,7 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--cycle_mom', action='store_true', help='')
     parser.add_argument('--one_shot', action='store_true', help='')
     parser.add_argument('--search', action='store_true', help='')
-
+    parser.add_argument('--bs_factor', type=float, default=1.0, help='Batch size reduction factor')
 
     args = parser.parse_args()
 

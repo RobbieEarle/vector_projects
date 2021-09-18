@@ -152,7 +152,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         args.dataset,
         seed=curr_seed,
         validation=args.validation,
-        batch_size=args.batch_size,
+        batch_size=int(args.batch_size * args.bs_factor),
         train_sample_size=curr_sample_size,
         kwargs=kwargs)
     loaders = {
@@ -170,7 +170,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                            weight_decay=curr_hparams['wd']
                            )
     scheduler = OneCycleLR(optimizer,
-                           max_lr=curr_hparams['max_lr'],
+                           max_lr=curr_hparams['max_lr'] * args.bs_factor,
                            epochs=num_epochs,
                            steps_per_epoch=int(math.floor(sample_size / batch_size)),
                            pct_start=curr_hparams['cycle_peak'],
