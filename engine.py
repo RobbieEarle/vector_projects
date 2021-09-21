@@ -65,8 +65,9 @@ def setup_experiment(args):
     checkpoint = None
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
-        actfun_valid = (actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns'])
-        checkpoint_valid = actfun_valid and checkpoint['c'] <= args.c
+        checkpoint_valid = (actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns'])
+        if args.c is not None:
+            checkpoint_valid = checkpoint_valid and checkpoint['c'] <= args.c
 
     if checkpoint is None or checkpoint_valid:
         if not os.path.exists(outfile_path):
