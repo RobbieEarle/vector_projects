@@ -199,11 +199,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                   "\np: {}"
                   "\nk: {}"
                   "\ng: {}"
+                  "\nc: {}"
                   "\nperm_method: {}".format(mid_checkpoint_location, checkpoint['curr_seed'],
                                              checkpoint['epoch'], checkpoint['actfun'],
                                              checkpoint['num_params'], checkpoint['sample_size'],
                                              checkpoint['p'], checkpoint['k'], checkpoint['g'],
-                                             checkpoint['perm_method']))
+                                             checkpoint['c'], checkpoint['perm_method']))
     seen_actfuns.add(actfun)
 
     if args.model == 'efficientnet':
@@ -230,6 +231,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                         'num_params': num_params,
                         'sample_size': sample_size,
                         'p': curr_p, 'k': curr_k, 'g': curr_g,
+                        'c': args.c,
                         'perm_method': perm_method,
                         'seen_actfuns': seen_actfuns
                         }, mid_checkpoint_location)
