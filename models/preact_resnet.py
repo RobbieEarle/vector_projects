@@ -23,16 +23,17 @@ class BottleneckBlock(nn.Module):
         # print("c_in = {}, c_out = {}".format(c_in, c_out))
 
         pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
+        c_out_wide = (self.k * self.g) * int((c_out * width) / (self.k * self.g))
         if self.actfun == 'bin_partition_full':
             conv1_in = int((c_in * self.p) + (2 * math.floor((c_in * self.p) / (3 * self.k)) * (1 - self.k)))
-            conv2_in = int((c_out*width*self.p) + (2*math.floor((c_out*width*self.p) / (3*self.k)) * (1-self.k)))
-            conv3_in = int((c_out*width*self.p) + (2*math.floor((c_out*width*self.p) / (3*self.k)) * (1-self.k)))
+            conv2_in = int((c_out_wide*self.p) + (2*math.floor((c_out_wide*self.p) / (3*self.k)) * (1-self.k)))
+            conv3_in = int((c_out_wide*self.p) + (2*math.floor((c_out_wide*self.p) / (3*self.k)) * (1-self.k)))
         else:
             conv1_in = int(c_in * pk_ratio)
-            conv2_in = int(c_out * width * pk_ratio)
-            conv3_in = int(c_out * width * pk_ratio)
+            conv2_in = int(c_out_wide * pk_ratio)
+            conv3_in = int(c_out_wide * pk_ratio)
 
-        out = int(c_out * width)
+        out = int(c_out_wide)
         # -------- Defining layers in current block
         self.bn1 = nn.BatchNorm2d(c_in)
         self.conv1 = nn.Conv2d(conv1_in, out, kernel_size=1, bias=False)
@@ -130,7 +131,7 @@ class PreActResNet(nn.Module):
         c = kwargs['c'] if 'c' in kwargs else 64
         c = [c, 2 * c, 4 * c, 8 * c]
         for i, curr_num_params in enumerate(c):
-            c[i] = self.k * self.g * self.width * int(curr_num_params / (self.k * self.g * self.width))
+            c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
         self.inplanes = c[0]
         # print("c = {}".format(c))
 
