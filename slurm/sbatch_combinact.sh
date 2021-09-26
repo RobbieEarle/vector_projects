@@ -12,7 +12,8 @@
 source ~/.bashrc
 source activate ~/venvs/combinact
 
-SEED="$1"
+RESNET_TYPE="$1"
+SEED="$2"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
 SAVE_PATH=~/vector_projects/outputs/wrn50_cf100
@@ -36,4 +37,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --bs_factor 0.75
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --bs_factor 0.75 --resnet_type $RESNET_TYPE
