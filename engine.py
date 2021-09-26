@@ -32,12 +32,24 @@ def setup_experiment(args):
                        'ail_all_or_and_xnor', 'ail_part_or_xnor',
                        'ail_part_or_and_xnor']
         actfun = all_actfuns[args.actfun_idx]
-        if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
+        if args.resnet_type == 'wrn50':
             resnet_width = 2
-        elif actfun in ['ail_all_or_and_xnor']:
-            resnet_width = 1.5625
-        else:
-            resnet_width = 3
+        elif args.resnet_type == 'rn50':
+            resnet_width = 1
+        elif args.resnet_type == 'wrn50_custom':
+            if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
+                resnet_width = 2
+            elif actfun in ['ail_all_or_and_xnor']:
+                resnet_width = 1.5
+            else:
+                resnet_width = 3
+        elif args.resnet_type == 'rn50_custom':
+            if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
+                resnet_width = 1
+            elif actfun in ['ail_all_or_and_xnor']:
+                resnet_width = 0.75
+            else:
+                resnet_width = 1.5
     else:
         actfun = args.actfun
         resnet_width = args.resnet_width
@@ -49,10 +61,10 @@ def setup_experiment(args):
         fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
                       'sample_size', 'model', 'batch_size', 'alpha_primes', 'alphas',
                       'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                      'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_width', 'epoch_train_loss',
-                      'epoch_train_acc', 'epoch_aug_train_loss', 'epoch_aug_train_acc', 'epoch_val_loss',
-                      'epoch_val_acc', 'epoch_aug_val_loss', 'epoch_aug_val_acc', 'hp_idx', 'curr_lr',
-                      'found_lr', 'hparams', 'epochs']
+                      'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_type', 'resnet_width',
+                      'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
+                      'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
+                      'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -147,6 +159,7 @@ if __name__ == '__main__':
     parser.add_argument('--c', type=int, default=None, help='Default c value for model')
     parser.add_argument('--num_params', type=int, default=0, help='Adjust number of model params')
     parser.add_argument('--resnet_ver', type=int, default=34, help='Which version of ResNet to use')
+    parser.add_argument('--resnet_type', type=str, default='wrn50_custom', help='Resnet type')
     parser.add_argument('--resnet_width', type=float, default=2, help='How wide to make our ResNet layers')
     parser.add_argument('--model', type=str, default='mlp', help='cnn, mlp, resnet')  # cnn
     parser.add_argument('--dataset', type=str, default='cifar100', help='mnist, cifar10, cifar100')  # mnist
