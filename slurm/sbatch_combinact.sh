@@ -19,7 +19,7 @@ SEED="$2"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
 SAVE_PATH=~/vector_projects/outputs/wrn50_cf100_2
-CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 touch $CHECK_PATH
 
 # Debugging outputs
