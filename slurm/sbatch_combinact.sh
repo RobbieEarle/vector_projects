@@ -6,8 +6,10 @@
 #SBATCH --mem=32G                            # memory per node
 #SBATCH --time=700:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-10%11                    # array value
-#SBATCH --output=logs_new/wrn50_cf100/%x_%A-%a_%n-%t.out   # %N for node name, %j for jobID
-#SBATCH --job-name=wrn50_cf100
+#SBATCH --output=logs_new/wrn50_cf100_2/%x_%A-%a_%n-%t.out
+              # %x=job-name, %A=job ID, %a=array task id, %n=node rank, %t=task rank, %N=hostname
+              # Note: You must manually create output directory "logs" before launching job.
+#SBATCH --job-name=wrn50_cf100_2
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -16,8 +18,8 @@ RESNET_TYPE="$1"
 SEED="$2"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/vector_projects/outputs/wrn50_cf100
-CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
+SAVE_PATH=~/vector_projects/outputs/wrn50_cf100_2
+CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 touch $CHECK_PATH
 
 # Debugging outputs
@@ -37,4 +39,4 @@ echo ""
 echo "SAVE_PATH=$SAVE_PATH"
 echo "SEED=$SEED"
 
-python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --bs_factor 0.75 --resnet_type $RESNET_TYPE
+python engine.py --seed $SEED --save_path $SAVE_PATH --check_path $CHECK_PATH --model resnet --batch_size 128 --actfun_idx $ACTFUN_IDX --optim onecycle --num_epochs 100 --dataset cifar100 --aug --mix_pre_apex --bs_factor 0.75 --resnet_type $RESNET_TYPE --label _${RESNET_TYPE}_${ACTFUN_IDX}
