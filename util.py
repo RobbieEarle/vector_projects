@@ -589,7 +589,7 @@ def load_dataset(
         aug_eval_set = aug_test_set
         eval_set = test_set
 
-    print(len(train_set.targets))
+    print(len(set(train_set.targets)))
     train_sample_size = train_idx.shape[0]
 
     aug_train_set = torch.utils.data.Subset(aug_train_set, train_idx)
