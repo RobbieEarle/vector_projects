@@ -555,10 +555,12 @@ def load_dataset(
         aug_trans_all = transforms.Compose(aug_trans)
         trans_all = transforms.Compose(trans)
 
-        aug_train_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="train", transform=aug_trans_all)
-        train_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="train", transform=trans_all)
-        aug_test_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="val", transform=aug_trans_all)
-        test_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="val", transform=trans_all)
+        traindir = '/scratch/ssd002/datasets/imagenet/train'
+        valdir = '/scratch/ssd002/datasets/imagenet/val'
+        aug_train_set = datasets.ImageFolder(root=traindir, transform=aug_trans_all)
+        train_set = datasets.ImageFolder(root=traindir, transform=trans_all)
+        aug_test_set = datasets.ImageFolder(root=valdir, transform=aug_trans_all)
+        test_set = datasets.ImageFolder(root=valdir, transform=trans_all)
 
         if batch_size is None:
             batch_size = 32
