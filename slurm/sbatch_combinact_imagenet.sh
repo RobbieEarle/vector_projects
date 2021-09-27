@@ -5,7 +5,7 @@
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 32                       # Number of CPU cores
 #SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0           # array value (for running multiple seeds, etc)
+#SBATCH --array=0-10%11           # array value (for running multiple seeds, etc)
 #SBATCH --output=logs/%x_%A-%a_%n-%t.out
                             # %x=job-name, %A=job ID, %a=array value, %n=node rank, %t=task rank, %N=hostname
                             # Note: You must manually create output directory "logs" before launching job.
@@ -51,9 +51,14 @@ echo ""
 # Input handling
 SEED="$SLURM_ARRAY_TASK_ID"
 LABEL=""
-DATASET=$1
+DATASET="imagenet"
+RESNET_TYPE="$1"
+SEED="$2"
+ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
+echo "RESNET TYPE = $RESNET_TYPE"
+echo "ACTFUN INDEX = $ACTFUN_IDX"
 echo "EXTRA_ARGS = ${@:2}"
 echo ""
 echo "------------------------------------------------------------------------"
@@ -173,7 +178,7 @@ python engine.py \
   --actfun_idx $ACTFUN_IDX \
   --optim onecycle \
   --num_epochs 100 \
-  --dataset imagenet \
+  --dataset $DATASET \
   --aug \
   --mix_pre_apex \
   --distributed \
