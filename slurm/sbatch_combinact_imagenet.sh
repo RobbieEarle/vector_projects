@@ -1,14 +1,12 @@
 #!/bin/bash
 #SBATCH --partition=p100,t4v1,rtx6000  # Which node partition to use (partitioned by GPU type)
-#SBATCH --nodes 1                   # Number of nodes to request
+#SBATCH --nodes 1                      # Number of nodes to request
 #SBATCH --gres=gpu:4                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 32                       # Number of CPU cores
 #SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10%11           # array value (for running multiple seeds, etc)
-#SBATCH --output=logs/%x_%A-%a_%n-%t.out
-                            # %x=job-name, %A=job ID, %a=array value, %n=node rank, %t=task rank, %N=hostname
-                            # Note: You must manually create output directory "logs" before launching job.
+#SBATCH --output=logs_new/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=wrn50_imgnt
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
