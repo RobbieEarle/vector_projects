@@ -34,6 +34,8 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
         input_channels, input_dim, output_dim = 3, 32, 10
     elif dataset == 'cifar100':
         input_channels, input_dim, output_dim = 3, 32, 100
+    elif dataset == 'imagenet':
+        input_channels, input_dim, output_dim = 3, 224, 21841
 
     if model == 'nn' or model == 'mlp':
         if dataset == 'mnist' or dataset == 'fashion_mnist':
@@ -145,6 +147,12 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     util.seed_all(curr_seed)
     model.apply(util.weights_init)
 
+    if args.distributed:
+        pmodel = nn.DataParallel(model)
+    else:
+        pmodel = model
+    pmodel = pmodel.cuda()
+
     util.seed_all(curr_seed)
     dataset = util.load_dataset(
         args,
@@ -222,6 +230,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     while epoch <= num_epochs:
 
         if args.check_path != '':
+            temp_path = os.path.join(args.check_path, "temp.pth")
             torch.save({'state_dict': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
@@ -234,7 +243,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                         'c': args.c,
                         'perm_method': perm_method,
                         'seen_actfuns': seen_actfuns
-                        }, mid_checkpoint_location)
+                        }, temp_path)
+            os.replace(temp_path, mid_checkpoint_location)
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
@@ -250,7 +260,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             optimizer.zero_grad()
             if args.mix_pre:
                 with torch.cuda.amp.autocast():
-                    output = model(x)
+                    output = pmodel(x)
                     train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
                 n += 1
@@ -258,7 +268,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 scaler.step(optimizer)
                 scaler.update()
             elif args.mix_pre_apex:
-                output = model(x)
+                output = pmodel(x)
                 train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
                 n += 1
@@ -266,7 +276,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     scaled_loss.backward()
                 optimizer.step()
             else:
-                output = model(x)
+                output = pmodel(x)
                 train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
                 n += 1
@@ -295,7 +305,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
             for batch_idx, (y, targety) in enumerate(loaders['aug_eval']):
                 y, targety = y.to(device), targety.to(device)
-                output = model(y)
+                output = pmodel(y)
                 val_loss = criterion(output, targety)
                 total_val_loss += val_loss
                 n += 1
@@ -308,7 +318,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             total_val_loss, n, num_correct, num_total = 0, 0, 0, 0
             for batch_idx, (y, targety) in enumerate(loaders['eval']):
                 y, targety = y.to(device), targety.to(device)
-                output = model(y)
+                output = pmodel(y)
                 val_loss = criterion(output, targety)
                 total_val_loss += val_loss
                 n += 1
@@ -339,7 +349,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
                 for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
                     x, targetx = x.to(device), targetx.to(device)
-                    output = model(x)
+                    output = pmodel(x)
                     train_loss = criterion(output, targetx)
                     total_train_loss += train_loss
                     n += 1
@@ -352,7 +362,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
                 for batch_idx, (x, targetx) in enumerate(loaders['train']):
                     x, targetx = x.to(device), targetx.to(device)
-                    output = model(x)
+                    output = pmodel(x)
                     train_loss = criterion(output, targetx)
                     total_train_loss += train_loss
                     n += 1

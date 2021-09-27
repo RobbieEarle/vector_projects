@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 import numpy as np
 import random
 import activation_functions as actfuns
-from auto_augment import CIFAR10Policy
+from auto_augment import CIFAR10Policy, ImageNetPolicy
 from collections import namedtuple
 from sklearn import model_selection
 from sklearn.datasets import load_iris
@@ -541,6 +541,28 @@ def load_dataset(
         if batch_size is None:
             batch_size = 256
 
+    elif dataset == 'imagenet':
+        aug_trans, trans = [], []
+        if args.aug:
+            augs_trans.append(transforms.RandomResizedCrop(224))
+            aug_trans.append(transforms.RandomHorizontalFlip())
+            aug_trans.append(ImageNetPolicy())
+        aug_trans.append(transforms.ToTensor())
+        aug_trans.append(transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)))
+        trans.append(transforms.ToTensor())
+        trans.append(transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)))
+
+        aug_trans_all = transforms.Compose(aug_trans)
+        trans_all = transforms.Compose(trans)
+
+        aug_train_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="train", transform=aug_trans_all)
+        train_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="train", transform=trans_all)
+        aug_test_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="val", transform=aug_trans_all)
+        test_set = datasets.ImageNet(root='/scratch/ssd002/datasets/imagenet', split="val", transform=trans_all)
+
+        if batch_size is None:
+            batch_size = 32
+
     train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:
         if dataset == 'mnist':
@@ -565,6 +587,7 @@ def load_dataset(
         aug_eval_set = aug_test_set
         eval_set = test_set
 
+    print(train_set.targets)
     train_sample_size = train_idx.shape[0]
 
     aug_train_set = torch.utils.data.Subset(aug_train_set, train_idx)
