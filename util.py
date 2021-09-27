@@ -544,7 +544,7 @@ def load_dataset(
     elif dataset == 'imagenet':
         aug_trans, trans = [], []
         if args.aug:
-            augs_trans.append(transforms.RandomResizedCrop(224))
+            aug_trans.append(transforms.RandomResizedCrop(224))
             aug_trans.append(transforms.RandomHorizontalFlip())
             aug_trans.append(ImageNetPolicy())
         aug_trans.append(transforms.ToTensor())
