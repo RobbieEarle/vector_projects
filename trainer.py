@@ -35,7 +35,7 @@ def load_model(model, dataset, actfun, k, p, g, num_params, perm_method, device,
     elif dataset == 'cifar100':
         input_channels, input_dim, output_dim = 3, 32, 100
     elif dataset == 'imagenet':
-        input_channels, input_dim, output_dim = 3, 224, 21841
+        input_channels, input_dim, output_dim = 3, 224, 1000
 
     if model == 'nn' or model == 'mlp':
         if dataset == 'mnist' or dataset == 'fashion_mnist':
