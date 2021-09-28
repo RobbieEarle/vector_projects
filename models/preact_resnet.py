@@ -55,7 +55,7 @@ class BottleneckBlock(nn.Module):
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
-        self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
+        # self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
         # if self.actfun == "combinact":
         #     self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(self.reduce_actfuns))
         #     if self.alpha_dist == "per_cluster":
