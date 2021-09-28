@@ -181,7 +181,6 @@ python engine.py \
   --aug \
   --mix_pre_apex \
   --distributed \
-  --bs_factor 2 \
   --resnet_type $RESNET_TYPE
 echo ""
 echo "# Finished running engine.py"
