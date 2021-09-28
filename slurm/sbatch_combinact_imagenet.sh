@@ -179,7 +179,6 @@ python engine.py \
   --num_epochs 160 \
   --dataset "$DATASET" \
   --aug \
-  --mix_pre_apex \
   --distributed \
   --resnet_type "$RESNET_TYPE" \
   "${@:3}"

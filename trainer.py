@@ -237,6 +237,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     best_val_acc = 0
 
+    if args.mix_pre:
+        scaler = torch.cuda.amp.GradScaler()
+
     # ---- Start Training
     while epoch <= num_epochs:
 
@@ -260,8 +263,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         util.seed_all((curr_seed * args.num_epochs) + epoch)
         start_time = time.time()
-        if args.mix_pre:
-            scaler = torch.cuda.amp.GradScaler()
 
         # ---- Training
         model.train()
