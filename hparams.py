@@ -1168,7 +1168,7 @@ def get_hparams(model, dataset, actfun, seed, epochs, search=False, hp_idx=None,
                 b = _BOUNDS10[model][dataset][actfun]
         elif epochs == 50:
             b = _BOUNDS50[model][dataset][actfun]
-        elif epochs == 100:
+        else:
             b = _BOUNDS100[model][dataset][actfun]
 
         if search:
