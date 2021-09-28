@@ -6,8 +6,8 @@
 #SBATCH -c 32                       # Number of CPU cores
 #SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/rn50_imgnt_test/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=rn50_imgnt_test
+#SBATCH --output=logs_new/rn50_imgnt_test2/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=rn50_imgnt_test2
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/rn50_imgnt_test
+SAVE_PATH=~/vector_projects/outputs/rn50_imgnt_test2
 DATASET="imagenet"
 RESNET_TYPE="$1"
 SEED="$2"
@@ -173,7 +173,7 @@ python engine.py \
   --save_path "$SAVE_PATH" \
   --check_path "$CKPT_DIR" \
   --model resnet \
-  --batch_size 64 \
+  --batch_size 32 \
   --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
   --num_epochs 160 \
