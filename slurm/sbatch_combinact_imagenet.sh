@@ -6,7 +6,7 @@
 #SBATCH -c 32                       # Number of CPU cores
 #SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10%11           # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/%x_%A-%a_%n-%t.out
+#SBATCH --output=logs_new/wrn50_imgnt/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=wrn50_imgnt
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
@@ -47,6 +47,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
+SAVE_PATH="~/vector_projects/outputs/wrn50_imgnt"
 SEED="$SLURM_ARRAY_TASK_ID"
 LABEL=""
 DATASET="imagenet"
@@ -136,6 +137,7 @@ CKPT_DIR="/checkpoint/${USER}/${SLURM_JOB_ID}"
 # 48 hours
 touch "$CKPT_DIR/DELAYPURGE"
 #
+echo "SAVE_PATH = $SAVE_PATH"
 echo "CKPT_DIR = $CKPT_DIR"
 echo ""
 echo "ls -lh ${CKPT_DIR}:"
@@ -172,14 +174,15 @@ python engine.py \
   --save_path $SAVE_PATH \
   --check_path $CHECK_PATH \
   --model resnet \
-  --batch_size 64 \
+  --batch_size 32 \
   --actfun_idx $ACTFUN_IDX \
   --optim onecycle \
-  --num_epochs 100 \
+  --num_epochs 160 \
   --dataset $DATASET \
   --aug \
   --mix_pre_apex \
   --distributed \
+  --bs_factor 2
   --resnet_type $RESNET_TYPE \
   --label $LABEL
 echo ""

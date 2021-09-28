@@ -3,6 +3,7 @@ import torch.utils.data
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from torch.optim.lr_scheduler import CyclicLR
 from torch.optim.lr_scheduler import OneCycleLR
 import torch.nn.functional as F
@@ -172,18 +173,26 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     sample_size = dataset[4]
     batch_size = dataset[5]
 
-    optimizer = optim.Adam(model_params,
-                           betas=(curr_hparams['beta1'], curr_hparams['beta2']),
-                           eps=curr_hparams['eps'],
-                           weight_decay=curr_hparams['wd']
-                           )
-    scheduler = OneCycleLR(optimizer,
-                           max_lr=curr_hparams['max_lr'] * args.bs_factor,
-                           epochs=num_epochs,
-                           steps_per_epoch=int(math.floor(sample_size / batch_size)),
-                           pct_start=curr_hparams['cycle_peak'],
-                           cycle_momentum=False
-                           )
+    if args.dataset == 'imagenet':
+        optimizer = optim.SGD(model_params,
+                              weight_decay=1e-4)
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=lr=0.1 * args.bs_factor,
+                               epochs=num_epochs,
+                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
+                               pct_start=0.03125,
+                               cycle_momentum=False)
+    else:
+        optimizer = optim.Adam(model_params,
+                               betas=(curr_hparams['beta1'], curr_hparams['beta2']),
+                               eps=curr_hparams['eps'],
+                               weight_decay=curr_hparams['wd'])
+        scheduler = OneCycleLR(optimizer,
+                               max_lr=curr_hparams['max_lr'] * args.bs_factor,
+                               epochs=num_epochs,
+                               steps_per_epoch=int(math.floor(sample_size / batch_size)),
+                               pct_start=curr_hparams['cycle_peak'],
+                               cycle_momentum=False)
 
     epoch = 1
     seen_actfuns = set()
