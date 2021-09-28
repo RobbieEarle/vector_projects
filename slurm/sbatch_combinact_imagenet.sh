@@ -49,7 +49,6 @@ echo ""
 # Input handling
 SAVE_PATH="~/vector_projects/outputs/wrn50_imgnt"
 SEED="$SLURM_ARRAY_TASK_ID"
-LABEL=""
 DATASET="imagenet"
 RESNET_TYPE="$1"
 SEED="$2"
@@ -183,8 +182,7 @@ python engine.py \
   --mix_pre_apex \
   --distributed \
   --bs_factor 2 \
-  --resnet_type $RESNET_TYPE \
-  --label $LABEL
+  --resnet_type $RESNET_TYPE
 echo ""
 echo "# Finished running engine.py"
 date
