@@ -177,7 +177,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         optimizer = optim.SGD(model_params,
                               weight_decay=1e-4)
         scheduler = OneCycleLR(optimizer,
-                               max_lr=lr=0.1 * args.bs_factor,
+                               max_lr=0.1 * args.bs_factor,
                                epochs=num_epochs,
                                steps_per_epoch=int(math.floor(sample_size / batch_size)),
                                pct_start=0.03125,
