@@ -5,7 +5,7 @@
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 32                       # Number of CPU cores
 #SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0-10                # array value (for running multiple seeds, etc)
+#SBATCH --array=0                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs_new/rn50_imgnt_test2/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=rn50_imgnt_test2
 #SBATCH --qos=normal
