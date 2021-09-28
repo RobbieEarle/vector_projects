@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=t4v2            # Which node partition to use (partitioned by GPU type)
 #SBATCH --nodes 1                   # Number of nodes to request
-#SBATCH --gres=gpu:1                # Number of GPUs per node to request
+#SBATCH --gres=gpu:8                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
-#SBATCH -c 6                       # Number of CPU cores
-#SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
+#SBATCH -c 32                       # Number of CPU cores
+#SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs_new/rn50_imgnt_test/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=rn50_imgnt_test
@@ -12,7 +12,7 @@
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
 # Manually define this variable to be equal to the number of GPUs in the --gres argument above
-GPUS_PER_NODE=1
+GPUS_PER_NODE=8
 ​
 # Store the time at which the script was launched
 start_time=$SECONDS
@@ -173,7 +173,7 @@ python engine.py \
   --save_path "$SAVE_PATH" \
   --check_path "$CKPT_DIR" \
   --model resnet \
-  --batch_size 8 \
+  --batch_size 64 \
   --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
   --num_epochs 160 \
