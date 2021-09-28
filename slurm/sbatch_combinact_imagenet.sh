@@ -172,7 +172,7 @@ echo "# Running engine.py"
 python engine.py \
   --seed $SEED \
   --save_path $SAVE_PATH \
-  --check_path $CHECK_PATH \
+  --check_path $CKPT_DIR \
   --model resnet \
   --batch_size 32 \
   --actfun_idx $ACTFUN_IDX \
@@ -182,7 +182,7 @@ python engine.py \
   --aug \
   --mix_pre_apex \
   --distributed \
-  --bs_factor 2
+  --bs_factor 2 \
   --resnet_type $RESNET_TYPE \
   --label $LABEL
 echo ""
