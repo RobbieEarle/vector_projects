@@ -148,12 +148,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     util.seed_all(curr_seed)
     model.apply(util.weights_init)
 
-    if args.distributed:
-        pmodel = nn.DataParallel(model)
-    else:
-        pmodel = model
-    pmodel = pmodel.cuda()
-
     util.seed_all(curr_seed)
     dataset = util.load_dataset(
         args,
@@ -195,6 +189,15 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                pct_start=curr_hparams['cycle_peak'],
                                cycle_momentum=False)
 
+    if args.mix_pre_apex:
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
+
+    if args.distributed:
+        pmodel = nn.DataParallel(model)
+    else:
+        pmodel = model
+    pmodel = pmodel.cuda()
+
     epoch = 1
     seen_actfuns = set()
     if checkpoint is not None:
@@ -204,6 +207,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
+            amp.load_state_dict(checkpoint["amp"])
             epoch = checkpoint['epoch']
             seen_actfuns = checkpoint['seen_actfuns']
             model.to(device)
@@ -233,9 +237,6 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     best_val_acc = 0
 
-    if args.mix_pre_apex:
-        model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
-
     # ---- Start Training
     while epoch <= num_epochs:
 
@@ -244,6 +245,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             torch.save({'state_dict': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
+                        'amp':amp.state_dict(),
                         'curr_seed': curr_seed,
                         'epoch': epoch,
                         'actfun': actfun,

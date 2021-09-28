@@ -26,6 +26,7 @@ def setup_experiment(args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
+    torch.cuda.set_device(device)
     if args.actfun_idx is not None:
         all_actfuns = ['max', 'relu', 'swish', 'bin_all_max_min', 'ail_or',
                        'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
