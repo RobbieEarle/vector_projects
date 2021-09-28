@@ -47,14 +47,14 @@ class BottleneckBlock(nn.Module):
             self.conv_proj = nn.Conv2d(c_in, self.expansion * c_out, kernel_size=1, stride=stride, padding=0, bias=False)
 
         # -------- Setting up shuffle maps and alpha prime params for higher order activations
-        self.alpha_dist = hyper_params['alpha_dist'] if 'alpha_dist' in hyper_params else 'per_cluster'
-        self.permute_type = hyper_params['permute_type'] if 'permute_type' in hyper_params else 'shuffle'
-        self.reduce_actfuns = hyper_params['reduce_actfuns'] if 'reduce_actfuns' in hyper_params else False
+        # self.alpha_dist = hyper_params['alpha_dist'] if 'alpha_dist' in hyper_params else 'per_cluster'
+        # self.permute_type = hyper_params['permute_type'] if 'permute_type' in hyper_params else 'shuffle'
+        # self.reduce_actfuns = hyper_params['reduce_actfuns'] if 'reduce_actfuns' in hyper_params else False
 
-        self.shuffle_maps = []
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
+        # self.shuffle_maps = []
+        # self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
+        # self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
+        # self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
         # self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
         # if self.actfun == "combinact":
         #     self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(self.reduce_actfuns))
@@ -86,19 +86,22 @@ class BottleneckBlock(nn.Module):
         # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn1(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        x = F.relu(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
         x = self.conv1(x)
 
         # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn2(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        x = F.relu(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
         x = self.conv2(x)
 
         # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn3(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
+        x = F.relu(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
         x = self.conv3(x)
 
         if self.proj:
