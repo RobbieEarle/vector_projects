@@ -47,7 +47,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH="~/vector_projects/outputs/wrn50_imgnt"
+SAVE_PATH=~/vector_projects/outputs/wrn50_imgnt
 SEED="$SLURM_ARRAY_TASK_ID"
 DATASET="imagenet"
 RESNET_TYPE="$1"
@@ -187,7 +187,7 @@ echo ""
 echo "# Finished running engine.py"
 date
 echo ""
-CKPT_SOURCE=$(readlink "$CKPT_DIR/${SEED}${LABEL}.pth")
+CKPT_SOURCE=$(readlink "$CKPT_DIR/checkpoint_latest.pth")
 if [ "$CKPT_SOURCE" != "" ]; then  # Disabled
     echo "Copying output checkpoint $CKPT_SOURCE to $JOB_OUTPUT_DIR"
     mkdir -p "$JOB_OUTPUT_DIR"

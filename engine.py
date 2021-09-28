@@ -73,7 +73,7 @@ def setup_experiment(args):
     filename = '{}{}'.format(args.seed, args.label)
 
     outfile_path = os.path.join(args.save_path, filename) + '.csv'
-    mid_checkpoint_path = os.path.join(args.check_path, filename) + '.pth'
+    mid_checkpoint_path = os.path.join(args.check_path, "checkpoint_latest") + '.pth'
     checkpoint = None
     if os.path.exists(mid_checkpoint_path):
         checkpoint = torch.load(mid_checkpoint_path)
