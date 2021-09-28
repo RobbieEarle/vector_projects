@@ -175,6 +175,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     if args.dataset == 'imagenet':
         optimizer = optim.SGD(model_params,
+                              lr=0.1 * args.bs_factor,
                               weight_decay=1e-4)
         scheduler = OneCycleLR(optimizer,
                                max_lr=0.1 * args.bs_factor,
