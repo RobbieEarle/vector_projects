@@ -1,19 +1,21 @@
 #!/bin/bash
-#SBATCH --partition=p100,t4v1,rtx6000  # Which node partition to use (partitioned by GPU type)
-#SBATCH --nodes 1                      # Number of nodes to request
-#SBATCH --gres=gpu:4                # Number of GPUs per node to request
+#SBATCH --partition=t4v2            # Which node partition to use (partitioned by GPU type)
+#SBATCH --nodes 1                   # Number of nodes to request
+#SBATCH --gres=gpu:1                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
-#SBATCH -c 32                       # Number of CPU cores
-#SBATCH --mem=167G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0-10%11           # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/wrn50_imgnt/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=wrn50_imgnt
+#SBATCH -c 6                       # Number of CPU cores
+#SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
+#SBATCH --array=0-10                # array value (for running multiple seeds, etc)
+#SBATCH --output=logs_new/rn50_imgnt_test/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=rn50_imgnt_test
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
-
+​
 # Manually define this variable to be equal to the number of GPUs in the --gres argument above
-GPUS_PER_NODE=4
-
+GPUS_PER_NODE=1
+​
+# Store the time at which the script was launched
+start_time=$SECONDS
 date
 echo ""
 echo "Job $SLURM_JOB_NAME ($SLURM_JOB_ID) begins on $SLURM_NODENAME, submitted from $SLURM_SUBMIT_HOST ($SLURM_CLUSTER_NAME)"
@@ -47,8 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/wrn50_imgnt
-SEED="$SLURM_ARRAY_TASK_ID"
+SAVE_PATH=~/vector_projects/outputs/rn50_imgnt_test
 DATASET="imagenet"
 RESNET_TYPE="$1"
 SEED="$2"
@@ -57,7 +58,7 @@ echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "RESNET TYPE = $RESNET_TYPE"
 echo "ACTFUN INDEX = $ACTFUN_IDX"
-echo "EXTRA_ARGS = ${@:2}"
+echo "EXTRA_ARGS = ${@:3}"
 echo ""
 echo "------------------------------------------------------------------------"
 echo ""
@@ -156,12 +157,11 @@ echo ""
 echo "ls -lh ${JOB_OUTPUT_DIR}:"
 ls -lh "${JOB_OUTPUT_DIR}"
 echo ""
-echo "ls -lh ${SLURM_TMPDIR}:"
-ls -lh "${SLURM_TMPDIR}"
-echo ""
 echo "df -h:"
 df -h
 echo ""
+elapsed=$(( SECONDS - start_time ))
+eval "echo Total elapsed time: $(date -ud "@$elapsed" +'$((%s/3600/24)) days %H hr %M min %S sec')"
 echo "------------------------------------------------------------------------"
 echo ""
 date
@@ -169,35 +169,31 @@ date
 echo ""
 echo "# Running engine.py"
 python engine.py \
-  --seed $SEED \
-  --save_path $SAVE_PATH \
-  --check_path $CKPT_DIR \
+  --seed "$SEED" \
+  --save_path "$SAVE_PATH" \
+  --check_path "$CKPT_DIR" \
   --model resnet \
-  --batch_size 32 \
-  --actfun_idx $ACTFUN_IDX \
+  --batch_size 8 \
+  --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
   --num_epochs 160 \
-  --dataset $DATASET \
+  --dataset "$DATASET" \
   --aug \
   --mix_pre_apex \
   --distributed \
-  --resnet_type $RESNET_TYPE
+  --resnet_type "$RESNET_TYPE" \
+  "${@:3}"
 echo ""
 echo "# Finished running engine.py"
+elapsed=$(( SECONDS - start_time ))
+eval "echo Total elapsed time: $(date -ud "@$elapsed" +'$((%s/3600/24)) days %H hr %M min %S sec')"
+echo ""
 date
 echo ""
-CKPT_SOURCE=$(readlink "$CKPT_DIR/checkpoint_latest.pth")
-if [ "$CKPT_SOURCE" != "" ]; then  # Disabled
-    echo "Copying output checkpoint $CKPT_SOURCE to $JOB_OUTPUT_DIR"
-    mkdir -p "$JOB_OUTPUT_DIR"
-    rsync -rvz "$CKPT_SOURCE" "$JOB_OUTPUT_DIR"
-    ln -sfn "${CKPT_SOURCE##*/}" "$JOB_OUTPUT_DIR/checkpoint_latest.pth"
-fi;
-echo "Copying output csv files from $CKPT_DIR to $JOB_OUTPUT_DIR"
-rsync -rvz "$CKPT_DIR"/*.csv "$JOB_OUTPUT_DIR"
-echo ""
-echo "Copying output csv files from $CKPT_DIR to $PWD/results/${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
-rsync -rvz "$CKPT_DIR"/*.csv "results/$DATASET/${SLURM_JOB_NAME}_${SLURM_JOB_ID}/"
+echo "Copying output checkpoint $CKPT_SOURCE to $JOB_OUTPUT_DIR"
+rsync -rvz "$CKPT_DIR" "$JOB_OUTPUT_DIR"
 echo ""
 echo "Job $SLURM_JOB_NAME ($SLURM_JOB_ID) finished on $SLURM_NODENAME, submitted from $SLURM_SUBMIT_HOST ($SLURM_CLUSTER_NAME)"
 date
+elapsed=$(( SECONDS - start_time ))
+eval "echo Total elapsed time: $(date -ud "@$elapsed" +'$((%s/3600/24)) days %H hr %M min %S sec')"
