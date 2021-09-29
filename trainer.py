@@ -275,8 +275,13 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
             # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
+            if batch_idx == 0:
+                print("Data is on {}".format(x.device))
+                print("Model is on {}".format(next(model.parameters()).device))
             optimizer.zero_grad()
             if args.mix_pre:
+                if batch_idx == 0:
+                    print("Using torch.cuda.amp.autocast", flush=True)
                 with torch.cuda.amp.autocast():
                     output = pmodel(x)
                     train_loss = criterion(output, targetx)
@@ -286,6 +291,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 scaler.step(optimizer)
                 scaler.update()
             elif args.mix_pre_apex:
+                if batch_idx == 0:
+                    print("Using amp.scale_loss", flush=True)
                 output = pmodel(x)
                 train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
@@ -294,6 +301,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     scaled_loss.backward()
                 optimizer.step()
             else:
+                if batch_idx == 0:
+                    print("No AMP", flush=True)
                 output = pmodel(x)
                 train_loss = criterion(output, targetx)
                 total_train_loss += train_loss
@@ -309,8 +318,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 print(
                     'Train Epoch: {:3d} [{:3d}/{:3d} ({:.0f}%)]  Loss: {:.6f}'.format(
                         epoch,
-                        batch_idx * len(x),
-                        len(loaders['aug_train'].dataset),
+                        batch_idx,
+                        len(loaders['aug_train']),
                         100. * batch_idx / len(loaders['aug_train']),
                         train_loss.item(),
                     ),
