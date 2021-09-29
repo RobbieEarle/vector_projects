@@ -173,7 +173,7 @@ python engine.py \
   --save_path "$SAVE_PATH" \
   --check_path "$CKPT_DIR" \
   --model resnet \
-  --batch_size 64 \
+  --batch_size 32 \
   --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
   --num_epochs 160 \
