@@ -306,7 +306,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             num_correct += torch.sum(prediction == targetx.data)
             num_total += len(prediction)
             if batch_idx <= 2:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                print('  Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(x), len(loaders['aug_train'].dataset),
                     100. * batch_idx / len(loaders['aug_train']), train_loss.item()))
         epoch_aug_train_loss = total_train_loss / n
