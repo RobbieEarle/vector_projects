@@ -6,10 +6,10 @@
 #SBATCH --mem=32G                            # memory per node
 #SBATCH --time=700:00:00                     # max walltime, hh:mm:ss
 #SBATCH --array=0-10%11                    # array value
-#SBATCH --output=logs_new/wrn50_cf100_2/%x_%A-%a_%n-%t.out
+#SBATCH --output=logs_new/rn50_cf10/%x_%A-%a_%n-%t.out
               # %x=job-name, %A=job ID, %a=array task id, %n=node rank, %t=task rank, %N=hostname
               # Note: You must manually create output directory "logs" before launching job.
-#SBATCH --job-name=wrn50_cf100_2
+#SBATCH --job-name=rn50_cf10
 
 source ~/.bashrc
 source activate ~/venvs/combinact
@@ -18,7 +18,7 @@ RESNET_TYPE="$1"
 SEED="$2"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 
-SAVE_PATH=~/vector_projects/outputs/wrn50_cf100_2
+SAVE_PATH=~/vector_projects/outputs/rn50_cf10
 CHECK_PATH="/checkpoint/$USER/${SLURM_JOB_ID}"
 touch $CHECK_PATH
 
