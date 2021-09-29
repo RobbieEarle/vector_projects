@@ -236,6 +236,11 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                             util.get_model_params(model), sample_size, batch_size, model.k, model.p, model.g,
                             perm_method, resnet_ver, resnet_width, args.optim, args.validation, curr_hparams)
 
+    print("")
+    print("Architecture:")
+    print(pmodel)
+    print("")
+
     best_val_acc = 0
 
     if args.mix_pre:
