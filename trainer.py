@@ -272,7 +272,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         # ---- Training
         model.train()
         total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
+        tb0 = time.time()
         for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
+            data_time = time.time() - tb0
             # print(batch_idx)
             x, targetx = x.to(device), targetx.to(device)
             if batch_idx == 0:
@@ -314,17 +316,26 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             _, prediction = torch.max(output.data, 1)
             num_correct += torch.sum(prediction == targetx.data)
             num_total += len(prediction)
-            if batch_idx <= 2 or batch_idx % 20 == 0:
+            # measure elapsed time
+            batch_time = time.time() - tb0
+            if batch_idx <= 5 or batch_idx % 20 == 0:
                 print(
-                    'Train Epoch: {:3d} [{:3d}/{:3d} ({:.0f}%)]  Loss: {:.6f}'.format(
+                    "Train Epoch: {:3d} [{:3d}/{:3d} ({:.0f}%)]"
+                    "  Data: {:7.4f}s  Batch: {:7.4f}s  Loss: {:.6f}".format(
                         epoch,
                         batch_idx,
                         len(loaders['aug_train']),
                         100. * batch_idx / len(loaders['aug_train']),
+                        data_time,
+                        batch_time,
                         train_loss.item(),
                     ),
                     flush=True,
                 )
+            else:
+                print("DEBUG MODE: STOPPING EARLY")
+                return
+            tb0 = time.time()
         epoch_aug_train_loss = total_train_loss / n
         epoch_aug_train_acc = num_correct * 1.0 / num_total
 
