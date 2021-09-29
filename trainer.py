@@ -318,7 +318,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             num_total += len(prediction)
             # measure elapsed time
             batch_time = time.time() - tb0
-            if batch_idx <= 2 or batch_idx % 20 == 0:
+            if batch_idx <= 5 or batch_idx % 20 == 0:
                 print(
                     "Train Epoch: {:3d} [{:3d}/{:3d} ({:.0f}%)]"
                     "  Data: {:7.4f}s  Batch: {:7.4f}s  Loss: {:.6f}".format(
@@ -332,6 +332,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     ),
                     flush=True,
                 )
+            else:
+                print("DEBUG MODE: STOPPING EARLY")
+                return
             tb0 = time.time()
         epoch_aug_train_loss = total_train_loss / n
         epoch_aug_train_acc = num_correct * 1.0 / num_total
