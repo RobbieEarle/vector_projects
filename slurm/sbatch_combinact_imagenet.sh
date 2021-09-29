@@ -6,8 +6,8 @@
 #SBATCH -c 6                       # Number of CPU cores
 #SBATCH --mem=21G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0                  # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/rn50_imgnt_test3/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=rn50_imgnt_test3
+#SBATCH --output=logs_new/rn50_imgnt_test4/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=rn50_imgnt_test4
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/rn50_imgnt_test3
+SAVE_PATH=~/vector_projects/outputs/rn50_imgnt_test4
 DATASET="imagenet"
 RESNET_TYPE="$1"
 SEED="$2"
