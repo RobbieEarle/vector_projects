@@ -318,8 +318,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 print(
                     'Train Epoch: {:3d} [{:3d}/{:3d} ({:.0f}%)]  Loss: {:.6f}'.format(
                         epoch,
-                        batch_idx * len(x),
-                        len(loaders['aug_train'].dataset),
+                        batch_idx,
+                        len(loaders['aug_train']),
                         100. * batch_idx / len(loaders['aug_train']),
                         train_loss.item(),
                     ),
