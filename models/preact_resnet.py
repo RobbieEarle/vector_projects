@@ -83,11 +83,11 @@ class BottleneckBlock(nn.Module):
 
         identity = x.clone().to(x.device)
 
-        # # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
-        # alpha_primes = None
-        # x = self.bn1(x)
-        # x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
-        # x = self.conv1(x)
+        # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
+        alpha_primes = None
+        x = self.bn1(x)
+        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        x = self.conv1(x)
         #
         # # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
         # alpha_primes = None
