@@ -97,11 +97,12 @@ class BottleneckBlock(nn.Module):
         x = F.relu(x)
         x = self.conv2(x)
         #
-        # # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
-        # alpha_primes = None
-        # x = self.bn3(x)
+        # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
+        alpha_primes = None
+        x = self.bn3(x)
         # x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
-        # x = self.conv3(x)
+        x = F.relu(x)
+        x = self.conv3(x)
 
         if self.proj:
             identity = self.conv_proj(identity)
@@ -185,15 +186,15 @@ class PreActResNet(nn.Module):
         x = F.relu(self.bn0(self.conv0(x)))
         for block in self.layer1:
             x = block(x)
-        # for block in self.layer2:
-        #     x = block(x)
-        # for block in self.layer3:
-        #     x = block(x)
-        # for block in self.layer4:
-        #     x = block(x)
-        #
-        # x = self.avgpool(x)
-        # x = torch.flatten(x, 1)
-        # x = self.fc(x)
+        for block in self.layer2:
+            x = block(x)
+        for block in self.layer3:
+            x = block(x)
+        for block in self.layer4:
+            x = block(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
 
         return x
