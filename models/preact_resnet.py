@@ -181,8 +181,8 @@ class PreActResNet(nn.Module):
     def forward(self, x):
 
         x = F.relu(self.bn0(self.conv0(x)))
-        # for block in self.layer1:
-        #     x = block(x)
+        for block in self.layer1:
+            x = block(x)
         # for block in self.layer2:
         #     x = block(x)
         # for block in self.layer3:
