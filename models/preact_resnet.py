@@ -38,7 +38,7 @@ class BottleneckBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(c_in)
         self.conv1 = nn.Conv2d(conv1_in, out, kernel_size=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out)
-        self.conv2 = nn.Conv2d(conv2_in, out, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(conv2_in, c_out * self.expansion, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(out)
         self.conv3 = nn.Conv2d(conv3_in, c_out * self.expansion, kernel_size=1, bias=False)
 
@@ -89,11 +89,11 @@ class BottleneckBlock(nn.Module):
         x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
         x = self.conv1(x)
         #
-        # # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
-        # alpha_primes = None
-        # x = self.bn2(x)
-        # x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
-        # x = self.conv2(x)
+        # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
+        alpha_primes = None
+        x = self.bn2(x)
+        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        x = self.conv2(x)
         #
         # # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
         # alpha_primes = None
