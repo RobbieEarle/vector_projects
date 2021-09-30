@@ -176,7 +176,7 @@ python engine.py \
   --batch_size 128 \
   --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
-  --num_epochs 100 \
+  --num_epochs 50 \
   --dataset "$DATASET" \
   --aug \
   --distributed \
