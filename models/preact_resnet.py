@@ -83,23 +83,23 @@ class BottleneckBlock(nn.Module):
 
         identity = x.clone().to(x.device)
 
-        # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
-        alpha_primes = None
-        x = self.bn1(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
-        x = self.conv1(x)
-
-        # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
-        alpha_primes = None
-        x = self.bn2(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
-        x = self.conv2(x)
-
-        # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
-        alpha_primes = None
-        x = self.bn3(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
-        x = self.conv3(x)
+        # # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
+        # alpha_primes = None
+        # x = self.bn1(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        # x = self.conv1(x)
+        #
+        # # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
+        # alpha_primes = None
+        # x = self.bn2(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        # x = self.conv2(x)
+        # 
+        # # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
+        # alpha_primes = None
+        # x = self.bn3(x)
+        # x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
+        # x = self.conv3(x)
 
         if self.proj:
             identity = self.conv_proj(identity)
