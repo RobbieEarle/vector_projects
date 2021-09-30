@@ -94,7 +94,7 @@ class BottleneckBlock(nn.Module):
         # x = self.bn2(x)
         # x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
         # x = self.conv2(x)
-        # 
+        #
         # # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
         # alpha_primes = None
         # x = self.bn3(x)
@@ -104,7 +104,7 @@ class BottleneckBlock(nn.Module):
         if self.proj:
             identity = self.conv_proj(identity)
 
-        x += identity
+        # x += identity
 
         return x
 
