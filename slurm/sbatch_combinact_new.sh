@@ -6,8 +6,8 @@
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/rn50_cf10/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=rn50_cf10
+#SBATCH --output=logs_new/rn50_50ep/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=rn50_50ep
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
@@ -49,10 +49,10 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/rn50_cf10
-DATASET="cifar10"
-RESNET_TYPE="$1"
-SEED="$2"
+SAVE_PATH=~/vector_projects/outputs/rn50_50ep
+DATASET="$1"
+RESNET_TYPE="$2"
+SEED="$3"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
