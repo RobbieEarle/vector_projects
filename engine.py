@@ -59,7 +59,7 @@ def setup_experiment(args):
         actfun = args.actfun
         resnet_width = args.resnet_width
 
-    if not (args.skip_actfuns && skip_actfun):
+    if not (args.skip_actfuns and skip_actfun):
         # =========================== Creating new output file
         if args.one_shot and args.search:
             fieldnames = ['hp_idx', 'hyperparam_set', 'seed', 'lr', 'loss']
