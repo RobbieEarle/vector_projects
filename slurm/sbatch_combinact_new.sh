@@ -181,6 +181,7 @@ python engine.py \
   --aug \
   --distributed \
   --mix_pre_apex \
+  --skip_actfuns \
   --bs_factor 0.75 \
   --resnet_type "$RESNET_TYPE" \
   --label _${RESNET_TYPE}_${ACTFUN_IDX} \

@@ -28,6 +28,7 @@ def setup_experiment(args):
     device = torch.device("cuda:0" if use_cuda else "cpu")
     torch.cuda.set_device(device)
 
+    skip_actfun = False
     if args.actfun_idx is not None:
         all_actfuns = ['max', 'relu', 'swish', 'bin_all_max_min', 'ail_or',
                        'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
@@ -41,6 +42,7 @@ def setup_experiment(args):
         elif args.resnet_type == 'wrn50_custom':
             if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
                 resnet_width = 2
+                skip_actfun = True
             elif actfun in ['ail_all_or_and_xnor']:
                 resnet_width = 1.5
             else:
@@ -48,6 +50,7 @@ def setup_experiment(args):
         elif args.resnet_type == 'rn50_custom':
             if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
                 resnet_width = 1
+                skip_actfun = True
             elif actfun in ['ail_all_or_and_xnor']:
                 resnet_width = 0.75
             else:
@@ -56,99 +59,100 @@ def setup_experiment(args):
         actfun = args.actfun
         resnet_width = args.resnet_width
 
-    # =========================== Creating new output file
-    if args.one_shot and args.search:
-        fieldnames = ['hp_idx', 'hyperparam_set', 'seed', 'lr', 'loss']
-    else:
-        fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
-                      'sample_size', 'model', 'batch_size', 'alpha_primes', 'alphas',
-                      'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
-                      'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_type', 'resnet_width',
-                      'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
-                      'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
-                      'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs']
+    if not (args.skip_actfuns && skip_actfun):
+        # =========================== Creating new output file
+        if args.one_shot and args.search:
+            fieldnames = ['hp_idx', 'hyperparam_set', 'seed', 'lr', 'loss']
+        else:
+            fieldnames = ['dataset', 'seed', 'epoch', 'time', 'actfun',
+                          'sample_size', 'model', 'batch_size', 'alpha_primes', 'alphas',
+                          'num_params', 'var_nparams', 'var_nsamples', 'k', 'p', 'g', 'perm_method',
+                          'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_type', 'resnet_width',
+                          'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
+                          'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
+                          'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs']
 
-    if args.model == 'resnet':
-        model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
-    else:
-        model = args.model
-    filename = '{}{}'.format(args.seed, args.label)
+        if args.model == 'resnet':
+            model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
+        else:
+            model = args.model
+        filename = '{}{}'.format(args.seed, args.label)
 
-    outfile_path = os.path.join(args.save_path, filename) + '.csv'
-    mid_checkpoint_path = os.path.join(args.check_path, "checkpoint_latest") + '.pth'
-    checkpoint = None
-    if os.path.exists(mid_checkpoint_path):
-        checkpoint = torch.load(mid_checkpoint_path)
-        checkpoint_valid = (actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns'])
-        if args.c is not None:
-            checkpoint_valid = checkpoint_valid and checkpoint['c'] <= args.c
+        outfile_path = os.path.join(args.save_path, filename) + '.csv'
+        mid_checkpoint_path = os.path.join(args.check_path, "checkpoint_latest") + '.pth'
+        checkpoint = None
+        if os.path.exists(mid_checkpoint_path):
+            checkpoint = torch.load(mid_checkpoint_path)
+            checkpoint_valid = (actfun == checkpoint['actfun'] or actfun not in checkpoint['seen_actfuns'])
+            if args.c is not None:
+                checkpoint_valid = checkpoint_valid and checkpoint['c'] <= args.c
 
-    if checkpoint is None or checkpoint_valid:
-        if not os.path.exists(outfile_path):
-            with open(outfile_path, mode='w') as out_file:
-                writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
-                writer.writeheader()
+        if checkpoint is None or checkpoint_valid:
+            if not os.path.exists(outfile_path):
+                with open(outfile_path, mode='w') as out_file:
+                    writer = csv.DictWriter(out_file, fieldnames=fieldnames, lineterminator='\n')
+                    writer.writeheader()
 
-        # =========================== Training
-        num_params = util.get_num_params(args)
-        train_samples = util.get_train_samples(args)
-        p_vals, k_vals, g_vals = util.get_pkg_vals(args)
-        perm_methods = util.get_perm_methods(args)
-        curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
-            g_vals) * len(perm_methods))
-        if checkpoint is not None:
-            num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
-            if train_samples[0] is not None:
-                train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
-            p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
-            k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
-            perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
-            curr_seed = checkpoint['curr_seed']
+            # =========================== Training
+            num_params = util.get_num_params(args)
+            train_samples = util.get_train_samples(args)
+            p_vals, k_vals, g_vals = util.get_pkg_vals(args)
+            perm_methods = util.get_perm_methods(args)
+            curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
+                g_vals) * len(perm_methods))
+            if checkpoint is not None:
+                num_params = retrieve_checkpoint(checkpoint['num_params'], num_params)
+                if train_samples[0] is not None:
+                    train_samples = retrieve_checkpoint(checkpoint['sample_size'], train_samples)
+                p_vals = retrieve_checkpoint(checkpoint['p'], p_vals)
+                k_vals = retrieve_checkpoint(checkpoint['k'], k_vals)
+                perm_methods = retrieve_checkpoint(checkpoint['perm_method'], perm_methods)
+                curr_seed = checkpoint['curr_seed']
 
-        for curr_num_params in num_params:
-            for curr_sample_size in train_samples:
-                for p in p_vals:
-                    for k in k_vals:
-                        for g in g_vals:
+            for curr_num_params in num_params:
+                for curr_sample_size in train_samples:
+                    for p in p_vals:
+                        for k in k_vals:
+                            for g in g_vals:
 
-                            if args.var_pg:
-                                g = p
+                                if args.var_pg:
+                                    g = p
 
-                            for perm_method in perm_methods:
+                                for perm_method in perm_methods:
 
-                                filename = '{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
-                                                                              args.dataset,
-                                                                              model,
-                                                                              actfun,
-                                                                              p, k, g, perm_method,
-                                                                              args.label
-                                                                              )
-                                final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
-                                best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
+                                    filename = '{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
+                                                                                  args.dataset,
+                                                                                  model,
+                                                                                  actfun,
+                                                                                  p, k, g, perm_method,
+                                                                                  args.label
+                                                                                  )
+                                    final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
+                                    best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
 
-                                # ---- Begin training model
-                                trainer.train(args,
-                                              checkpoint,
-                                              mid_checkpoint_path,
-                                              final_checkpoint_path,
-                                              best_checkpoint_path,
-                                              actfun,
-                                              curr_seed,
-                                              outfile_path,
-                                              filename,
-                                              fieldnames,
-                                              curr_sample_size,
-                                              device,
-                                              num_params=curr_num_params,
-                                              curr_p=p,
-                                              curr_k=k,
-                                              curr_g=g,
-                                              perm_method=perm_method,
-                                              resnet_width=resnet_width)
-                                print()
+                                    # ---- Begin training model
+                                    trainer.train(args,
+                                                  checkpoint,
+                                                  mid_checkpoint_path,
+                                                  final_checkpoint_path,
+                                                  best_checkpoint_path,
+                                                  actfun,
+                                                  curr_seed,
+                                                  outfile_path,
+                                                  filename,
+                                                  fieldnames,
+                                                  curr_sample_size,
+                                                  device,
+                                                  num_params=curr_num_params,
+                                                  curr_p=p,
+                                                  curr_k=k,
+                                                  curr_g=g,
+                                                  perm_method=perm_method,
+                                                  resnet_width=resnet_width)
+                                    print()
 
-                                checkpoint = None
-                                curr_seed += 1
+                                    checkpoint = None
+                                    curr_seed += 1
 
 
 # --------------------  Entry Point
@@ -211,6 +215,7 @@ if __name__ == '__main__':
     parser.add_argument('--cycle_mom', action='store_true', help='')
     parser.add_argument('--one_shot', action='store_true', help='')
     parser.add_argument('--search', action='store_true', help='')
+    parser.add_argument('--skip_actfuns', action='store_true', help='When true, skip redundant actfuns')
     parser.add_argument('--bs_factor', type=float, default=1.0, help='Batch size reduction factor')
 
     args = parser.parse_args()
