@@ -35,9 +35,6 @@ class BottleneckBlock(nn.Module):
 
         out = int(c_out_wide)
         # -------- Defining layers in current block
-        print(conv1_in, conv2_in, conv3_in)
-        print(out, c_out, self.expansion)
-        print()
         self.bn1 = nn.BatchNorm2d(c_in)
         self.conv1 = nn.Conv2d(conv1_in, out, kernel_size=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out)
@@ -89,13 +86,15 @@ class BottleneckBlock(nn.Module):
         # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn1(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        # x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        x = F.relu(x)
         x = self.conv1(x)
         #
         # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn2(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        # x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        x = F.relu(x)
         x = self.conv2(x)
         #
         # # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
