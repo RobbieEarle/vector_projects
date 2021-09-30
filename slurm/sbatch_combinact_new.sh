@@ -58,7 +58,7 @@ echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "RESNET TYPE = $RESNET_TYPE"
 echo "ACTFUN INDEX = $ACTFUN_IDX"
-echo "EXTRA_ARGS = ${@:3}"
+echo "EXTRA_ARGS = ${@:4}"
 echo ""
 echo "------------------------------------------------------------------------"
 echo ""
@@ -184,7 +184,7 @@ python engine.py \
   --bs_factor 0.75 \
   --resnet_type "$RESNET_TYPE" \
   --label _${RESNET_TYPE}_${ACTFUN_IDX} \
-  "${@:3}"
+  "${@:4}"
 echo ""
 echo "# Finished running engine.py"
 elapsed=$(( SECONDS - start_time ))
