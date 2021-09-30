@@ -181,17 +181,17 @@ class PreActResNet(nn.Module):
     def forward(self, x):
 
         x = F.relu(self.bn0(self.conv0(x)))
-        for block in self.layer1:
-            x = block(x)
-        for block in self.layer2:
-            x = block(x)
-        for block in self.layer3:
-            x = block(x)
-        for block in self.layer4:
-            x = block(x)
-
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+        # for block in self.layer1:
+        #     x = block(x)
+        # for block in self.layer2:
+        #     x = block(x)
+        # for block in self.layer3:
+        #     x = block(x)
+        # for block in self.layer4:
+        #     x = block(x)
+        #
+        # x = self.avgpool(x)
+        # x = torch.flatten(x, 1)
+        # x = self.fc(x)
 
         return x
