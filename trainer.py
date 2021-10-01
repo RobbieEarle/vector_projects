@@ -183,7 +183,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                                eps=curr_hparams['eps'],
                                weight_decay=curr_hparams['wd'])
         scheduler = OneCycleLR(optimizer,
-                               max_lr=curr_hparams['max_lr'] * args.bs_factor,
+                               max_lr=curr_hparams['max_lr'] * args.bs_factor * args.lr_factor,
                                epochs=num_epochs,
                                steps_per_epoch=int(math.floor(sample_size / batch_size)),
                                pct_start=curr_hparams['cycle_peak'],
