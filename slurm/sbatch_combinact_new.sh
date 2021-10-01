@@ -184,6 +184,7 @@ python engine.py \
   --distributed \
   --mix_pre_apex \
   --bs_factor 0.75 \
+  --lr_factor 0.95 \
   --balanced \
   --resnet_type "$RESNET_TYPE" \
   --label _${RESNET_TYPE}_${ACTFUN_IDX} \

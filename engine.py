@@ -232,6 +232,7 @@ if __name__ == '__main__':
     parser.add_argument('--skip_actfuns', action='store_true', help='When true, skip redundant actfuns')
     parser.add_argument('--balanced', action='store_true', help='When true num params are adjusted to be equal')
     parser.add_argument('--bs_factor', type=float, default=1.0, help='Batch size reduction factor')
+    parser.add_argument('--lr_factor', type=float, default=1.0, help='Learning rate reduction factor')
 
     args = parser.parse_args()
 
