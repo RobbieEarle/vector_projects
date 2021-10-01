@@ -51,14 +51,16 @@ echo ""
 # Input handling
 SAVE_PATH=~/vector_projects/outputs/rn50_50ep
 DATASET="$1"
-RESNET_TYPE="$2"
-SEED="$3"
+EPOCHS="$2"
+RESNET_TYPE="$3"
+SEED="$4"
 ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
+echo "EPOCHS = $EPOCHS"
 echo "RESNET TYPE = $RESNET_TYPE"
 echo "ACTFUN INDEX = $ACTFUN_IDX"
-echo "EXTRA_ARGS = ${@:4}"
+echo "EXTRA_ARGS = ${@:5}"
 echo ""
 echo "------------------------------------------------------------------------"
 echo ""
@@ -176,16 +178,16 @@ python engine.py \
   --batch_size 128 \
   --actfun_idx "$ACTFUN_IDX" \
   --optim onecycle \
-  --num_epochs 50 \
+  --num_epochs $EPOCHS \
   --dataset "$DATASET" \
   --aug \
   --distributed \
   --mix_pre_apex \
-  --skip_actfuns \
   --bs_factor 0.75 \
+  --balanced \
   --resnet_type "$RESNET_TYPE" \
   --label _${RESNET_TYPE}_${ACTFUN_IDX} \
-  "${@:4}"
+  "${@:5}"
 echo ""
 echo "# Finished running engine.py"
 elapsed=$(( SECONDS - start_time ))

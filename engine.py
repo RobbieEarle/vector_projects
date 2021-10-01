@@ -7,6 +7,29 @@ import datetime
 import csv
 import trainer
 
+_WIDTH_FACTORS = {
+    "0.5": {
+        "3/2": 0.4,
+        "1": 0.5,
+        "1/2": 0.75
+    },
+    "1": {
+        "3/2": 0.75,
+        "1": 1,
+        "1/2": 1.5
+    },
+    "2": {
+        "3/2": 1.5,
+        "1": 2,
+        "1/2": 3
+    },
+    "4": {
+        "3/2": 3,
+        "1": 4,
+        "1/2": 5
+    }
+}
+
 
 def retrieve_checkpoint(curr_entry, full_arr):
     if curr_entry in full_arr:
@@ -35,26 +58,17 @@ def setup_experiment(args):
                        'ail_all_or_and_xnor', 'ail_part_or_xnor',
                        'ail_part_or_and_xnor']
         actfun = all_actfuns[args.actfun_idx]
-        if args.resnet_type == 'wrn50':
-            resnet_width = 2
-        elif args.resnet_type == 'rn50':
-            resnet_width = 1
-        elif args.resnet_type == 'wrn50_custom':
+
+        if not args.balanced:
+            resnet_width = _WIDTH_FACTORS[args.resnet_type]["1"]
+        else:
             if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
-                resnet_width = 2
+                resnet_width = _WIDTH_FACTORS[args.resnet_type]["1"]
                 skip_actfun = True
             elif actfun in ['ail_all_or_and_xnor']:
-                resnet_width = 1.5
+                resnet_width = _WIDTH_FACTORS[args.resnet_type]["3/2"]
             else:
-                resnet_width = 3
-        elif args.resnet_type == 'rn50_custom':
-            if actfun in ['relu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
-                resnet_width = 1
-                skip_actfun = True
-            elif actfun in ['ail_all_or_and_xnor']:
-                resnet_width = 0.75
-            else:
-                resnet_width = 1.5
+                resnet_width = _WIDTH_FACTORS[args.resnet_type]["1/2"]
     else:
         actfun = args.actfun
         resnet_width = args.resnet_width
@@ -216,6 +230,7 @@ if __name__ == '__main__':
     parser.add_argument('--one_shot', action='store_true', help='')
     parser.add_argument('--search', action='store_true', help='')
     parser.add_argument('--skip_actfuns', action='store_true', help='When true, skip redundant actfuns')
+    parser.add_argument('--balanced', action='store_true', help='When true num params are adjusted to be equal')
     parser.add_argument('--bs_factor', type=float, default=1.0, help='Batch size reduction factor')
 
     args = parser.parse_args()
