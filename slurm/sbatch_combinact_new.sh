@@ -6,8 +6,8 @@
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/rn50_50ep_lr/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=rn50_50ep_lr
+#SBATCH --output=logs_new/rn50_100ep_w4/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=rn50_100ep_w4
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/rn50_50ep_lr
+SAVE_PATH=~/vector_projects/outputs/rn50_100ep_w4
 DATASET="$1"
 EPOCHS="$2"
 RESNET_TYPE="$3"
@@ -183,8 +183,7 @@ python engine.py \
   --aug \
   --distributed \
   --mix_pre_apex \
-  --bs_factor 0.75 \
-  --lr_factor 0.95 \
+  --bs_factor 0.5 \
   --balanced \
   --resnet_type "$RESNET_TYPE" \
   --label _${RESNET_TYPE}_${ACTFUN_IDX} \

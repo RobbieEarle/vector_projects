@@ -207,7 +207,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
-            amp.load_state_dict(checkpoint["amp"])
+            if args.mix_pre_apex:
+                amp.load_state_dict(checkpoint["amp"])
             epoch = checkpoint['epoch']
             seen_actfuns = checkpoint['seen_actfuns']
             model.to(device)
@@ -242,10 +243,14 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
         if args.check_path != '':
             temp_path = os.path.join(args.check_path, "temp.pth")
+            if args.mix_pre_apex:
+                mix_pre_state = amp.state_dict()
+            else:
+                mix_pre_state = None
             torch.save({'state_dict': model.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'scheduler': scheduler.state_dict(),
-                        'amp':amp.state_dict(),
+                        'amp':mix_pre_state,
                         'curr_seed': curr_seed,
                         'epoch': epoch,
                         'actfun': actfun,
