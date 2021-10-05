@@ -5,9 +5,9 @@
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/ep/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=ep
+#SBATCH --array=0               # array value (for running multiple seeds, etc)
+#SBATCH --output=logs_new/ep_2/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=ep_2
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
@@ -49,11 +49,11 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/seed_exp/ep
+SAVE_PATH=~/vector_projects/outputs/seed_exp/ep_2
 DATASET="$1"
 EPOCHS="$2"
 SEED="$3"
-ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
+ACTFUN_IDX="$4"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "EPOCHS = $EPOCHS"
@@ -179,7 +179,6 @@ python engine.py \
   --num_epochs $EPOCHS \
   --dataset "$DATASET" \
   --aug \
-  --distributed \
   --mix_pre_apex \
   --bs_factor 0.75 \
   --lr_factor 0.95 \

@@ -5,8 +5,8 @@
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/cf100_100_12/%x_%A-%a_%n-%t.out
+#SBATCH --array=0               # array value (for running multiple seeds, etc)
+#SBATCH --output=logs_new/cf100_100_12_2/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=cf100_100_12
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
@@ -49,12 +49,12 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/seed_exp/cf100_100_12
+SAVE_PATH=~/vector_projects/outputs/seed_exp/cf100_100_12_2
 DATASET="cifar100"
 EPOCHS=100
 RESNET_TYPE="$1"
 SEED="$2"
-ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
+ACTFUN_IDX="$3"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "EPOCHS = $EPOCHS"
@@ -181,7 +181,6 @@ python engine.py \
   --num_epochs $EPOCHS \
   --dataset "$DATASET" \
   --aug \
-  --distributed \
   --mix_pre_apex \
   --bs_factor 0.75 \
   --resnet_type "$RESNET_TYPE" \
