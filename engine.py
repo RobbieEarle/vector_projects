@@ -97,8 +97,6 @@ def setup_experiment(args):
         train_samples = args.sample_size
         p, k, g = 1, 2, 1
         perm_method = args.perm_method
-        curr_seed = (args.seed * len(num_params) * len(train_samples) * len(p_vals) * len(k_vals) * len(
-            g_vals) * len(perm_methods))
 
         filename = '{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
                                                       args.dataset,
@@ -117,7 +115,7 @@ def setup_experiment(args):
                       final_checkpoint_path,
                       best_checkpoint_path,
                       actfun,
-                      curr_seed,
+                      args.seed,
                       outfile_path,
                       filename,
                       fieldnames,
@@ -129,10 +127,6 @@ def setup_experiment(args):
                       curr_g=g,
                       perm_method=perm_method,
                       resnet_width=resnet_width)
-        print()
-
-        checkpoint = None
-        curr_seed += 1
 
 
 # --------------------  Entry Point
