@@ -3,7 +3,7 @@ HOW TO REPRODUCE EXPERIMENTS
 
 # ResNet50
 
-> sbatch slurm/sbatch_combinact_new {DATASET} {EPOCHS} {RESNET_TYPE} {SEED}
+> sbatch slurm/sbatch_combinact_new.sh {DATASET} {EPOCHS} {RESNET_TYPE} {SEED}
 
 DATASET can be any of:
 - MNIST
@@ -16,3 +16,5 @@ RESNET_TYPE refers to the width of the ResNet with a 1d actfun such as ReLU. Can
 - 2
 - 4
 Higher order activation functions will adjust accordingly to have the same number of parameters.
+
+Specify save path in slurm file.
