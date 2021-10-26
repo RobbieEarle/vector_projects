@@ -94,17 +94,15 @@ def setup_experiment(args):
 
         # =========================== Training
         num_params = util.get_num_params(args)
-        train_samples = args.sample_size
         p, k, g = 1, 2, 1
-        perm_method = args.perm_method
 
-        filename = '{}-{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
-                                                      args.dataset,
-                                                      model,
-                                                      actfun,
-                                                      p, k, g, perm_method,
-                                                      args.label
-                                                      )
+        filename = '{}-{}-{}-{}-{}-{}-{}{}'.format(args.seed,
+                                                   args.dataset,
+                                                   model,
+                                                   actfun,
+                                                   p, k, g,
+                                                   args.label
+                                                   )
         final_checkpoint_path = os.path.join(args.save_path, filename) + '_final.pth'
         best_checkpoint_path = os.path.join(args.save_path, filename) + '_best.pth'
 
@@ -119,13 +117,13 @@ def setup_experiment(args):
                       outfile_path,
                       filename,
                       fieldnames,
-                      sample_size,
+                      args.sample_size,
                       device,
-                      num_params=num_params,
+                      num_params=util.get_num_params(args),
                       curr_p=p,
                       curr_k=k,
                       curr_g=g,
-                      perm_method=perm_method,
+                      perm_method=args.perm_method,
                       resnet_width=resnet_width)
 
 
