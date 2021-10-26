@@ -65,40 +65,17 @@ def get_num_params(args):
     if args.c is not None:
         num_params = [args.c]
     elif args.model == 'resnet' or args.model == 'efficientnet':
-        if args.var_n_params == 'resnet':
-            num_params = [80, 25, 8, 3]
-        elif args.num_params == 0:
-            num_params = [64]
+        if args.num_params == 0:
+            num_params = 64
         else:
-            num_params = [args.num_params]
+            num_params = args.num_params
     else:
-        if args.var_n_params == 'new':
-            num_params = [3e4, 1e5, 1e6, 1e7]
-        elif args.num_params == 0:
-            num_params = [1e7]
+        if args.num_params == 0:
+            num_params = 1e7
         else:
-            num_params = [args.num_params]
+            num_params = args.num_params
 
     return num_params
-
-
-def get_train_samples(args):
-    if args.var_n_samples:
-        train_samples = [50000, 40000, 30000, 20000, 10000]
-    elif args.overfit:
-        train_samples = [2500]
-    else:
-        train_samples = [args.sample_size]
-
-    return train_samples
-
-
-def get_perm_methods(args):
-    if args.var_perm_method:
-        perm_methods = ['shuffle', 'roll', 'roll_grouped']
-    else:
-        perm_methods = [args.perm_method]
-    return perm_methods
 
 
 def get_pkg_vals(args):
@@ -288,12 +265,6 @@ def hook_f(module, input, output):
         print(input[0][0, 0, :4, :4])
     elif len(input[0].shape) == 2:
         print(input[0][0, :16])
-    # print("IN: {} {}".format(type(input), len(input)))
-    # for curr_in in input:
-    #     print("     {}".format(curr_in.shape))
-    # print("OUT: {} {}".format(type(output), len(output)))
-    # for curr_out in output:
-    #     print("     {}".format(curr_out.shape))
     print()
 
 
@@ -305,12 +276,6 @@ def hook_b(module, input, output):
         print(input[0][0, 0, :4, :4])
     elif len(input[0].shape) == 2:
         print(input[0][0, :10])
-    # print("IN: {} {}".format(type(input), len(input)))
-    # for curr_in in input:
-    #     print("     {}".format(curr_in.shape))
-    # print("OUT: {} {}".format(type(output), len(output)))
-    # for curr_out in output:
-    #     print("     {}".format(curr_out.shape))
     print()
 
 
@@ -463,38 +428,10 @@ def load_dataset(
         seed=0,
         validation=False,
         batch_size=None,
-        train_sample_size=60000,
+        train_sample_size=None,
         kwargs=None):
 
     seed_all(seed)
-
-    if dataset == 'iris':
-        features, labels = load_iris(return_X_y=True)
-        features_train, features_test, labels_train, labels_test = model_selection.train_test_split(features, labels,
-                                                                                                    random_state=0,
-                                                                                                    train_size=0.8,
-                                                                                                    stratify=labels,
-                                                                                                    shuffle=True)
-
-        train_dataset = torch.utils.data.TensorDataset(torch.Tensor(features_train),
-                                                       torch.tensor(labels_train, dtype=torch.long))
-        eval_dataset = torch.utils.data.TensorDataset(torch.Tensor(features_test),
-                                                      torch.tensor(labels_test, dtype=torch.long))
-        aug_train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=features_train.shape[0],
-                                                       drop_last=True,
-                                                       shuffle=True, **kwargs)
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=features_train.shape[0], drop_last=True,
-                                                   shuffle=True,
-                                                   **kwargs)
-        aug_eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=features_train.shape[0],
-                                                      drop_last=False,
-                                                      shuffle=False, **kwargs)
-        eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=features_train.shape[0],
-                                                  drop_last=False,
-                                                  shuffle=False,
-                                                  **kwargs)
-
-        return aug_train_loader, train_loader, aug_eval_loader, eval_loader, features_train.shape[0], 1
 
     if dataset == 'mnist':
         aug_trans, trans = [], []
@@ -540,30 +477,6 @@ def load_dataset(
 
         if batch_size is None:
             batch_size = 256
-
-    elif dataset == 'imagenet':
-        aug_trans, trans = [], []
-        if args.aug:
-            aug_trans.append(transforms.RandomResizedCrop(224))
-            aug_trans.append(transforms.RandomHorizontalFlip())
-            aug_trans.append(ImageNetPolicy())
-        aug_trans.append(transforms.ToTensor())
-        aug_trans.append(transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)))
-        trans.append(transforms.ToTensor())
-        trans.append(transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)))
-
-        aug_trans_all = transforms.Compose(aug_trans)
-        trans_all = transforms.Compose(trans)
-
-        traindir = '/scratch/ssd002/datasets/imagenet/train'
-        valdir = '/scratch/ssd002/datasets/imagenet/val'
-        aug_train_set = datasets.ImageFolder(root=traindir, transform=aug_trans_all)
-        train_set = datasets.ImageFolder(root=traindir, transform=trans_all)
-        aug_test_set = datasets.ImageFolder(root=valdir, transform=aug_trans_all)
-        test_set = datasets.ImageFolder(root=valdir, transform=trans_all)
-
-        if batch_size is None:
-            batch_size = 32
 
     train_sample_size = len(train_set) if train_sample_size is None else train_sample_size
     if validation:

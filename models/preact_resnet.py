@@ -55,16 +55,6 @@ class BottleneckBlock(nn.Module):
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
         self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
-        # self.all_alpha_primes = nn.ParameterList()  # List of our trainable alpha prime values
-        # if self.actfun == "combinact":
-        #     self.num_combinact_actfuns = len(actfuns.get_combinact_actfuns(self.reduce_actfuns))
-        #     if self.alpha_dist == "per_cluster":
-        #         self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv1_in, self.num_combinact_actfuns)))
-        #         self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv2_in, self.num_combinact_actfuns)))
-        #         self.all_alpha_primes.append(nn.Parameter(torch.zeros(conv3_in, self.num_combinact_actfuns)))
-        #     if self.alpha_dist == "per_perm":
-        #         for layer in range(3):
-        #             self.all_alpha_primes.append(nn.Parameter(torch.zeros(self.p, self.num_combinact_actfuns)))
 
     def activate(self, x, layer_type, shuffle_map, alpha_primes):
         return actfuns.activate(x,
@@ -83,19 +73,16 @@ class BottleneckBlock(nn.Module):
 
         identity = x.clone().to(x.device)
 
-        # alpha_primes = self.all_alpha_primes[0] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn1(x)
         x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
         x = self.conv1(x)
 
-        # alpha_primes = self.all_alpha_primes[1] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn2(x)
         x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
         x = self.conv2(x)
 
-        # alpha_primes = self.all_alpha_primes[2] if self.actfun == 'combinact' else None
         alpha_primes = None
         x = self.bn3(x)
         x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
