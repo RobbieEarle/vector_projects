@@ -62,9 +62,7 @@ def get_actfuns(actfun):
 
 
 def get_num_params(args):
-    if args.c is not None:
-        num_params = [args.c]
-    elif args.model == 'resnet' or args.model == 'efficientnet':
+    if args.model == 'resnet' or args.model == 'efficientnet':
         if args.num_params == 0:
             num_params = 64
         else:
