@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/seed_exp/ep_2
+SAVE_PATH=~/vector_projects/outputs/seed_exp2/ep_2
 DATASET="$1"
 EPOCHS="$2"
 SEED="$3"

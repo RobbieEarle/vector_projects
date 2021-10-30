@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/seed_exp/cf100_100_12_balanced_2
+SAVE_PATH=~/vector_projects/outputs/seed_exp2/cf100_100_12_balanced_2
 DATASET="cifar100"
 EPOCHS=100
 RESNET_TYPE="$1"
