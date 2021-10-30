@@ -6,8 +6,8 @@
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0-10                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/ep_2/%x_%A-%a_%n-%t.out
-#SBATCH --job-name=ep_2
+#SBATCH --output=logs_new/seed_exp2/%x_%A-%a_%n-%t.out
+#SBATCH --job-name=ep
 #SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
