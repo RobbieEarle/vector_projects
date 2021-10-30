@@ -5,7 +5,7 @@
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0               # array value (for running multiple seeds, etc)
+#SBATCH --array=0-10                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs_new/cf10_100_12_balanced_2/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=cf10_100_12_balanced_2
 #SBATCH --qos=normal
@@ -54,7 +54,7 @@ DATASET="cifar10"
 EPOCHS=100
 RESNET_TYPE="$1"
 SEED="$2"
-ACTFUN_IDX="$3"
+ACTFUN_IDX="$SLURM_ARRAY_TASK_ID"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "EPOCHS = $EPOCHS"
