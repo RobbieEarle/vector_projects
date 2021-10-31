@@ -39,7 +39,10 @@ class BottleneckBlock(nn.Module):
 
         alpha_primes = None
         x = self.bn1(x)
+        print(x.shape)
         x = self.actfun(x)
+        print(x.shape)
+        print(x)
         x = self.conv1(x)
 
         alpha_primes = None
