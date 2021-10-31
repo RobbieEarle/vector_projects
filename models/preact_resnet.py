@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-import activation_functions as actfuns
+import actfuns
 import util
 
 
@@ -14,27 +14,18 @@ class BottleneckBlock(nn.Module):
         super(BottleneckBlock, self).__init__()
 
         # -------- Calculating number of input channels for each layer after applying activations
-        self.actfun = hyper_params['actfun'] if 'actfun' in hyper_params else 'relu'
-        self.k = hyper_params['k'] if 'k' in hyper_params else 2
-        self.p = hyper_params['p'] if 'p' in hyper_params else 1
-        self.g = hyper_params['g'] if 'g' in hyper_params else 1
+        actfun = hyper_params['actfun'] if 'actfun' in hyper_params else 'relu'
+        self.actfun = actfun.actfun_name2factory(actfun)
+        divisor = getattr(self.actfun, "divisor", 1)
+        feature_factor = getattr(self.actfun, "feature_factor", 1)
         width = hyper_params['width'] if 'width' in hyper_params else 1
 
-        # print("c_in = {}, c_out = {}".format(c_in, c_out))
+        out = int(int(round((c_out * width) / divisor)) * divisor)
 
-        pk_ratio = util.get_pk_ratio(self.actfun, self.p, self.k, self.g)
-        c_out_wide = (self.k * self.g) * int((c_out * width) / (self.k * self.g))
-        if self.actfun == 'bin_partition_full':
-            conv1_in = int((c_in * self.p) + (2 * math.floor((c_in * self.p) / (3 * self.k)) * (1 - self.k)))
-            conv2_in = int((c_out_wide*self.p) + (2*math.floor((c_out_wide*self.p) / (3*self.k)) * (1-self.k)))
-            conv3_in = int((c_out_wide*self.p) + (2*math.floor((c_out_wide*self.p) / (3*self.k)) * (1-self.k)))
-        else:
-            conv1_in = int(c_in * pk_ratio)
-            conv2_in = int(c_out_wide * pk_ratio)
-            conv3_in = int(c_out_wide * pk_ratio)
+        conv1_in = int(c_in * feature_factor)
+        conv2_in = int(out * feature_factor)
+        conv3_in = int(out * feature_factor)
 
-        out = int(c_out_wide)
-        # -------- Defining layers in current block
         self.bn1 = nn.BatchNorm2d(c_in)
         self.conv1 = nn.Conv2d(conv1_in, out, kernel_size=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out)
@@ -42,50 +33,23 @@ class BottleneckBlock(nn.Module):
         self.bn3 = nn.BatchNorm2d(out)
         self.conv3 = nn.Conv2d(conv3_in, c_out * self.expansion, kernel_size=1, bias=False)
 
-        self.proj = (c_in != self.expansion * c_out or stride > 1)
-        if self.proj:
-            self.conv_proj = nn.Conv2d(c_in, self.expansion * c_out, kernel_size=1, stride=stride, padding=0, bias=False)
-
-        # -------- Setting up shuffle maps and alpha prime params for higher order activations
-        self.alpha_dist = hyper_params['alpha_dist'] if 'alpha_dist' in hyper_params else 'per_cluster'
-        self.permute_type = hyper_params['permute_type'] if 'permute_type' in hyper_params else 'shuffle'
-        self.reduce_actfuns = hyper_params['reduce_actfuns'] if 'reduce_actfuns' in hyper_params else False
-
-        self.shuffle_maps = []
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_in, self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
-        self.shuffle_maps = util.add_shuffle_map(self.shuffle_maps, c_out, self.p)
-
-    def activate(self, x, layer_type, shuffle_map, alpha_primes):
-        return actfuns.activate(x,
-                                actfun=self.actfun,
-                                k=self.k,
-                                p=self.p,
-                                M=x.shape[1],
-                                layer_type=layer_type,
-                                permute_type=self.permute_type,
-                                shuffle_maps=shuffle_map,
-                                alpha_primes=alpha_primes,
-                                alpha_dist=self.alpha_dist,
-                                reduce_actfuns=self.reduce_actfuns)
-
     def forward(self, x):
 
         identity = x.clone().to(x.device)
 
         alpha_primes = None
         x = self.bn1(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[0], alpha_primes)
+        x = self.actfun(x)
         x = self.conv1(x)
 
         alpha_primes = None
         x = self.bn2(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[1], alpha_primes)
+        x = self.actfun(x)
         x = self.conv2(x)
 
         alpha_primes = None
         x = self.bn3(x)
-        x = self.activate(x, 'conv', self.shuffle_maps[2], alpha_primes)
+        x = self.actfun(x)
         x = self.conv3(x)
 
         if self.proj:

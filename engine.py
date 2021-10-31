@@ -49,6 +49,8 @@ def setup_experiment(args):
                        'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
                        'ail_all_or_and_xnor', 'ail_part_or_xnor',
                        'ail_part_or_and_xnor']
+        if args.new_actfuns:
+            all_actfuns = ['il_or', 'il_xnor', 'prelu', 'crelu']
         actfun = all_actfuns[args.actfun_idx]
 
         if not args.balanced:
@@ -164,6 +166,7 @@ if __name__ == '__main__':
     parser.add_argument('--balanced', action='store_true', help='When true num params are adjusted to be equal')
     parser.add_argument('--bs_factor', type=float, default=1.0, help='Batch size reduction factor')
     parser.add_argument('--lr_factor', type=float, default=1.0, help='Learning rate reduction factor')
+    parser.add_argument('--new_actfuns', action='store_true', help='Only runs new actfuns')
 
     args = parser.parse_args()
 
