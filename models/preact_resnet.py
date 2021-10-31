@@ -33,6 +33,10 @@ class BottleneckBlock(nn.Module):
         self.bn3 = nn.BatchNorm2d(out)
         self.conv3 = nn.Conv2d(conv3_in, c_out * self.expansion, kernel_size=1, bias=False)
 
+        self.proj = (c_in != self.expansion * c_out or stride > 1)
+        if self.proj:
+            self.conv_proj = nn.Conv2d(c_in, self.expansion * c_out, kernel_size=1, stride=stride, padding=0, bias=False)
+
     def forward(self, x):
 
         identity = x.clone().to(x.device)
