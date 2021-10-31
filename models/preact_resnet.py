@@ -15,7 +15,7 @@ class BottleneckBlock(nn.Module):
 
         # -------- Calculating number of input channels for each layer after applying activations
         actfun = hyper_params['actfun'] if 'actfun' in hyper_params else 'relu'
-        self.actfun = actfun.actfun_name2factory(actfun)
+        self.actfun = actfuns.actfun_name2factory(actfun)
         divisor = getattr(self.actfun, "divisor", 1)
         feature_factor = getattr(self.actfun, "feature_factor", 1)
         width = hyper_params['width'] if 'width' in hyper_params else 1
