@@ -80,7 +80,7 @@ class HOActfun(nn.Module):
 class CReLU(HOActfun):
     def forward(self, x):
         x = torch.cat((x,-x),1)
-        return F.relu(x)
+        return torch.relu(x)
 
     @property
     def divisor(self):
