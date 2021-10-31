@@ -37,7 +37,7 @@ def logistic_xnor_approx(z, dim):
 def logistic_or(z, dim):
     sig_neg_z = torch.sigmoid(-1 * z)
     sig_neg_z_prod = sig_neg_z.prod(dim=dim)
-    p = torch.ones(sig_neg_z_prod.shape) - sig_neg_z_prod
+    p = torch.ones_like(sig_neg_z_prod) - sig_neg_z_prod
     return torch.log(p / (1-p))
 
 
