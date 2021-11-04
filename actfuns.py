@@ -34,18 +34,13 @@ def logistic_xnor_approx(z, dim):
     return torch.sign(torch.prod(z, dim=dim)) * torch.min(z.abs(), dim=dim).values
 
 
-def logistic_or(z, dim):
-    sig_neg_z = torch.sigmoid(-1 * z)
-    sig_neg_z_prod = sig_neg_z.prod(dim=dim)
-    p = torch.ones_like(sig_neg_z_prod) - sig_neg_z_prod
-    return torch.log(p / (1-p))
+def logistic_or(z, dim, eps=1e-7):
+    p_inv = torch.sigmoid(-z).prod(dim=dim)
+    return torch.log(torch.clamp(1 - p_inv, eps)) - torch.log(torch.clamp(p_inv, eps))
 
-
-def logistic_xnor(z, dim):
-    sig_z = torch.sigmoid(z)
-    sig_neg_z = torch.sigmoid(-1 * z)
-    p = sig_z.prod(dim=dim) + sig_neg_z.prod(dim=dim)
-    return torch.log(p / (1-p))
+def logistic_xnor(z, dim, eps=1e-7):
+    p = torch.sigmoid(z).prod(dim=dim) + torch.sigmoid(-z).prod(dim=dim)
+    return torch.log(torch.clamp(p, eps)) - torch.log(torch.clamp(1 - p, eps))
 
 
 def unroll_k(x, k, d):
