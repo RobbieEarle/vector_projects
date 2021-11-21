@@ -117,7 +117,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     resnet_ver = args.resnet_ver
     num_epochs = args.num_epochs
 
-    actfuns_1d = ['relu', 'abs', 'swish', 'leaky_relu', 'tanh']
+    actfuns_1d = ['relu', 'abs', 'prelu', 'swish', 'leaky_relu', 'tanh']
     if actfun in actfuns_1d:
         curr_k = 1
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
