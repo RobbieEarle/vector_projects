@@ -84,7 +84,8 @@ def setup_experiment(args):
                           'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_type', 'resnet_width',
                           'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
                           'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
-                          'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs']
+                          'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs',
+                          'is_preempted']
 
         if args.model == 'resnet':
             model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)

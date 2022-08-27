@@ -200,7 +200,9 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
 
     epoch = 1
     seen_actfuns = set()
+    is_preempted = False
     if checkpoint is not None:
+        is_preempted = True
         if actfun not in checkpoint['seen_actfuns']:
             seen_actfuns = checkpoint['seen_actfuns']
         else:
@@ -354,9 +356,10 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
             lr_curr = param_group['lr']
         print(
             "    Epoch {}: LR {:1.5f} ||| aug_train_acc {:1.4f} | val_acc {:1.4f}, aug {:1.4f} ||| "
-            "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}"
+            "aug_train_loss {:1.4f} | val_loss {:1.4f}, aug {:1.4f} ||| time = {:1.4f}, is_preempted={}"
                 .format(epoch, lr_curr, epoch_aug_train_acc, epoch_val_acc, epoch_aug_val_acc,
-                        epoch_aug_train_loss, epoch_val_loss, epoch_aug_val_loss, (time.time() - start_time)), flush=True
+                        epoch_aug_train_loss, epoch_val_loss, epoch_aug_val_loss,
+                         (time.time() - start_time), is_preempted), flush=True
         )
 
         if args.hp_idx is None:
@@ -431,7 +434,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                              'curr_lr': lr_curr,
                              'found_lr': lr,
                              'hparams': curr_hparams,
-                             'epochs': num_epochs
+                             'epochs': num_epochs,
+                             'is_preempted': is_preempted
                              })
 
         epoch += 1
