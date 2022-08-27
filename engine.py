@@ -8,7 +8,7 @@ import csv
 import trainer
 
 _WIDTH_FACTORS = {
-    "0.5": {
+    "0": {
         "3/2": 0.4,
         "1": 0.5,
         "1/2": 0.75
@@ -23,7 +23,7 @@ _WIDTH_FACTORS = {
         "1": 2,
         "1/2": 3
     },
-    "4": {
+    "3": {
         "3/2": 3,
         "1": 4,
         "1/2": 6
@@ -48,9 +48,7 @@ def setup_experiment(args):
         all_actfuns = ['max', 'relu', 'swish', 'bin_all_max_min', 'ail_or',
                        'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
                        'ail_all_or_and_xnor', 'ail_part_or_xnor',
-                       'ail_part_or_and_xnor']
-        if args.new_actfuns:
-            all_actfuns = ['il_or', 'il_xnor', 'prelu', 'crelu']
+                       'ail_part_or_and_xnor', 'prelu']
         actfun = all_actfuns[args.actfun_idx]
 
         if not args.balanced:
@@ -73,7 +71,8 @@ def setup_experiment(args):
                   'gen_gap', 'aug_gen_gap', 'resnet_ver', 'resnet_type', 'resnet_width',
                   'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
                   'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
-                  'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs']
+                  'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs',
+                  'is_preempted']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
