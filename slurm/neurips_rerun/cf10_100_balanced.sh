@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=p100,t4v1,t4v2            # Which node partition to use (partitioned by GPU type)
+#SBATCH --partition=t4v2            # Which node partition to use (partitioned by GPU type)
 #SBATCH --nodes 1                   # Number of nodes to request
 #SBATCH --gres=gpu:1                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
