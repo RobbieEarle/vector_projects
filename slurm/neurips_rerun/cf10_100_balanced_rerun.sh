@@ -6,7 +6,7 @@
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0                # array value (for running multiple seeds, etc)
-#SBATCH --output=logs_new/neurips/%x_%A-%a_%n-%t.out
+#SBATCH --output=logs_new/neurips_rerun/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=cf10_100_balanced_neurips
 #SBATCH --qos=high
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
@@ -49,7 +49,7 @@ echo ""
 echo "------------------------------------------------------------------------"
 echo ""
 # Input handling
-SAVE_PATH=~/vector_projects/outputs/neurips/cf10_100_balanced
+SAVE_PATH=~/vector_projects/outputs/neurips_rerun/cf10_100_balanced
 DATASET="cifar10"
 EPOCHS=100
 SEED="$1"
