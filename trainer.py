@@ -174,7 +174,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     pmodel = pmodel.cuda()
 
     epoch = 1
-    seen_actfuns = set
+    seen_actfuns = set()
     is_preempted = False
     if checkpoint is not None:
         is_preempted = True

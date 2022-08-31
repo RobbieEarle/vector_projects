@@ -45,10 +45,10 @@ def setup_experiment(args):
     torch.cuda.set_device(device)
 
     if args.actfun_idx is not None:
-        all_actfuns = ['max', 'relu', 'swish', 'bin_all_max_min', 'ail_or',
-                       'ail_xnor', 'ail_all_or_and', 'ail_all_or_xnor',
-                       'ail_all_or_and_xnor', 'ail_part_or_xnor',
-                       'ail_part_or_and_xnor', 'prelu']
+        all_actfuns = ['max', 'relu', 'swish', 'max_min_dup', 'ail_or',
+                       'ail_xnor', 'ail_and_or_dup', 'ail_or_xnor_dup',
+                       'ail_and_or_xnor_dup', 'ail_or_xnor_part',
+                       'ail_and_or_xnor_part', 'prelu']
         actfun = all_actfuns[args.actfun_idx]
 
         if not args.balanced:

@@ -97,6 +97,9 @@ class MinOut(HOActfun):
         x, d_new = unroll_k(x, self.k, self.dim)
         return torch.min(x, dim=d_new).values
 
+class Swish(HOActfun):
+    def forward(self, x):
+        return x * torch.sigmoid(x)
 
 class SignedGeomeanFunc(torch.autograd.Function):
     @staticmethod
@@ -256,6 +259,8 @@ def actfun_name2factory(name):
         return nn.ReLU
     elif name == "prelu":
         return nn.PReLU
+    elif name == "swish":
+        return Swish
     elif name == "crelu":
         return CReLU
     elif name in ("maxout", "max"):
