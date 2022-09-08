@@ -1,11 +1,13 @@
 #!/bin/bash
 #SBATCH --partition=t4v2            # Which node partition to use (partitioned by GPU type)
+#SBATCH --exclude=gpu102
+#SBATCH --exclude=gpu069
 #SBATCH --nodes 1                   # Number of nodes to request
 #SBATCH --gres=gpu:1                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
 #SBATCH -c 6                      # Number of CPU cores
 #SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
-#SBATCH --array=0-3                # array value (for running multiple seeds, etc)
+#SBATCH --array=0                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs_new/neurips/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=cf100_100_balanced_neurips
 #SBATCH --qos=high
@@ -52,8 +54,8 @@ echo ""
 SAVE_PATH=~/vector_projects/outputs/neurips/cf100_100_balanced
 DATASET="cifar100"
 EPOCHS=100
-RESNET_TYPE="$SLURM_ARRAY_TASK_ID"
 SEED="$1"
+RESNET_TYPE="$2"
 echo "SEED = $SEED"
 echo "DATASET = $DATASET"
 echo "EPOCHS = $EPOCHS"
