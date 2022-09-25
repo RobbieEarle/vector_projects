@@ -255,7 +255,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                     train_loss = train_loss/2
                     optimizer.step()
                     optimizer.zero_grad()
-                else if not args.split_batch:
+                elif not args.split_batch:
                     optimizer.step()
 
             else:
