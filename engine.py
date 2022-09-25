@@ -72,7 +72,7 @@ def setup_experiment(args):
                   'epoch_train_loss', 'epoch_train_acc', 'epoch_aug_train_loss',
                   'epoch_aug_train_acc', 'epoch_val_loss', 'epoch_val_acc', 'epoch_aug_val_loss',
                   'epoch_aug_val_acc', 'hp_idx', 'curr_lr', 'found_lr', 'hparams', 'epochs',
-                  'is_preempted']
+                  'is_preempted', 'split_batch']
 
     if args.model == 'resnet':
         model = "{}-{}-{}".format(args.model, args.resnet_ver, args.resnet_width)
@@ -160,6 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--grid_id', type=int, default=5, help='')
     parser.add_argument('--mix_pre', action='store_true', help='')
     parser.add_argument('--mix_pre_apex', action='store_true', help='')
+    parser.add_argument('--split_batch', action='store_true', help='')
     parser.add_argument('--search', action='store_true', help='')
     parser.add_argument('--skip_actfuns', action='store_true', help='When true, skip redundant actfuns')
     parser.add_argument('--balanced', action='store_true', help='When true num params are adjusted to be equal')

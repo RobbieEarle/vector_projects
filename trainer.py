@@ -233,7 +233,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
         total_train_loss, n, num_correct, num_total = 0, 0, 0, 0
         for batch_idx, (x, targetx) in enumerate(loaders['aug_train']):
             x, targetx = x.to(device), targetx.to(device)
-            optimizer.zero_grad()
+            if not args.split_batch:
+                optimizer.zero_grad()
             if args.mix_pre:
                 with torch.cuda.amp.autocast():
                     output = pmodel(x)
@@ -250,7 +251,13 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 n += 1
                 with amp.scale_loss(train_loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
-                optimizer.step()
+                if args.split_batch and (batch_idx+1)%2==0:
+                    train_loss = train_loss/2
+                    optimizer.step()
+                    optimizer.zero_grad()
+                else if not args.split_batch:
+                    optimizer.step()
+
             else:
                 output = pmodel(x)
                 train_loss = criterion(output, targetx)
