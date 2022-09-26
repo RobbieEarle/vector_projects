@@ -251,8 +251,8 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
                 n += 1
                 with amp.scale_loss(train_loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
-                if args.split_batch and (batch_idx+1)%2==0:
-                    train_loss = train_loss/2
+                if args.split_batch and (batch_idx+1)%4==0:
+                    train_loss = train_loss/4
                     optimizer.step()
                     optimizer.zero_grad()
                 elif not args.split_batch:
