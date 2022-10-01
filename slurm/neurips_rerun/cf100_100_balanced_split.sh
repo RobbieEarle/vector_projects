@@ -170,7 +170,6 @@ date
 #
 echo ""
 echo "# Running engine.py"
-python engine.py --seed "$SEED" --save_path "$SAVE_PATH" --check_path "$CKPT_DIR" --model resnet --batch_size 16 --actfun_idx 3 --optim onecycle --num_epochs $EPOCHS --dataset "$DATASET" --aug --mix_pre_apex --split_batch --bs_factor 0.75 --balanced --resnet_type "$RESNET_TYPE" --label _${RESNET_TYPE}_${ACTFUN_IDX} "${@:5}"
 python engine.py --seed "$SEED" --save_path "$SAVE_PATH" --check_path "$CKPT_DIR" --model resnet --batch_size 16 --actfun_idx 5 --optim onecycle --num_epochs $EPOCHS --dataset "$DATASET" --aug --mix_pre_apex --split_batch --bs_factor 0.75 --balanced --resnet_type "$RESNET_TYPE" --label _${RESNET_TYPE}_${ACTFUN_IDX} "${@:5}"
 python engine.py --seed "$SEED" --save_path "$SAVE_PATH" --check_path "$CKPT_DIR" --model resnet --batch_size 16 --actfun_idx 6 --optim onecycle --num_epochs $EPOCHS --dataset "$DATASET" --aug --mix_pre_apex --split_batch --bs_factor 0.75 --balanced --resnet_type "$RESNET_TYPE" --label _${RESNET_TYPE}_${ACTFUN_IDX} "${@:5}"
 python engine.py --seed "$SEED" --save_path "$SAVE_PATH" --check_path "$CKPT_DIR" --model resnet --batch_size 16 --actfun_idx 7 --optim onecycle --num_epochs $EPOCHS --dataset "$DATASET" --aug --mix_pre_apex --split_batch --bs_factor 0.75 --balanced --resnet_type "$RESNET_TYPE" --label _${RESNET_TYPE}_${ACTFUN_IDX} "${@:5}"
