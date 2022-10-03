@@ -58,9 +58,11 @@ def activate(x, actfun, p=1, k=1, M=None,
         x = x.reshape(batch_size, int(num_channels * p / k), k)
 
     bin_partition_actfuns = ['bin_part_full', 'bin_part_max_min_sgm', 'bin_part_max_sgm',
-                             'ail_part_full', 'ail_part_or_and_xnor', 'ail_part_or_xnor']
+                             'ail_part_full', 'ail_part_or_and_xnor', 'ail_part_or_xnor',
+                             'nail_part_full', 'nail_part_or_and_xnor', 'nail_part_or_xnor']
     bin_all_actfuns = ['bin_all_full', 'bin_all_max_min', 'bin_all_max_sgm', 'bin_all_max_min_sgm',
-                       'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor']
+                       'ail_all_full', 'ail_all_or_and', 'ail_all_or_xnor', 'ail_all_or_and_xnor',
+                       'nail_all_full', 'nail_all_or_and', 'nail_all_or_xnor', 'nail_all_or_and_xnor']
 
     if actfun == 'combinact':
         x = combinact(x,
@@ -95,67 +97,6 @@ def get_combinact_actfuns(reduce_actfuns=False):
         return _COMBINACT_ACTFUNS
 
 
-_ACTFUNS = {
-    'ail_and':
-        lambda z: logistic_and_approx(z),
-    'ail_or':
-        lambda z: logistic_or_approx(z),
-    'ail_xnor':
-        lambda z: logistic_xnor_approx(z),
-    'combinact':
-        lambda z: combinact(z),
-    'relu':
-        lambda z: F.relu_(z),
-    'tanh':
-        lambda z: F.tanh(z),
-    'leaky_relu':
-        lambda z: F.leaky_relu_(z),
-    'abs':
-        lambda z: torch.abs_(z),
-    'swish':
-        lambda z: z * torch.sigmoid(z),
-    'prod':
-        lambda z: torch.prod(z, dim=2),
-    'max':
-        lambda z: torch.max(z, dim=2).values,
-    'min':
-        lambda z: torch.min(z, dim=2).values,
-    'signed_geomean':
-        lambda z: sgm(z),
-    'swishk':
-        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
-    'swishy':
-        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
-    'l1':
-        lambda z: (torch.sum(z.abs(), dim=2)),
-    'l2':
-        lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
-    'l3-signed':
-        lambda z: signed_l3(z),
-    'linf':
-        lambda z: torch.max(z.abs(), dim=2).values,
-    'lse':
-        lambda z: torch.logsumexp(z, dim=2),
-    'lae':
-        lambda z: logavgexp(z, dim=2),
-    'nlsen':
-        lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
-    'nlaen':
-        lambda z: -1 * logavgexp(-1 * z, dim=2),
-    'lse-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'lae-approx':
-        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'nlsen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'nlaen-approx':
-        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
-    'multi_relu':
-        lambda z: multi_relu(z),
-}
-_ln2 = 0.6931471805599453
-
-
 def logistic_and_approx(z):
     return torch.where(
         (z < 0).all(dim=2),
@@ -175,6 +116,20 @@ def logistic_or_approx(z):
 def logistic_xnor_approx(z):
     return torch.sign(torch.prod(z, dim=2)) * torch.min(z.abs(), dim=2).values
 
+
+def logistic_and_approx_normalized(z):
+    # divide by math.sqrt((1 + 2.5 * np.pi) / (2 * math.pi))
+    return logistic_and_approx(z).mul_(0.8424043984960415)
+
+
+def logistic_or_approx_normalized(z):
+    # divide by math.sqrt((1 + 2.5 * np.pi) / (2 * math.pi))
+    return logistic_or_approx(z).mul_(0.8424043984960415)
+
+
+def logistic_xnor_approx_normalized(z):
+    # divide by math.sqrt(1 - 2 / math.pi)
+    return logistic_xnor_approx(z).mul_(1.658896739970306)
 
 def combinact(x, p, layer_type='linear', alpha_primes=None, alpha_dist=None, reduce_actfuns=False):
 
@@ -314,88 +269,223 @@ def logavgexp(input, dim, keepdim=False, temperature=None, dtype=torch.float32):
 
 def binary_ops(z, actfun, layer_type, bin_partition_actfuns, bin_all_actfuns):
 
-    bin_and = None
-    bin_xor = None
     bin_pass = None
+
     if actfun in bin_partition_actfuns:
         if actfun == 'bin_part_full':
             partition = math.floor(z.shape[1] / 4)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
-            bin_xor = sgm(z[:, 2*partition: 3*partition, ...])
-            bin_pass = z[:, 3*partition:, ...]
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                torch.min(z[:, partition:2 * partition, ...], dim=2).values,
+                sgm(z[:, 2 * partition: 3 * partition, ...]),
+            ]
+            bin_pass = z[:, 3 * partition:, ...]
         elif actfun == 'bin_part_max_min_sgm':
             partition = math.floor(z.shape[1] / 3)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_and = torch.min(z[:, partition:2*partition, ...], dim=2).values
-            bin_xor = sgm(z[:, 2*partition:, ...])
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                torch.min(z[:, partition:2 * partition, ...], dim=2).values,
+                sgm(z[:, 2 * partition:, ...]),
+            ]
         elif actfun == 'bin_part_max_sgm':
             partition = math.floor(z.shape[1] / 2)
-            bin_or = torch.max(z[:, :partition, ...], dim=2).values
-            bin_xor = sgm(z[:, partition:, ...])
+            zs = [
+                torch.max(z[:, :partition, ...], dim=2).values,
+                sgm(z[:, partition:, ...]),
+            ]
         elif actfun == 'ail_part_full':
             partition = math.floor(z.shape[1] / 4)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_and_approx(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx(z[:, 2 * partition: 3 * partition, ...]),
+            ]
+            bin_pass = z[:, 3 * partition:, ...]
+        elif actfun == 'nail_part_full':
+            partition = math.floor(z.shape[1] / 4)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_and_approx_normalized(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx_normalized(z[:, 2 * partition: 3 * partition, ...]),
+            ]
             bin_pass = z[:, 3 * partition:, ...]
         elif actfun == 'ail_part_or_and_xnor':
             partition = math.floor(z.shape[1] / 3)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_and = logistic_and_approx(z[:, partition:2 * partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, 2 * partition:, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_and_approx(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx(z[:, 2 * partition:, ...]),
+            ]
+        elif actfun == 'nail_part_or_and_xnor':
+            partition = math.floor(z.shape[1] / 3)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_and_approx_normalized(z[:, partition:2 * partition, ...]),
+                logistic_xnor_approx_normalized(z[:, 2 * partition:, ...]),
+            ]
         elif actfun == 'ail_part_or_xnor':
             partition = math.floor(z.shape[1] / 2)
-            bin_or = logistic_or_approx(z[:, :partition, ...])
-            bin_xor = logistic_xnor_approx(z[:, partition:, ...])
+            zs = [
+                logistic_or_approx(z[:, :partition, ...]),
+                logistic_xnor_approx(z[:, partition:, ...]),
+            ]
+        elif actfun == 'nail_part_or_xnor':
+            partition = math.floor(z.shape[1] / 2)
+            zs = [
+                logistic_or_approx_normalized(z[:, :partition, ...]),
+                logistic_xnor_approx_normalized(z[:, partition:, ...]),
+            ]
     elif actfun in bin_all_actfuns:
         if actfun == 'bin_all_max_sgm':
-            bin_or = torch.max(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                sgm(z),
+            ]
         elif actfun == 'bin_all_max_min':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+            ]
         elif actfun == 'bin_all_max_min_sgm':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+                sgm(z),
+            ]
         elif actfun == 'bin_all_full':
-            bin_or = torch.max(z, dim=2).values
-            bin_and = torch.min(z, dim=2).values
-            bin_xor = sgm(z)
+            zs = [
+                torch.max(z, dim=2).values,
+                torch.min(z, dim=2).values,
+                sgm(z),
+            ]
             bin_pass = z
         elif actfun == 'ail_all_or_xnor':
-            bin_or = logistic_or_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_xnor_approx(z),
+            ]
+        elif actfun == 'nail_all_or_xnor':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
+            ]
         elif actfun == 'ail_all_or_and':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+            ]
+        elif actfun == 'nail_all_or_and':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
+            ]
         elif actfun == 'ail_all_or_and_xnor':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+                logistic_xnor_approx(z),
+            ]
+        elif actfun == 'nail_all_or_and_xnor':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
+            ]
         elif actfun == 'ail_all_full':
-            bin_or = logistic_or_approx(z)
-            bin_and = logistic_and_approx(z)
-            bin_xor = logistic_xnor_approx(z)
+            zs = [
+                logistic_or_approx(z),
+                logistic_and_approx(z),
+                logistic_xnor_approx(z),
+            ]
+            bin_pass = z
+        elif actfun == 'nail_all_full':
+            zs = [
+                logistic_or_approx_normalized(z),
+                logistic_and_approx_normalized(z),
+                logistic_xnor_approx_normalized(z),
+            ]
             bin_pass = z
 
-    z = bin_or
-
-    if bin_and is not None:
-        z = torch.cat((z, bin_and), dim=1)
-    if bin_xor is not None:
-        z = torch.cat((z, bin_xor), dim=1)
     if bin_pass is not None:
         if layer_type == 'conv':
             bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2],
                                         bin_pass.shape[3], bin_pass.shape[4])
         elif layer_type == 'linear':
             bin_pass = bin_pass.reshape(bin_pass.shape[0], bin_pass.shape[1] * bin_pass.shape[2])
+        zs.append(bin_pass)
 
-        z = torch.cat((z, bin_pass), dim=1)
-
-    return z
+    return torch.cat(zs, dim=1)
 
 
 sgm = SignedGeomean.apply
+
+
+_ln2 = 0.6931471805599453
+_ACTFUNS = {
+    'ail_and':
+        logistic_and_approx,
+    'ail_or':
+        logistic_or_approx,
+    'ail_xnor':
+        logistic_xnor_approx,
+    'nail_and':
+        logistic_and_approx_normalized,
+    'nail_or':
+        logistic_or_approx_normalized,
+    'nail_xnor':
+        logistic_xnor_approx_normalized,
+    'combinact':
+        combinact,
+    'relu':
+        F.relu_,
+    'nrelu':
+        lambda z: F.relu_(z).mul_(1.414213562),
+    'tanh':
+        F.tanh,
+    'leaky_relu':
+        F.leaky_relu_,
+    'abs':
+        torch.abs_,
+    'swish':
+        lambda z: z * torch.sigmoid(z),
+    'nswish':
+        lambda z: z.mul_(torch.sigmoid(z)).mul_(1.676531339),
+    'prod':
+        lambda z: torch.prod(z, dim=2),
+    'max':
+        lambda z: torch.max(z, dim=2).values,
+    'min':
+        lambda z: torch.min(z, dim=2).values,
+    'signed_geomean':
+        sgm,
+    'swishk':
+        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z), dim=2)),
+    'swishy':
+        lambda z: z[:, :, 0] * torch.exp(torch.sum(F.logsigmoid(z[:, :, 1:]), dim=2)),
+    'l1':
+        lambda z: (torch.sum(z.abs(), dim=2)),
+    'l2':
+        lambda z: (torch.sum(z.pow(2), dim=2)).sqrt_(),
+    'l3-signed':
+        signed_l3,
+    'linf':
+        lambda z: torch.max(z.abs(), dim=2).values,
+    'lse':
+        lambda z: torch.logsumexp(z, dim=2),
+    'lae':
+        lambda z: logavgexp(z, dim=2),
+    'nlsen':
+        lambda z: -1 * torch.logsumexp(-1 * z, dim=2),
+    'nlaen':
+        lambda z: -1 * logavgexp(-1 * z, dim=2),
+    'lse-approx':
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'lae-approx':
+        lambda z: torch.max(z[:, :, 0], z[:, :, 1]) + torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'nlsen-approx':
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(0., device=z.device), _ln2 - 0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'nlaen-approx':
+        lambda z: -torch.max(-z[:, :, 0], -z[:, :, 1]) - torch.max(torch.tensor(-_ln2, device=z.device), -0.305 * (z[:, :, 0] - z[:, :, 1]).abs_()),
+    'multi_relu':
+        multi_relu,
+}
