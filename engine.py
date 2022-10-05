@@ -54,9 +54,9 @@ def setup_experiment(args):
         if not args.balanced:
             resnet_width = _WIDTH_FACTORS[args.resnet_type]["1"]
         else:
-            if actfun in ['relu', 'prelu', 'swish', 'bin_all_max_min', 'ail_all_or_and', 'ail_all_or_xnor']:
+            if actfun in ['relu', 'prelu', 'swish', 'max_min_dup', 'ail_and_or_dup', 'ail_or_xnor_dup']:
                 resnet_width = _WIDTH_FACTORS[args.resnet_type]["1"]
-            elif actfun in ['ail_all_or_and_xnor']:
+            elif actfun in ['ail_and_or_xnor_dup']:
                 resnet_width = _WIDTH_FACTORS[args.resnet_type]["3/2"]
             else:
                 resnet_width = _WIDTH_FACTORS[args.resnet_type]["1/2"]
