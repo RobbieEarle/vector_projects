@@ -5,8 +5,8 @@
 #SBATCH --nodes 1                   # Number of nodes to request
 #SBATCH --gres=gpu:1                # Number of GPUs per node to request
 #SBATCH --tasks-per-node=1          # Number of processes to spawn per node
-#SBATCH -c 6                      # Number of CPU cores
-#SBATCH --mem=32G                  # RAM per node (don't exceed 43000MB per GPU)
+#SBATCH -c 2                        # Number of CPU cores
+#SBATCH --mem=12G                  # RAM per node (don't exceed 43000MB per GPU)
 #SBATCH --array=0                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs/neurips_balanced_rerun/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=neurips_balanced_rerun
