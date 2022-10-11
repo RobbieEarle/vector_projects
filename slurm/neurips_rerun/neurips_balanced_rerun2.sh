@@ -10,7 +10,7 @@
 #SBATCH --array=0                # array value (for running multiple seeds, etc)
 #SBATCH --output=logs/neurips_balanced_rerun/%x_%A-%a_%n-%t.out
 #SBATCH --job-name=neurips_balanced_rerun
-#SBATCH --qos=high
+#SBATCH --qos=normal
 #SBATCH --open-mode=append  # Use append mode otherwise preemption resets the checkpoint file
 ​
 # Manually define this variable to be equal to the number of GPUs in the --gres argument above
