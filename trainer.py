@@ -130,7 +130,7 @@ def train(args, checkpoint, mid_checkpoint_location, final_checkpoint_location, 
     model, model_params = load_model(args.model, args.dataset, actfun, curr_k, curr_p, curr_g, num_params=num_params,
                                perm_method=perm_method, device=device, resnet_ver=resnet_ver,
                                resnet_width=resnet_width, verbose=args.verbose)
-
+    print(model)
     util.seed_all(curr_seed)
     model.apply(util.weights_init)
 
