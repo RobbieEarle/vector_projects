@@ -194,7 +194,6 @@ python engine.py \
     --resnet_type "$RESNET_TYPE" \
     --label "${DATASET}_${RESNET_TYPE}_${ACTFUN_IDX}" \
     "${@}"
-    done
 
 echo ""
 echo "# Finished running engine.py"
