@@ -52,8 +52,8 @@ def setup_experiment(args):
     if args.actfun_idx is not None:
         all_actfuns = ['max', 'relu', 'swish', 'max_min_dup', 'ail_or',
                        'ail_xnor', 'ail_and_or_dup', 'ail_or_xnor_dup',
-                       'ail_and_or_xnor_dup', 'ail_or_xnor_part',
-                       'ail_and_or_xnor_part', 'prelu']
+                       'ail_and_or_xnor_dup', 'ail_or_xnor_part_fixed',
+                       'ail_and_or_xnor_part_fixed', 'prelu']
         actfun = all_actfuns[args.actfun_idx]
 
         if not args.balanced:
