@@ -201,7 +201,7 @@ class MultiActfunPartition(HOActfun):
 
     def forward(self, x):
         x, d_new = unroll_k(x, self.k, self.dim)
-        xs = torch.split(x, len(self.actfuns), dim=d_new)
+        xs = torch.split(x, x.shape[self.dim] // len(self.actfuns), dim=self.dim)
         return torch.cat(
             [f(xi, d_new) for f, xi in zip(self.actfuns, xs)], dim=self.dim
         )
