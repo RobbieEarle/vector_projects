@@ -1407,15 +1407,16 @@ def get_hparams(model, dataset, actfun, seed, epochs, search=False, hp_idx=None,
     else:
         util.seed_all(seed)
         rng = np.random.RandomState(seed)
+        _actfun = actfun.replace("_fixed", "")
         if epochs == 10:
             if oneshot:
-                b = _TEST_BOUNDS[model][dataset][actfun]
+                b = _TEST_BOUNDS[model][dataset][_actfun]
             else:
-                b = _BOUNDS10[model][dataset][actfun]
+                b = _BOUNDS10[model][dataset][_actfun]
         elif epochs == 50:
-            b = _BOUNDS50[model][dataset][actfun]
+            b = _BOUNDS50[model][dataset][_actfun]
         else:
-            b = _BOUNDS100[model][dataset][actfun]
+            b = _BOUNDS100[model][dataset][_actfun]
 
         if search:
             hparams = {"beta1": 1 - np.power(10., rng.uniform(b['beta1'][0], b['beta1'][1])),
