@@ -82,6 +82,9 @@ class PreActResNet(nn.Module):
         self.k = kwargs['k'] if 'k' in kwargs else 1
         self.p = kwargs['p'] if 'p' in kwargs else 1
         self.g = kwargs['g'] if 'g' in kwargs else 1
+        _actfun = actfuns.actfun_name2factory(self.actfun)()
+        divisor = getattr(_actfun, "divisor", 1)
+
         self.width = kwargs['width'] if 'width' in kwargs else 1
         if self.actfun == 'relu':
             assert self.k == 1, "k = {} with ReLU activation. ReLU cannot have k != 1".format(self.k)
@@ -89,7 +92,7 @@ class PreActResNet(nn.Module):
         c = kwargs['c'] if 'c' in kwargs else 64
         c = [c, 2 * c, 4 * c, 8 * c]
         for i, curr_num_params in enumerate(c):
-            c[i] = self.k * self.g * int(curr_num_params / (self.k * self.g))
+            c[i] = divisor * self.g * int(curr_num_params / (divisor * self.g))
         self.inplanes = c[0]
         # print("c = {}".format(c))
 

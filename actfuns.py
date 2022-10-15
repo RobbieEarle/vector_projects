@@ -201,7 +201,7 @@ class MultiActfunPartition(HOActfun):
 
     def forward(self, x):
         x, d_new = unroll_k(x, self.k, self.dim)
-        xs = torch.split(x, len(self.actfuns), dim=d_new)
+        xs = torch.split(x, x.shape[self.dim] // len(self.actfuns), dim=self.dim)
         return torch.cat(
             [f(xi, d_new) for f, xi in zip(self.actfuns, xs)], dim=self.dim
         )
@@ -286,11 +286,11 @@ def actfun_name2factory(name):
         return AIL_OR_XNOR_duplicate
     elif name == "ail_and_or_xnor_dup":
         return AIL_AND_OR_XNOR_duplicate
-    elif name == "max_min_part":
+    elif name == "max_min_part" or name == "max_min_part_fixed":
         return max_min_partition
-    elif name == "ail_or_xnor_part":
+    elif name == "ail_or_xnor_part" or name == "ail_or_xnor_part_fixed":
         return AIL_OR_XNOR_partition
-    elif name == "ail_and_or_xnor_part":
+    elif name == "ail_and_or_xnor_part" or name == "ail_and_or_xnor_part_fixed":
         return AIL_AND_OR_XNOR_partition
     else:
         raise ValueError("Unsupported actfun: {}".format(name))
