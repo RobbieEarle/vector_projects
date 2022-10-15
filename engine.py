@@ -163,7 +163,7 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true', help='')
     parser.add_argument('--hp_idx', type=int, default=None, help='')
     parser.add_argument('--grid_id', type=int, default=5, help='')
-    parser.add_argument('--split_size', type=int, default=4, help='')
+    parser.add_argument('--split_size', type=int, default=2, help='')
     parser.add_argument('--mix_pre', action='store_true', help='')
     parser.add_argument('--mix_pre_apex', action='store_true', help='')
     parser.add_argument('--split_batch', action='store_true', help='')
